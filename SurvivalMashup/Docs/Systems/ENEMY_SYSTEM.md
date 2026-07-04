@@ -6,6 +6,31 @@
 
 ---
 
+## System Ownership
+
+This system owns:
+- Enemy identity, enemy roles, encounter composition goals, regional enemy ecology, and enemy definition guidance.
+
+This system does NOT own:
+- AI framework behavior, Ability rules, Damage resolution, Loot tables, or Region state.
+
+Primary Responsibilities:
+- Define hostile Gameplay Objects through composition so enemies reinforce challenge and regional identity.
+
+Primary Data:
+- Enemy definitions, roles, tags, attributes, resources, ability references, and loot hooks.
+
+Primary Runtime Objects:
+- Enemy Gameplay Object instances and their composed components.
+
+Published Events:
+- TBD
+
+Consumed Events:
+- TBD
+
+---
+
 # Purpose
 
 The Enemy System defines how hostile Gameplay Objects are created, configured, and behave.
@@ -244,7 +269,7 @@ Enemies may use resources.
 
 Examples:
 
-Health
+Current Health
 
 Energy
 
@@ -294,7 +319,7 @@ Distance
 
 Threat
 
-Health
+Current Health
 
 Status Effects
 

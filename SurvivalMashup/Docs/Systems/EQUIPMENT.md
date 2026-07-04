@@ -6,6 +6,31 @@
 
 ---
 
+## System Ownership
+
+This system owns:
+- Equip and unequip flow, slot validation, requirement checks, and equipment contribution activation.
+
+This system does NOT own:
+- Combat calculations, Damage resolution, Ability execution, Inventory storage, Crafting, or Loot generation.
+
+Primary Responsibilities:
+- Bridge Item Instances into active gameplay capabilities on Gameplay Objects.
+
+Primary Data:
+- Equipment slot definitions, requirement rules, and equipment contribution references.
+
+Primary Runtime Objects:
+- Equipment Components, equipped Item Instances, and active equipment state.
+
+Published Events:
+- Item Equipped, Item Unequipped, Equipment Changed, Ability Granted, Ability Removed, Equipment Requirement Failed.
+
+Consumed Events:
+- TBD
+
+---
+
 # Purpose
 
 The Equipment System manages items that are actively equipped by Gameplay Objects.
@@ -167,7 +192,7 @@ Minimum Level
 
 Required Tags
 
-Quest Completion
+Adventure Completion
 
 Companion Species
 

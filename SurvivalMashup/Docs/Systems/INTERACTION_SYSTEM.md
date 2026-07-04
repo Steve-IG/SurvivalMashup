@@ -6,6 +6,31 @@
 
 ---
 
+## System Ownership
+
+This system owns:
+- Interaction discovery, interaction validation, interaction prioritization, and routing interactions to abilities.
+
+This system does NOT own:
+- Ability effect execution, UI prompts, Loot generation, economy rules, or Region travel logic.
+
+Primary Responsibilities:
+- Provide one consistent framework for non-combat interactions used by players and AI.
+
+Primary Data:
+- Interaction ability definitions, validation rules, priority rules, tags, costs, and requirements.
+
+Primary Runtime Objects:
+- Interaction Components, interaction queries, available interaction results, and execution context.
+
+Published Events:
+- TBD
+
+Consumed Events:
+- TBD
+
+---
+
 # Purpose
 
 The Interaction System enables Gameplay Objects to interact with one another through a consistent, ability-driven framework.
@@ -110,7 +135,7 @@ Line of Sight
 
 Gameplay Tags
 
-Quest Progress
+Adventure Progress
 
 Region Unlock
 
@@ -250,7 +275,7 @@ Rescue
 
 Puzzle Activation
 
-Quest Interaction
+Adventure Interaction
 
 Future interactions should reuse the same framework.
 

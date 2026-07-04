@@ -6,6 +6,31 @@
 
 ---
 
+## System Ownership
+
+This system owns:
+- Item definitions, definition components, item instance model, stacking rules, durability rules, quality rules, and affix structure.
+
+This system does NOT own:
+- Inventory storage, Equipment slot logic, Loot table generation, or Crafting validation.
+
+Primary Responsibilities:
+- Define the reusable model for collectible, craftable, equippable, consumable, and tradable objects.
+
+Primary Data:
+- ItemDefinition assets and item definition components.
+
+Primary Runtime Objects:
+- ItemInstance data, durability, charges, affixes, quality, ownership, and item relationships.
+
+Published Events:
+- TBD
+
+Consumed Events:
+- TBD
+
+---
+
 # Purpose
 
 The Item System defines every collectible, craftable, equippable, consumable, or tradable object in the game.

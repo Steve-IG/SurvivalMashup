@@ -74,7 +74,8 @@ Example:
 
 Enemy
 
-- Health
+- Current Health Resource
+- Maximum Health Attribute
 - Damageable
 - Status Effects
 - Navigation
@@ -159,7 +160,8 @@ Players, companions, NPCs, bosses, and enemies should share gameplay systems whe
 
 Examples include:
 
-- Health
+- Current Health
+- Maximum Health
 - Damage
 - Status Effects
 - Buffs
@@ -186,6 +188,164 @@ New:
 - Seasonal Events
 
 should integrate without requiring major refactoring.
+
+---
+
+# Dependency Rules
+
+Dependencies should flow in one direction.
+
+Higher-level layers may depend on lower-level layers.
+
+Lower-level layers must not depend on higher-level layers.
+
+Layer order:
+
+Presentation / UI
+
+↓
+
+Gameplay Systems
+
+↓
+
+Gameplay Framework
+
+↓
+
+Core Services
+
+↓
+
+Engine
+
+Rules:
+
+- Presentation / UI may observe gameplay state and send player intent, but must not own gameplay rules.
+- Gameplay Systems may depend on the Gameplay Framework, Core Services, and Engine capabilities.
+- Gameplay Systems must not depend on Presentation / UI.
+- Gameplay Framework may depend on Core Services and Engine capabilities.
+- Gameplay Framework must not depend on specific Gameplay Systems.
+- Core Services may depend on Engine capabilities.
+- Core Services must not own gameplay state or gameplay rules.
+- Engine code must not depend on project-specific gameplay, UI, or content.
+
+Services expose capabilities.
+
+They do not own gameplay domains.
+
+Examples:
+
+Save System
+
+Serializes and restores runtime state.
+
+It does not own inventory, health, progression, region state, or companion state.
+
+State Ownership vs Serialization Responsibility
+
+Gameplay systems own their own persistent state.
+
+Examples:
+
+Inventory System owns inventory state.
+
+Resource System owns resource state.
+
+Progression systems own progression state.
+
+World and Region systems own world and region state.
+
+Companion systems own companion state.
+
+The Save System coordinates serialization and deserialization.
+
+It does not decide what gameplay state means.
+
+It does not validate gameplay rules.
+
+It does not repair gameplay state through gameplay logic.
+
+It does not become the owner of any state because that state is saved.
+
+When loading, the Save System restores state back to the system that owns it.
+
+The owning system remains responsible for interpreting, validating, and using that state according to its own rules.
+
+Event Bus
+
+Transports events between systems.
+
+It does not decide gameplay outcomes.
+
+Data Registry
+
+Provides access to definitions.
+
+It does not interpret gameplay meaning.
+
+Systems own their own data.
+
+If a system needs information owned by another system, it should request it through a stable interface or react to events.
+
+Communication should prefer events over direct coupling where practical.
+
+Direct references are allowed only when ownership is clear, dependency direction is valid, and the relationship is stable.
+
+---
+
+# Event Architecture
+
+An event represents something that has already happened.
+
+Events are notifications, not commands.
+
+Use events when:
+
+- A system needs to announce a completed state change.
+- Multiple unrelated systems may need to react.
+- The publisher should not know who is listening.
+- The response is optional, indirect, or cross-cutting.
+
+Prefer direct service calls when:
+
+- A system needs a specific capability immediately.
+- The caller requires a return value.
+- The relationship is stable and follows dependency rules.
+- The operation belongs to a clearly owned service.
+
+Events should remain data-oriented.
+
+They should describe what happened, who or what was involved, and any stable context required by listeners.
+
+Events should not contain business logic.
+
+Events should not decide outcomes.
+
+Events should not be used to tell another system what to do.
+
+Systems publish events rather than directly orchestrating unrelated systems.
+
+Listeners may react to events, but ownership remains with the system that owns the affected gameplay domain.
+
+---
+
+# Architectural Anti-Patterns
+
+The following practices are prohibited:
+
+- Manager-to-manager coupling.
+- Circular dependencies between systems.
+- Duplicated ownership of the same gameplay state.
+- Business logic inside UI.
+- UI directly modifying gameplay state.
+- Save System owning gameplay state.
+- Core Services deciding gameplay outcomes.
+- Systems reaching into another system's internals.
+- Special-case gameplay branches for individual content unless explicitly approved.
+- Parallel implementations of shared mechanics.
+
+If an implementation requires one of these patterns, stop and reconsider the design before coding.
 
 ---
 
@@ -288,9 +448,14 @@ The architecture is successful if:
 
 # Related Documents
 
-- AI_PLAYBOOK.md
-- AI_CODING_STANDARDS.md
-- AI_AGENT_INDEX.md
-- WORLD_REACTION_SYSTEM.md
-- COMBAT.md
-- PROGRESSION.md
+- Docs/AI_AGENT_INDEX.md
+- Docs/Architecture/AI_PLAYBOOK.md
+- Docs/Architecture/AI_CODING_STANDARDS.md
+- Docs/Architecture/CODING_PRINCIPLES.md
+- Docs/Architecture/ENGINE_PRINCIPLES.md
+- Docs/Architecture/PROJECT_ARCHITECTURE.md
+- Docs/Architecture/GAMEPLAY_OBJECT.md
+- Docs/Systems/GAMEPLAY_FRAMEWORK.md
+- Docs/Systems/WORLD_REACTION_SYSTEM.md
+- Docs/Systems/COMBAT.md
+- Docs/Systems/PROGRESSION.md

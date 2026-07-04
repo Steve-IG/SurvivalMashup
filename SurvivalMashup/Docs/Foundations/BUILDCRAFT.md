@@ -366,14 +366,14 @@ The Buildcraft system is successful when:
 
 # Related Documents
 
-- GAME_VISION.md
-- DESIGN_PILLARS.md
-- PLAYER_PROGRESSION.md
-- PLAYER.md
-- COMBAT.md
-- WORLD_REACTION_SYSTEM.md
-- COMPANIONS.md
-- ABILITY_SYSTEM.md
-- EQUIPMENT.md
-- INVENTORY_SYSTEM.md
-- CRAFTING_SYSTEM.md
+- Docs/Foundations/GAME_VISION.md
+- Docs/Foundations/DESIGN_PILLARS.md
+- Docs/Systems/PLAYER_PROGRESSION.md
+- Docs/Systems/PLAYER.md
+- Docs/Systems/COMBAT.md
+- Docs/Systems/WORLD_REACTION_SYSTEM.md
+- Docs/Systems/COMPANIONS.md
+- Docs/Systems/ABILITY_SYSTEM.md
+- Docs/Systems/EQUIPMENT.md
+- Docs/Systems/INVENTORY_SYSTEM.md
+- Docs/Systems/CRAFTING_SYSTEM.md

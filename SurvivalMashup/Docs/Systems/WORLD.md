@@ -7,6 +7,31 @@
 
 ---
 
+## System Ownership
+
+This system owns:
+- World structure, Hub World role, region state philosophy, campaign structure, Frontier structure, and liberation/restoration design.
+
+This system does NOT own:
+- Region streaming, Adventure objectives, Loot generation, enemy spawning, or procedural generation implementation.
+
+Primary Responsibilities:
+- Define the world as a progression system made of evolving regions connected through the Hub World.
+
+Primary Data:
+- Region state design, Hub World growth expectations, campaign region structure, and Frontier rules.
+
+Primary Runtime Objects:
+- Region state and Hub World persistence state.
+
+Published Events:
+- TBD
+
+Consumed Events:
+- TBD
+
+---
+
 # Purpose
 
 The world is one of the game's primary progression systems.
@@ -320,10 +345,13 @@ This architectural decision should be preserved throughout development.
 
 # Related Documents
 
-- GAME_VISION.md
-- DESIGN_PILLARS.md
-- CORE_GAMEPLAY_LOOP.md
-- PROGRESSION.md
-- COMBAT.md
-- HUB_WORLD.md (future)
-- PROCEDURAL_GENERATION.md (future)
+- Docs/Foundations/GAME_VISION.md
+- Docs/Foundations/DESIGN_PILLARS.md
+- Docs/Foundations/CORE_GAMEPLAY_LOOP.md
+- Docs/Systems/PROGRESSION.md
+- Docs/Systems/COMBAT.md
+
+Future related topics:
+
+- Hub World
+- Procedural Generation

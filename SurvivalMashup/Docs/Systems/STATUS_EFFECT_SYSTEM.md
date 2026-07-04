@@ -6,6 +6,31 @@
 
 ---
 
+## System Ownership
+
+This system owns:
+- Active conditions, durations, stacks, status lifecycle, periodic ticks, and status-driven modifiers.
+
+This system does NOT own:
+- Gameplay Effect definitions, Attribute storage, Resource storage, World Reaction rules, or presentation.
+
+Primary Responsibilities:
+- Apply and manage temporary or persistent gameplay conditions through data.
+
+Primary Data:
+- Status Effect definitions, durations, stacking rules, tags, modifiers, periodic effects, and presentation references.
+
+Primary Runtime Objects:
+- Status Effect Components and active status instances.
+
+Published Events:
+- Status Applied, Status Removed, Status Expired, Status Refreshed, Stack Increased, Periodic Tick.
+
+Consumed Events:
+- TBD
+
+---
+
 # Purpose
 
 The Status Effect System manages temporary and persistent gameplay conditions that modify actors over time.

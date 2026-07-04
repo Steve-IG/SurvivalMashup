@@ -6,6 +6,31 @@
 
 ---
 
+## System Ownership
+
+This system owns:
+- Current Resource values, regeneration, consumption, restoration, transfer, clamping, overflow, and resource change reporting.
+
+This system does NOT own:
+- Ability activation, Attribute definitions, Damage resolution, UI bars, or Status Effect rules.
+
+Primary Responsibilities:
+- Manage all consumable, rechargeable, spendable, and transferable gameplay resources generically.
+
+Primary Data:
+- Resource definitions, min/max values, regeneration rules, overflow rules, tags, visibility, and persistence.
+
+Primary Runtime Objects:
+- Resource Components and runtime resource values.
+
+Published Events:
+- Resource Depleted, Resource Restored, Resource Overflow, Resource Full, Resource Changed.
+
+Consumed Events:
+- TBD
+
+---
+
 # Purpose
 
 The Resource System manages all consumable, rechargeable, and spendable gameplay resources.
@@ -40,6 +65,7 @@ Resources are defined by data.
 
 The engine should not distinguish between:
 
+- Current Health
 - Mana
 - Energy
 - Rage

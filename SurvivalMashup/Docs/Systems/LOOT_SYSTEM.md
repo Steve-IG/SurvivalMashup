@@ -6,6 +6,31 @@
 
 ---
 
+## System Ownership
+
+This system owns:
+- Reward generation, reward distribution, loot tables, smart-loot biasing, and cooperative loot rules.
+
+This system does NOT own:
+- Item behavior, Inventory storage, Itemization philosophy, Crafting rules, or Damage resolution.
+
+Primary Responsibilities:
+- Determine where rewards come from and generate appropriate Item Instances, resources, currencies, recipes, or other rewards.
+
+Primary Data:
+- Loot tables, reward pools, drop rules, context modifiers, and smart-loot weighting.
+
+Primary Runtime Objects:
+- Loot generation context and generated reward results.
+
+Published Events:
+- TBD
+
+Consumed Events:
+- TBD
+
+---
+
 # Purpose
 
 The Loot System governs how Item Instances, resources, currencies, companions, recipes, and other rewards are generated and distributed throughout the game.
@@ -76,7 +101,7 @@ World Events
 
 Seasonal Events
 
-Quest Rewards
+Adventure Rewards
 
 Future systems should integrate naturally.
 

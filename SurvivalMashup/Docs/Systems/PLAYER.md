@@ -7,6 +7,31 @@
 
 ---
 
+## System Ownership
+
+This system owns:
+- Player fantasy, feel goals, player capability categories, control expectations, and build-expression goals.
+
+This system does NOT own:
+- Ability implementation, Equipment rules, Companion behavior, Interaction logic, Damage rules, or UI implementation.
+
+Primary Responsibilities:
+- Define how controlling the player should feel and how player capabilities should expand over time.
+
+Primary Data:
+- TBD
+
+Primary Runtime Objects:
+- Player Gameplay Object and its composed capability components.
+
+Published Events:
+- TBD
+
+Consumed Events:
+- TBD
+
+---
+
 # Purpose
 
 The player is the center of every gameplay system.
@@ -368,12 +393,12 @@ The Player system is successful when:
 
 # Related Documents
 
-- GAME_VISION.md
-- DESIGN_PILLARS.md
-- BUILDCRAFT.md
-- PLAYER_PROGRESSION.md
-- COMBAT.md
-- COMPANIONS.md
-- WORLD_REACTION_SYSTEM.md
-- ABILITY_SYSTEM.md
-- EQUIPMENT.md
+- Docs/Foundations/GAME_VISION.md
+- Docs/Foundations/DESIGN_PILLARS.md
+- Docs/Foundations/BUILDCRAFT.md
+- Docs/Systems/PLAYER_PROGRESSION.md
+- Docs/Systems/COMBAT.md
+- Docs/Systems/COMPANIONS.md
+- Docs/Systems/WORLD_REACTION_SYSTEM.md
+- Docs/Systems/ABILITY_SYSTEM.md
+- Docs/Systems/EQUIPMENT.md

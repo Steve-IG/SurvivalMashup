@@ -6,6 +6,31 @@
 
 ---
 
+## System Ownership
+
+This system owns:
+- Relationship types, relationship state, ownership attribution, source attribution, team relationships, faction relationships, and relationship queries.
+
+This system does NOT own:
+- Gameplay decisions, Damage math, AI behavior trees, Save format, or UI presentation.
+
+Primary Responsibilities:
+- Provide a shared model for ownership, attribution, allegiance, and interaction eligibility.
+
+Primary Data:
+- Relationship definitions, relationship type metadata, stable identifiers, and persistence flags.
+
+Primary Runtime Objects:
+- Relationship state on Gameplay Objects and transient relationship context.
+
+Published Events:
+- TBD
+
+Consumed Events:
+- TBD
+
+---
+
 # Purpose
 
 The Relationship System defines how Gameplay Objects relate to one another.
@@ -313,7 +338,7 @@ Wood ownership transfers to the Player.
 
 Experience is awarded to the Player.
 
-Quest progress is credited to the Player.
+Adventure progress is credited to the Player.
 
 ---
 
@@ -335,7 +360,7 @@ Instigator remains Companion.
 
 Owner remains Player.
 
-Player receives experience and quest credit.
+Player receives experience and adventure credit.
 
 ---
 
@@ -407,7 +432,7 @@ Faction reputation
 
 Region ownership
 
-Quest associations
+Adventure associations
 
 Temporary combat relationships should not persist.
 

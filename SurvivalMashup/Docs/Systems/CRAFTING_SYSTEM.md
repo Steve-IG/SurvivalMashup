@@ -6,6 +6,31 @@
 
 ---
 
+## System Ownership
+
+This system owns:
+- Recipe validation, crafting execution, station requirements, and item transformation.
+
+This system does NOT own:
+- Item behavior, Inventory UI, Loot generation, Equipment activation, or economy pricing.
+
+Primary Responsibilities:
+- Transform Item Instances and resources into crafted outputs through data-driven recipes.
+
+Primary Data:
+- Recipe definitions, inputs, outputs, station requirements, tags, and unlock requirements.
+
+Primary Runtime Objects:
+- Crafting transactions, crafting stations, and recipe execution context.
+
+Published Events:
+- TBD
+
+Consumed Events:
+- TBD
+
+---
+
 # Purpose
 
 The Crafting System allows players to transform collected resources into useful items, equipment, consumables, upgrades, and other gameplay rewards.
@@ -53,7 +78,7 @@ Consumables
 
 Currencies
 
-Quest Items (rare)
+Adventure Items (rare)
 
 Special Components
 
@@ -85,7 +110,7 @@ Cosmetics
 
 Housing Objects (future)
 
-Quest Items
+Adventure Items
 
 Recipes
 
@@ -107,7 +132,7 @@ Crafting Station
 
 Region Unlock
 
-Quest Completion
+Adventure Completion
 
 Companion Assistance (future)
 

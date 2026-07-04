@@ -6,6 +6,31 @@
 
 ---
 
+## System Ownership
+
+This system owns:
+- Perception, world knowledge, goals, decision-making, and ability or interaction selection.
+
+This system does NOT own:
+- Gameplay execution, Ability rules, Damage resolution, movement physics, or interaction validation.
+
+Primary Responsibilities:
+- Choose valid actions for enemies, companions, NPCs, wildlife, and future AI-controlled Gameplay Objects.
+
+Primary Data:
+- Goal definitions, priorities, decision rules, perception settings, and AI usage metadata.
+
+Primary Runtime Objects:
+- AI controllers, perception caches, active goals, and selected decisions.
+
+Published Events:
+- TBD
+
+Consumed Events:
+- TBD
+
+---
+
 # Purpose
 
 The AI System enables Gameplay Objects to perceive the world, evaluate goals, and select abilities or interactions to achieve those goals.
@@ -114,7 +139,7 @@ Visibility
 
 Noise (future)
 
-Health
+Current Health
 
 Status Effects
 

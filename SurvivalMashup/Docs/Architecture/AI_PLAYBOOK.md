@@ -82,17 +82,13 @@ Review code for:
 
 ## 5. Update Documentation
 
-If architecture changed:
+If the current task, sprint, or next step changed:
 
-Update Decision Log.
+Update `Docs/Development/DEVELOPMENT_PLAN.md`.
 
-If lessons were learned:
+If architectural intent changed:
 
-Update Lessons Learned.
-
-If sprint changed:
-
-Update Current Sprint.
+Update the relevant architecture or system document.
 
 ---
 

@@ -192,12 +192,8 @@ If not, reconsider the feature.
 
 # Related Documents
 
-GAME_VISION.md
-
-DESIGN_PILLARS.md
-
-PLAYER.md
-
-WORLD.md
-
-PROGRESSION.md
+- Docs/Foundations/GAME_VISION.md
+- Docs/Foundations/DESIGN_PILLARS.md
+- Docs/Systems/PLAYER.md
+- Docs/Systems/WORLD.md
+- Docs/Systems/PROGRESSION.md

@@ -6,6 +6,31 @@
 
 ---
 
+## System Ownership
+
+This system owns:
+- Region design formula, regional identity rules, restoration expectations, and region approval criteria.
+
+This system does NOT own:
+- Adventure runtime, procedural generation engine, Loot tables, enemy spawning, or region streaming.
+
+Primary Responsibilities:
+- Ensure every handcrafted or procedural region feels like a memorable, restorable adventure destination.
+
+Primary Data:
+- Regional design templates, themes, fantasies, signature mechanics, wonders, and restoration goals.
+
+Primary Runtime Objects:
+- TBD
+
+Published Events:
+- TBD
+
+Consumed Events:
+- TBD
+
+---
+
 # Purpose
 
 The Region Director defines how every ToyChest region is conceived, structured, and experienced.

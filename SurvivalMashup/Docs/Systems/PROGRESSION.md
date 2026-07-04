@@ -7,6 +7,31 @@
 
 ---
 
+## System Ownership
+
+This system owns:
+- Overall progression philosophy, progression pillars, Hero Wave pacing, milestone rewards, and long-term progression goals.
+
+This system does NOT own:
+- Individual implementation details for Character, Equipment, Companion, World, Knowledge, or seasonal systems.
+
+Primary Responsibilities:
+- Define how the game creates meaningful forward progress across multiple systems.
+
+Primary Data:
+- TBD
+
+Primary Runtime Objects:
+- TBD
+
+Published Events:
+- TBD
+
+Consumed Events:
+- TBD
+
+---
+
 # Purpose
 
 Progression is the primary long-term motivator of the game.
@@ -151,7 +176,7 @@ Examples:
 - New weapon types
 - Additional companions
 - New crafting recipes
-- Alternate skill paths
+- Alternate ability progression paths
 - New traversal abilities
 - Specialized equipment
 
@@ -301,11 +326,13 @@ The game should support adding entirely new progression systems without requirin
 
 # Related Documents
 
-- GAME_VISION.md
-- DESIGN_PILLARS.md
-- WORLD.md
-- COMBAT.md
-- COMPANIONS.md
-- EQUIPMENT.md
-- ABILITY_SYSTEM.md
-- HUB_WORLD.md
+- Docs/Foundations/GAME_VISION.md
+- Docs/Foundations/DESIGN_PILLARS.md
+- Docs/Systems/WORLD.md
+- Docs/Systems/COMBAT.md
+- Docs/Systems/COMPANIONS.md
+- Docs/Systems/EQUIPMENT.md
+- Docs/Systems/ABILITY_SYSTEM.md
+- Docs/Systems/PLAYER_PROGRESSION.md
+- Docs/Systems/ADVENTURE_SYSTEM.md
+- Docs/Systems/REGION_DIRECTOR.md

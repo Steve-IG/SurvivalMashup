@@ -22,10 +22,11 @@ Every AI implementation session should begin with:
 2. `Docs/Development/DEVELOPMENT_PLAN.md`
 3. `Docs/Architecture/CORE_ARCHITECTURE.md`
 4. `Docs/Architecture/ENGINE_PRINCIPLES.md`
-5. `Docs/Architecture/AI_CODING_STANDARDS.md`
-6. `Docs/Architecture/PROJECT_ARCHITECTURE.md`
-7. Task-specific `Docs/Systems/*.md`
-8. Relevant `Docs/Foundations/*.md`
+5. `Docs/Architecture/CODING_PRINCIPLES.md`
+6. `Docs/Architecture/AI_CODING_STANDARDS.md`
+7. `Docs/Architecture/PROJECT_ARCHITECTURE.md`
+8. Task-specific `Docs/Systems/*.md`
+9. Relevant `Docs/Foundations/*.md`
 
 Do not begin implementation from chat history, older design drafts, or inferred intent.
 
@@ -134,13 +135,13 @@ It is useful for understanding why decisions changed, but it must not be used as
 
 # Gameplay Object And Gameplay Framework
 
-`Docs/Foundations/GAMEPLAY_OBJECT.md` defines the concept and design role of Gameplay Objects.
+`Docs/Architecture/GAMEPLAY_OBJECT.md` defines the concept and design role of Gameplay Objects.
 
 `Docs/Systems/GAMEPLAY_FRAMEWORK.md` defines the implementation architecture that supports Gameplay Objects.
 
 Keep both documents, but do not let them redefine each other. If they disagree:
 
-- Use `GAMEPLAY_OBJECT.md` for conceptual intent.
+- Use `Docs/Architecture/GAMEPLAY_OBJECT.md` for conceptual intent.
 - Use `GAMEPLAY_FRAMEWORK.md` for runtime implementation structure.
 - Update the stale document rather than layering compatibility around both meanings.
 
@@ -148,14 +149,9 @@ Keep both documents, but do not let them redefine each other. If they disagree:
 
 # Health Ownership
 
-Health follows the generic Resource and Attribute model:
+Health follows the canonical terminology above.
 
-- Current Health is a Resource.
-- Maximum Health is an Attribute.
-- Health regeneration is an Attribute or Resource configuration, depending on the implementation detail.
-- Damage and healing modify the Current Health resource through Gameplay Effects.
-
-No separate Health System should own health values.
+For implementation details, see `Docs/Systems/RESOURCE_SYSTEM.md` and `Docs/Systems/ATTRIBUTE_SYSTEM.md`.
 
 ---
 
@@ -170,6 +166,43 @@ Before implementing a feature, an AI agent should state:
 5. Whether the conflict blocks implementation.
 
 If a conflict exists, stop and ask for clarification unless this index already resolves it.
+
+---
+
+# Recommended Implementation Workflow
+
+For implementation tasks, AI coding agents should:
+
+1. Read relevant Foundations documents.
+2. Read `Docs/Architecture/CORE_ARCHITECTURE.md`.
+3. Read the owning System document.
+4. Identify ownership boundaries.
+5. Identify dependencies.
+6. Determine required events.
+7. Implement data objects.
+8. Implement runtime behavior.
+9. Integrate with existing systems.
+10. Validate against `Docs/Architecture/CODING_PRINCIPLES.md`.
+11. Update documentation only if architectural intent changed.
+
+---
+
+# Definition of Done
+
+An AI implementation task is complete only when:
+
+- It follows `Docs/Architecture/CODING_PRINCIPLES.md`.
+- It follows `Docs/Architecture/ENGINE_PRINCIPLES.md`.
+- It respects the System Ownership section of every affected system document.
+- It uses approved architectural patterns from `Docs/Architecture/CORE_ARCHITECTURE.md`.
+- It publishes required events for completed state changes.
+- It integrates with save/load when the feature owns persistent state.
+- It uses data-driven design for configurable gameplay.
+- It contains no TODO placeholders.
+- It updates documentation only when ownership, architecture, or system boundaries changed.
+- It compiles without warnings.
+
+Do not mark a feature complete if any item is unresolved.
 
 ---
 

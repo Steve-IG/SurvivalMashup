@@ -6,6 +6,31 @@
 
 ---
 
+## System Ownership
+
+This system owns:
+- Itemization philosophy, item progression structure, quality goals, affix design goals, and collection goals.
+
+This system does NOT own:
+- Item runtime model, Loot distribution, Equipment activation, Crafting recipes, or Inventory storage.
+
+Primary Responsibilities:
+- Define how items support build diversity, long-term progression, collection, and player expression.
+
+Primary Data:
+- TBD
+
+Primary Runtime Objects:
+- TBD
+
+Published Events:
+- TBD
+
+Consumed Events:
+- TBD
+
+---
+
 # Purpose
 
 Itemization defines the philosophy, structure, and progression of equipment and collectible items in ToyChest.
@@ -43,7 +68,7 @@ Player power grows through multiple systems:
 
 Abilities
 
-Skill Evolution
+Ability Evolution
 
 Equipment
 

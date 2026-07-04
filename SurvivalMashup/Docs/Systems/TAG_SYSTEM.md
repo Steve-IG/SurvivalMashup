@@ -6,6 +6,31 @@
 
 ---
 
+## System Ownership
+
+This system owns:
+- Tag vocabulary, tag definitions, tag storage, tag query APIs, and aggregated active tag sets.
+
+This system does NOT own:
+- Behavior triggered by tags, Damage reactions, AI decisions, Ability rules, or presentation.
+
+Primary Responsibilities:
+- Provide a passive universal descriptor layer for identity, state, capability, and gameplay queries.
+
+Primary Data:
+- Tag definitions, tag categories, stable identifiers, and metadata.
+
+Primary Runtime Objects:
+- Gameplay Tag Components and active tag sets.
+
+Published Events:
+- TBD
+
+Consumed Events:
+- TBD
+
+---
+
 # Purpose
 
 The Tag System provides a universal vocabulary for describing gameplay objects, gameplay state, gameplay capabilities, and gameplay relationships.

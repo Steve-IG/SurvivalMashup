@@ -6,6 +6,31 @@
 
 ---
 
+## System Ownership
+
+This system owns:
+- Gameplay Object identity, capability component structure, definition-instance separation, shared interfaces, and lifecycle expectations.
+
+This system does NOT own:
+- Ability rules, Damage rules, Inventory rules, Equipment rules, Companion rules, Adventure rules, World Reaction rules, UI behavior, or Save ownership.
+
+Primary Responsibilities:
+- Provide the integration layer that lets gameplay systems cooperate through shared object and component contracts.
+
+Primary Data:
+- Gameplay Object definitions, component schemas, stable identifiers, and definition references.
+
+Primary Runtime Objects:
+- Gameplay Object instances and their capability components.
+
+Published Events:
+- TBD
+
+Consumed Events:
+- TBD
+
+---
+
 # Purpose
 
 The Gameplay Framework defines the fundamental architecture used by every interactive object in the game.
@@ -16,7 +41,7 @@ The framework favors composition over inheritance, data over hardcoded logic, an
 
 Its goal is to ensure that every gameplay system can interact with every gameplay object through shared interfaces rather than specialized code.
 
-`Docs/Foundations/GAMEPLAY_OBJECT.md` defines the conceptual design role of Gameplay Objects. This document defines the runtime framework that implements that concept.
+`Docs/Architecture/GAMEPLAY_OBJECT.md` defines the conceptual design role of Gameplay Objects. This document defines the runtime framework that implements that concept.
 
 ---
 
@@ -53,6 +78,40 @@ The player is an object with:
 - Adventure Tracker
 
 The same philosophy applies throughout the game.
+
+---
+
+# Framework Ownership
+
+The Gameplay Framework owns the shared runtime model that allows gameplay systems to cooperate.
+
+It owns:
+
+- Gameplay Object identity.
+- Capability component structure.
+- Runtime instance structure.
+- Definition-to-instance separation.
+- Common interfaces used by gameplay systems.
+- Shared lifecycle expectations.
+- Event participation rules.
+
+It does not own:
+
+- Ability rules.
+- Damage rules.
+- Inventory rules.
+- Equipment rules.
+- Companion rules.
+- Adventure rules.
+- World Reaction rules.
+- UI behavior.
+- Save ownership.
+
+Individual gameplay systems own their own rules, data, and runtime state.
+
+The framework provides the integration layer.
+
+It should make systems interoperable without absorbing their responsibilities.
 
 ---
 
@@ -316,7 +375,7 @@ Components publish gameplay events.
 
 Example:
 
-An Ability does not modify Health directly.
+An Ability does not modify Current Health directly.
 
 Instead:
 
@@ -345,6 +404,57 @@ Audio reacts
 ↓
 
 Achievements update
+
+---
+
+# System Cooperation
+
+Gameplay systems cooperate through the framework.
+
+They should interact with Gameplay Objects through capabilities, interfaces, tags, resources, attributes, effects, and events.
+
+Systems should not reach into another system's internal data structures.
+
+Systems should not duplicate another system's runtime state.
+
+Systems should not require UI, presentation, or content-specific classes to execute gameplay logic.
+
+When one system needs another system to react, it should prefer:
+
+- Gameplay Events.
+- Stable interfaces.
+- Shared component capabilities.
+- Data-driven definitions.
+
+Direct dependencies are allowed only when ownership is clear and the dependency direction follows the architecture rules.
+
+Each system remains responsible for its own domain.
+
+Examples:
+
+Ability System
+
+Owns activation, targeting, costs, cooldowns, and execution flow.
+
+Damage System
+
+Owns damage requests, modifiers, resistance checks, and damage resolution.
+
+Resource System
+
+Owns current resource values and resource changes.
+
+Status Effect System
+
+Owns active conditions, durations, stacks, and status-driven effects.
+
+World Reaction System
+
+Owns world property evaluation and environmental reactions.
+
+The Gameplay Framework coordinates how these systems see and address the same Gameplay Object.
+
+It does not decide the outcome for those systems.
 
 ---
 

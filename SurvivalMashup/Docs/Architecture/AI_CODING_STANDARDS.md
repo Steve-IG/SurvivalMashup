@@ -34,8 +34,8 @@ Before writing code:
 
 - Read `Docs/AI_AGENT_INDEX.md`.
 - Read the AI Playbook.
-- Read Current Sprint.
-- Read Decision Log.
+- Read `Docs/Development/DEVELOPMENT_PLAN.md`.
+- Read the owning system document.
 - Read relevant documentation.
 - Search the existing project.
 - Explain the proposed solution.
@@ -262,7 +262,7 @@ A feature is complete only when:
 
 ✔ Documentation updated.
 
-✔ Decision Log updated (if needed).
+✔ DEVELOPMENT_PLAN.md updated (if needed).
 
 ✔ Performance reviewed.
 

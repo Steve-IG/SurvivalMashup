@@ -7,6 +7,31 @@
 
 ---
 
+## System Ownership
+
+This system owns:
+- Gameplay Effect definitions, effect execution, conditions, sequencing, and deterministic outcome application.
+
+This system does NOT own:
+- Ability activation, targeting selection, Resource ownership, World Reaction rule evaluation, or UI.
+
+Primary Responsibilities:
+- Execute reusable gameplay outcomes triggered by abilities, equipment, status effects, interactions, and environment.
+
+Primary Data:
+- Gameplay Effect definitions, effect categories, conditions, target requirements, and execution rules.
+
+Primary Runtime Objects:
+- Effect execution contexts and effect result data.
+
+Published Events:
+- Damage Applied, Enemy Defeated, Item Collected, Tree Harvested, Ability Activated, Region Liberated, Adventure Completed.
+
+Consumed Events:
+- TBD
+
+---
+
 # Purpose
 
 The Gameplay Effect System is responsible for executing gameplay outcomes.
@@ -316,7 +341,7 @@ Examples:
 - Target Burning
 - Target Frozen
 - Critical Hit
-- Health Below 30%
+- Current Health Below 30%
 - Companion Nearby
 - Region Cleared
 - Night Time
@@ -489,8 +514,12 @@ The Gameplay Effect System succeeds when:
 
 # Related Documents
 
-- ABILITY_SYSTEM.md
-- WORLD_REACTION_SYSTEM.md
-- BUILDCRAFT.md
-- PLAYER.md
-- CORE_ARCHITECTURE.md
+- Docs/Systems/ABILITY_SYSTEM.md
+- Docs/Systems/WORLD_REACTION_SYSTEM.md
+- Docs/Systems/STATUS_EFFECT_SYSTEM.md
+- Docs/Systems/DAMAGE_SYSTEM.md
+- Docs/Systems/RESOURCE_SYSTEM.md
+- Docs/Systems/ATTRIBUTE_SYSTEM.md
+- Docs/Foundations/BUILDCRAFT.md
+- Docs/Systems/PLAYER.md
+- Docs/Architecture/CORE_ARCHITECTURE.md

@@ -6,13 +6,38 @@
 
 ---
 
+## System Ownership
+
+This system owns:
+- Attribute definitions, base values, modifier application, derived values, and attribute change reporting.
+
+This system does NOT own:
+- Current Resource values, Status Effect logic, Equipment slots, or Damage resolution.
+
+Primary Responsibilities:
+- Represent reusable gameplay capabilities and statistics for all actor and object types.
+
+Primary Data:
+- Attribute definitions, limits, rounding rules, tags, visibility, persistence, and modifier sources.
+
+Primary Runtime Objects:
+- Attribute Components, runtime attribute values, and modifier stacks.
+
+Published Events:
+- Attribute changed events.
+
+Consumed Events:
+- TBD
+
+---
+
 # Purpose
 
 The Attribute System defines the permanent and temporary characteristics of every actor in the game.
 
 Attributes describe an actor's capabilities.
 
-They influence combat, movement, gathering, crafting, companions, AI behavior, simulation interactions, and progression.
+They influence combat, movement, gathering, crafting, companions, AI behavior, World Reaction interactions, and progression.
 
 The system must be completely generic and reusable.
 
@@ -42,7 +67,7 @@ All attributes should be data-driven.
 
 The engine should never hardcode attributes like:
 
-Health
+Maximum Health
 
 Armor
 
@@ -228,7 +253,7 @@ Rare Resource Chance
 
 ## Companion
 
-Companion Health
+Companion Maximum Health
 
 Companion Damage
 
@@ -288,7 +313,7 @@ Difficulty
 
 Temporary Effects
 
-Quest Rewards
+Adventure Rewards
 
 Seasonal Events
 

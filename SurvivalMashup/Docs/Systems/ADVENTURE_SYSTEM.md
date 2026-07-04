@@ -6,6 +6,31 @@
 
 ---
 
+## System Ownership
+
+This system owns:
+- Adventure structure, objective assembly, progress state, completion criteria, and restoration cadence.
+
+This system does NOT own:
+- Combat rules, loot generation, NPC AI, region streaming, or dialogue implementation.
+
+Primary Responsibilities:
+- Create meaningful regional situations that guide discovery, resolution, restoration, and reward.
+
+Primary Data:
+- Adventure templates, objective modules, completion rules, and generation parameters.
+
+Primary Runtime Objects:
+- Active adventures, objectives, progress state, and Adventure Components.
+
+Published Events:
+- TBD
+
+Consumed Events:
+- TBD
+
+---
+
 # Purpose
 
 The Adventure System is responsible for creating meaningful experiences within every region of ToyChest.

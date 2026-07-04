@@ -7,6 +7,31 @@
 
 ---
 
+## System Ownership
+
+This system owns:
+- Player progression journey, progression dimensions, reward categories, and capability-growth expectations.
+
+This system does NOT own:
+- Character level implementation, Ability unlock execution, Equipment stats, Resource values, or World state.
+
+Primary Responsibilities:
+- Define how the player's power, expression, mastery, and convenience expand over time.
+
+Primary Data:
+- TBD
+
+Primary Runtime Objects:
+- TBD
+
+Published Events:
+- TBD
+
+Consumed Events:
+- TBD
+
+---
+
 # Purpose
 
 Player progression is the heart of the game.
@@ -281,9 +306,9 @@ Players should regularly unlock exciting capabilities throughout the game.
 
 # Related Documents
 
-- PLAYER.md
-- ABILITY_SYSTEM.md
-- COMPANIONS.md
-- COMBAT.md
-- PROGRESSION.md
-- WORLD_REACTION_SYSTEM.md
+- Docs/Systems/PLAYER.md
+- Docs/Systems/ABILITY_SYSTEM.md
+- Docs/Systems/COMPANIONS.md
+- Docs/Systems/COMBAT.md
+- Docs/Systems/PROGRESSION.md
+- Docs/Systems/WORLD_REACTION_SYSTEM.md

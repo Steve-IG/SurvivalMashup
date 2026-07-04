@@ -75,8 +75,8 @@ Tasks:
 
 References:
 
-- CORE_ARCHITECTURE.md
-- AI_PLAYBOOK.md
+- Docs/Architecture/CORE_ARCHITECTURE.md
+- Docs/Architecture/AI_PLAYBOOK.md
 
 ---
 
@@ -93,7 +93,7 @@ Tasks:
 
 References:
 
-- CORE_ARCHITECTURE.md
+- Docs/Architecture/CORE_ARCHITECTURE.md
 
 ---
 
@@ -109,11 +109,11 @@ Tasks:
 
 References:
 
-- PLAYER.md
-- RESOURCE_SYSTEM.md
-- ATTRIBUTE_SYSTEM.md
-- WORLD_REACTION_SYSTEM.md
-- COMBAT.md
+- Docs/Systems/PLAYER.md
+- Docs/Systems/RESOURCE_SYSTEM.md
+- Docs/Systems/ATTRIBUTE_SYSTEM.md
+- Docs/Systems/WORLD_REACTION_SYSTEM.md
+- Docs/Systems/COMBAT.md
 
 ---
 
@@ -129,9 +129,9 @@ Implement the Player Controller.
 
 Cursor should:
 
-- Read PLAYER.md
-- Read PLAYER_PROGRESSION.md
-- Read CORE_ARCHITECTURE.md
+- Read Docs/Systems/PLAYER.md
+- Read Docs/Systems/PLAYER_PROGRESSION.md
+- Read Docs/Architecture/CORE_ARCHITECTURE.md
 - Implement movement only
 - Do not implement combat
 - Do not implement inventory
@@ -164,15 +164,14 @@ Move the next task into Current AI Task.
 
 ---
 
-# Upcoming Design Work
+# Upcoming Documentation Work
 
-Next documents to complete:
+Current documentation focus:
 
-1. BUILDCRAFT.md
-2. PLAYER.md
-3. ABILITY_SYSTEM.md
-4. EQUIPMENT.md
-5. INVENTORY_SYSTEM.md
+1. Keep `Docs/AI_AGENT_INDEX.md` current.
+2. Keep system ownership sections current.
+3. Add new documents only when a real ownership gap appears.
+4. Prefer updating existing canonical docs over creating parallel docs.
 
 ---
 
@@ -220,11 +219,12 @@ Every AI implementation session should follow this workflow:
 3. Read referenced specifications
 4. Read CORE_ARCHITECTURE.md
 5. Read ENGINE_PRINCIPLES.md
-6. Read AI_CODING_STANDARDS.md
-7. Implement only the current task
-8. Self-review implementation
-9. Update DEVELOPMENT_PLAN.md
-10. Stop
+6. Read CODING_PRINCIPLES.md
+7. Read AI_CODING_STANDARDS.md
+8. Implement only the current task
+9. Self-review implementation
+10. Update DEVELOPMENT_PLAN.md
+11. Stop
 
 Never begin a second feature without updating the plan.
 

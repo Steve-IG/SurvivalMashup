@@ -18,6 +18,8 @@ Gameplay Systems operate on those capabilities to produce gameplay.
 
 Gameplay Objects themselves contain little or no gameplay logic.
 
+This is the canonical Gameplay Object concept document.
+
 This document defines the conceptual design role of Gameplay Objects. `Docs/Systems/GAMEPLAY_FRAMEWORK.md` defines the runtime framework that implements this concept.
 
 ---
@@ -148,7 +150,7 @@ Gameplay Objects may expose any combination of the following capabilities.
 
 Examples:
 
-Health
+Maximum Health
 
 Strength
 

@@ -6,6 +6,31 @@
 
 ---
 
+## System Ownership
+
+This system owns:
+- Item storage, stacking, transfer, sorting queries, filtering queries, capacity checks, and ownership transfer.
+
+This system does NOT own:
+- Item behavior, Equipment bonuses, Crafting logic, consumable effects, or Adventure progression.
+
+Primary Responsibilities:
+- Manage collections of Item Instances owned by Gameplay Objects.
+
+Primary Data:
+- Inventory capacity rules, slot rules, filter data, and storage configuration.
+
+Primary Runtime Objects:
+- Inventory Components and Item Instance collections.
+
+Published Events:
+- Item Added, Item Removed, Stack Changed, Inventory Full, Inventory Cleared, Ownership Changed.
+
+Consumed Events:
+- TBD
+
+---
+
 # Purpose
 
 The Inventory System manages collections of Item Instances owned by Gameplay Objects.
@@ -148,7 +173,7 @@ Crafting logic
 
 Consumable behavior
 
-Quest progression
+Adventure progression
 
 These belong to other systems.
 
@@ -264,7 +289,7 @@ Resources
 
 Crafting Materials
 
-Quest Items
+Adventure Items
 
 Legendary
 

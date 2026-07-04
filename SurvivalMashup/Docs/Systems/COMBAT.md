@@ -7,6 +7,31 @@
 
 ---
 
+## System Ownership
+
+This system owns:
+- Combat design goals, pacing, encounter feel, combat roles, and build-expression expectations.
+
+This system does NOT own:
+- Damage resolution, Ability execution, AI behavior, loot generation, or enemy runtime implementation.
+
+Primary Responsibilities:
+- Define how combat should feel and how combat supports exploration, progression, cooperation, and liberation.
+
+Primary Data:
+- TBD
+
+Primary Runtime Objects:
+- TBD
+
+Published Events:
+- TBD
+
+Consumed Events:
+- TBD
+
+---
+
 # Purpose
 
 Combat is the primary gameplay activity through which players reclaim dangerous regions.
@@ -357,9 +382,12 @@ New weapons, abilities, and enemies should be addable primarily through data rat
 
 # Related Documents
 
-- PLAYER.md
-- PROGRESSION.md
-- COMPANIONS.md
-- ENEMIES.md
-- WEAPONS.md
-- ABILITY_SYSTEM.md
+- Docs/Systems/PLAYER.md
+- Docs/Systems/PROGRESSION.md
+- Docs/Systems/COMPANIONS.md
+- Docs/Systems/ENEMY_SYSTEM.md
+- Docs/Systems/EQUIPMENT.md
+- Docs/Systems/ITEMIZATION.md
+- Docs/Systems/DAMAGE_SYSTEM.md
+- Docs/Systems/STATUS_EFFECT_SYSTEM.md
+- Docs/Systems/ABILITY_SYSTEM.md

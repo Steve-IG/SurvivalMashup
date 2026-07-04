@@ -240,8 +240,8 @@ If the answer to most of these questions is "no," reconsider the feature.
 
 # Related Documents
 
-- 00_OVERVIEW.md
-- 01_CORE_GAMEPLAY.md
-- 02_PLAYER.md
-- 03_WORLD.md
-- 04_COMBAT.md
+- Docs/Foundations/GAME_VISION.md
+- Docs/Foundations/CORE_GAMEPLAY_LOOP.md
+- Docs/Systems/PLAYER.md
+- Docs/Systems/WORLD.md
+- Docs/Systems/COMBAT.md

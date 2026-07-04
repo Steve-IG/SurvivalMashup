@@ -5,6 +5,31 @@
 
 ---
 
+## System Ownership
+
+This system owns:
+- Ability definitions, activation models, costs, cooldowns, targeting configuration, and ability loadouts.
+
+This system does NOT own:
+- Gameplay Effect execution, Resource values, Attribute math, Damage resolution, or actor identity.
+
+Primary Responsibilities:
+- Provide the reusable action framework for combat, movement, utility, companion, enemy, and interaction abilities.
+
+Primary Data:
+- Ability definitions, tags, categories, activation rules, costs, cooldowns, effects, unlocks, and evolution data.
+
+Primary Runtime Objects:
+- Ability instances, equipped loadouts, cooldown state, and activation state.
+
+Published Events:
+- TBD
+
+Consumed Events:
+- TBD
+
+---
+
 # Purpose
 
 The Ability System is the universal framework that defines actions performed by actors within the game.
@@ -129,7 +154,7 @@ Visual Effects
 
 +
 
-Simulation Effects
+World Reaction Effects
 
 Rather than:
 
@@ -167,7 +192,7 @@ Audio
 
 Visual Effects
 
-Simulation Interactions
+World Reaction Interactions
 
 Evolution Tree
 
@@ -303,7 +328,7 @@ Grant Buff
 
 Create Hazard
 
-Modify Simulation
+Modify World Properties
 
 Generate Loot
 

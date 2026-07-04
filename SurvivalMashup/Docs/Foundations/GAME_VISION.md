@@ -134,6 +134,6 @@ The game intentionally avoids:
 
 # Related Documents
 
-- DESIGN_PILLARS.md
-- DESIGN_NON_NEGOTIABLES.md
-- CORE_GAMEPLAY_LOOP.md
+- Docs/Foundations/DESIGN_PILLARS.md
+- Docs/Foundations/DESIGN_NON_NEGOTIABLES.md
+- Docs/Foundations/CORE_GAMEPLAY_LOOP.md

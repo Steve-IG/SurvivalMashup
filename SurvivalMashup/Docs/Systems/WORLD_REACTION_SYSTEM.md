@@ -6,6 +6,31 @@
 
 ---
 
+## System Ownership
+
+This system owns:
+- World property evaluation, reaction rules, environmental outcomes, and emergent world behavior.
+
+This system does NOT own:
+- Damage pipeline, Status Effect definitions, Ability execution, Resource storage, or presentation.
+
+Primary Responsibilities:
+- Determine how the world responds when gameplay changes world properties.
+
+Primary Data:
+- World property definitions, reaction rules, thresholds, regional baseline conditions, and reaction configuration.
+
+Primary Runtime Objects:
+- World Properties Components and runtime world property state.
+
+Published Events:
+- Object Ignited, Ice Melted, Tree Fell, Bridge Collapsed, Water Frozen, Explosion Triggered.
+
+Consumed Events:
+- TBD
+
+---
+
 # Purpose
 
 The World Reaction System governs how the game world responds to gameplay.

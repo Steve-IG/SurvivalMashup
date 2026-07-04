@@ -57,7 +57,7 @@ Exploration should rarely feel wasted.
 
 # 4. There Must Never Be One Correct Build
 
-Every major weapon type, companion strategy, and skill path should be capable of completing the game.
+Every major weapon type, companion strategy, and ability path should be capable of completing the game.
 
 The goal is meaningful choice, not perfect mathematical balance.
 

@@ -7,6 +7,31 @@
 
 ---
 
+## System Ownership
+
+This system owns:
+- Companion design rules, roles, progression model, active companion expectations, and companion synergy goals.
+
+This system does NOT own:
+- Ability execution, AI framework behavior, Equipment rules, Loot generation, or Relationship attribution.
+
+Primary Responsibilities:
+- Define collectible, upgradeable allies that support combat, exploration, utility, and world interaction.
+
+Primary Data:
+- Companion definitions, roles, affinities, progression data, and ability references.
+
+Primary Runtime Objects:
+- Companion instances, active companion selection, bond state, and companion progression state.
+
+Published Events:
+- TBD
+
+Consumed Events:
+- TBD
+
+---
+
 # Purpose
 
 Companions are long-term allies that accompany the player throughout their journey.
@@ -278,9 +303,9 @@ This allows designers to add new companions with minimal engineering effort.
 
 # Related Documents
 
-- PROGRESSION.md
-- COMBAT.md
-- PLAYER.md
-- WORLD.md
-- DAMAGE_TYPES.md
-- ABILITY_SYSTEM.md
+- Docs/Systems/PROGRESSION.md
+- Docs/Systems/COMBAT.md
+- Docs/Systems/PLAYER.md
+- Docs/Systems/WORLD.md
+- Docs/Systems/DAMAGE_SYSTEM.md
+- Docs/Systems/ABILITY_SYSTEM.md

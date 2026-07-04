@@ -524,7 +524,7 @@ Examples:
 
 Cooldowns
 
-Health
+Current Health
 
 Mana
 

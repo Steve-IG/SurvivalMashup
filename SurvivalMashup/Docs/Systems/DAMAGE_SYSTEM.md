@@ -6,6 +6,31 @@
 
 ---
 
+## System Ownership
+
+This system owns:
+- Damage requests, damage resolution, modifiers, resistances, weaknesses, critical resolution, and harvest damage.
+
+This system does NOT own:
+- World Reaction rules, Status Effect definitions, Resource storage, or presentation.
+
+Primary Responsibilities:
+- Evaluate and resolve all incoming damage consistently across combat, harvesting, traps, abilities, and environment.
+
+Primary Data:
+- Damage types, resistance rules, weakness rules, modifier definitions, and critical rules.
+
+Primary Runtime Objects:
+- DamageRequest data and damage resolution pipeline context.
+
+Published Events:
+- Damage Applied, Critical Hit, Damage Blocked, Object Destroyed, Resource Depleted, Status Applied, Target Defeated.
+
+Consumed Events:
+- TBD
+
+---
+
 # Purpose
 
 The Damage System evaluates and resolves all forms of gameplay damage.
@@ -282,7 +307,7 @@ Damage may affect any resource.
 
 Examples:
 
-Health
+Current Health
 
 Shield
 
@@ -298,7 +323,7 @@ Heat
 
 Stress (future)
 
-Damage is not limited to Health.
+Damage is not limited to Current Health.
 
 ---
 
