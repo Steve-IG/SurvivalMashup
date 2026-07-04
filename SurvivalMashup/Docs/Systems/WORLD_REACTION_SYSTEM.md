@@ -170,7 +170,7 @@ Additional Gameplay Effects
 
 ↓
 
-Simulation Updates
+World Reaction Updates
 
 ↓
 

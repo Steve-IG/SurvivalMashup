@@ -14,6 +14,8 @@ It exists to ensure the engine remains scalable, modular, data-driven, AI-friend
 
 Whenever there is uncertainty about an implementation, these principles take precedence over convenience.
 
+Documentation authority, canonical terminology, and AI read order are defined in `Docs/AI_AGENT_INDEX.md`.
+
 ---
 
 # Guiding Philosophy
@@ -50,7 +52,7 @@ Engine code defines capabilities.
 
 Content defines behavior.
 
-When adding a new weapon, ability, companion, item, region, enemy, or quest, prefer creating or configuring data rather than modifying engine code.
+When adding a new weapon, ability, companion, item, region, enemy, or adventure, prefer creating or configuring data rather than modifying engine code.
 
 If engine code changes every time content is added, the architecture has failed.
 
@@ -72,7 +74,7 @@ Gameplay emerges from combining:
 - Attributes
 - Tags
 - Events
-- Simulation Properties
+- World Properties
 
 ---
 
@@ -146,7 +148,7 @@ Audio reacts
 
 ↓
 
-Quest System reacts
+Adventure System reacts
 
 ↓
 
@@ -184,7 +186,7 @@ Ability System
 
 Gameplay Effect System
 
-Simulation System
+World Reaction System
 
 Attribute System
 
@@ -210,7 +212,7 @@ Resources
 
 Categories
 
-Simulation Properties
+World Properties
 
 AI Metadata
 
@@ -258,7 +260,7 @@ should influence design from the beginning.
 
 # Principle 12
 
-## Simulation Is Universal
+## World Reaction Is Universal
 
 The world reacts consistently.
 

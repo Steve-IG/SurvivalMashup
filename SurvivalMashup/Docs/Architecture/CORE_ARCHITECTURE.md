@@ -15,6 +15,8 @@ The objective is not simply to build a working game, but to build a game that re
 
 Whenever implementation decisions conflict with these principles, these principles take precedence.
 
+Documentation authority, canonical terminology, and AI read order are defined in `Docs/AI_AGENT_INDEX.md`.
+
 ---
 
 # Core Philosophy
@@ -37,7 +39,7 @@ The game should grow by adding new data and systems rather than increasing compl
 
 Gameplay should emerge from reusable systems.
 
-Avoid writing special-case logic for individual weapons, enemies, companions, quests, or regions whenever possible.
+Avoid writing special-case logic for individual weapons, enemies, companions, adventures, or regions whenever possible.
 
 Instead, extend existing systems through data and composition.
 
@@ -51,7 +53,7 @@ Examples include:
 
 - Weapons
 - Enemies
-- Skills
+- Abilities
 - Loot Tables
 - Regions
 - Crafting Recipes
@@ -97,11 +99,11 @@ Inventory System
 
 Owns inventory.
 
-Quest System
+Adventure System
 
-Owns quests.
+Owns region experiences, objectives, and adventure progression.
 
-Simulation System
+World Reaction System
 
 Owns world interactions.
 
@@ -115,7 +117,9 @@ Every piece of gameplay data has exactly one authoritative owner.
 
 Example:
 
-HealthComponent owns Health.
+Resource System owns Current Health.
+
+Attribute System owns Maximum Health and health regeneration.
 
 No other system stores duplicate health values.
 
@@ -133,9 +137,9 @@ This allows systems to evolve independently.
 
 ---
 
-## 7. Simulation First
+## 7. World Reaction First
 
-Whenever possible, gameplay should be expressed through the Simulation System rather than actor-specific logic.
+Whenever possible, gameplay should be expressed through the World Reaction System rather than actor-specific logic.
 
 Objects react to properties and interactions rather than who caused them.
 
@@ -143,7 +147,7 @@ Objects react to properties and interactions rather than who caused them.
 
 ## 8. Prefer Configuration Over Programming
 
-Adding a new weapon, enemy, companion, or skill should primarily involve creating new data rather than writing new code.
+Adding a new weapon, enemy, companion, or ability should primarily involve creating new data rather than writing new code.
 
 If implementing a new content type consistently requires new code, reconsider the architecture.
 
@@ -175,10 +179,10 @@ New:
 
 - Regions
 - Weapons
-- Skills
+- Abilities
 - Damage Types
 - Companions
-- Quests
+- Adventures
 - Seasonal Events
 
 should integrate without requiring major refactoring.
@@ -262,7 +266,7 @@ Before introducing a new system, ask:
 - Does this duplicate an existing system?
 - Can this be data-driven?
 - Can this be expressed through composition?
-- Does it follow the Simulation rules?
+- Does it follow the World Reaction rules?
 - Will AI understand this pattern?
 - Can designers extend it without engineering?
 - Will multiplayer support this architecture?
@@ -286,6 +290,7 @@ The architecture is successful if:
 
 - AI_PLAYBOOK.md
 - AI_CODING_STANDARDS.md
-- SIMULATION.md
+- AI_AGENT_INDEX.md
+- WORLD_REACTION_SYSTEM.md
 - COMBAT.md
 - PROGRESSION.md

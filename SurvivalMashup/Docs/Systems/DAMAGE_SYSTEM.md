@@ -24,7 +24,7 @@ Damage is a request.
 
 Damage is not guaranteed.
 
-Every Gameplay Object evaluates incoming damage according to its own properties, attributes, resources, tags, relationships, status effects, and simulation state.
+Every Gameplay Object evaluates incoming damage according to its own properties, attributes, resources, tags, relationships, status effects, and world reaction state.
 
 This creates consistent, extensible, and emergent gameplay.
 
@@ -96,7 +96,7 @@ Critical Resolution
 
 ↓
 
-Simulation Reactions
+World Reaction Evaluation
 
 ↓
 
@@ -264,7 +264,7 @@ World Conditions
 
 Region Effects
 
-Simulation
+World Reactions
 
 Relics
 
@@ -302,9 +302,9 @@ Damage is not limited to Health.
 
 ---
 
-# Simulation Integration
+# World Reaction Integration
 
-Damage may trigger simulation reactions.
+Damage may trigger world reactions.
 
 Examples:
 
@@ -346,7 +346,7 @@ Damage Tree
 
 Spawn Wood
 
-Simulation determines world behavior.
+The World Reaction System determines world behavior.
 
 ---
 
@@ -488,7 +488,7 @@ Target Resistances
 
 Friendly Fire Risk
 
-Simulation Opportunities
+World Reaction Opportunities
 
 AI reasons through metadata rather than handcrafted rules.
 
@@ -528,7 +528,7 @@ The Damage System succeeds when:
 
 - Combat and harvesting share the same framework.
 - New damage types require only data.
-- Simulation reacts naturally.
+- World reactions occur naturally.
 - AI understands damage generically.
 - Multiplayer remains deterministic.
 - The system scales to future gameplay without redesign.

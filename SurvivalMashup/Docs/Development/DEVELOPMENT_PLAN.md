@@ -21,6 +21,8 @@ Every completed task should update this document.
 
 Development should proceed in small, testable, vertical slices that continuously improve a playable build.
 
+Documentation authority, terminology, and AI read order are defined in `Docs/AI_AGENT_INDEX.md`.
+
 ---
 
 # Current Phase
@@ -102,13 +104,15 @@ Tasks:
 - [ ] Player Controller
 - [ ] Third Person Camera
 - [ ] Interaction System
-- [ ] Health System
+- [ ] Resource and Attribute health model
 - [ ] Damage System
 
 References:
 
 - PLAYER.md
-- SIMULATION.md
+- RESOURCE_SYSTEM.md
+- ATTRIBUTE_SYSTEM.md
+- WORLD_REACTION_SYSTEM.md
 - COMBAT.md
 
 ---
@@ -154,7 +158,7 @@ Move the next task into Current AI Task.
 
 - Documentation repository created.
 - Core Architecture completed.
-- Simulation specification completed.
+- World Reaction System specification completed.
 - Combat specification completed.
 - Companion specification completed.
 
@@ -166,9 +170,9 @@ Next documents to complete:
 
 1. BUILDCRAFT.md
 2. PLAYER.md
-3. SKILLS.md
+3. ABILITY_SYSTEM.md
 4. EQUIPMENT.md
-5. INVENTORY.md
+5. INVENTORY_SYSTEM.md
 
 ---
 
@@ -211,14 +215,16 @@ A task is complete only when:
 
 Every AI implementation session should follow this workflow:
 
-1. Read DEVELOPMENT_PLAN.md
-2. Read referenced specifications
-3. Read CORE_ARCHITECTURE.md
-4. Read AI_CODING_STANDARDS.md
-5. Implement only the current task
-6. Self-review implementation
-7. Update DEVELOPMENT_PLAN.md
-8. Stop
+1. Read AI_AGENT_INDEX.md
+2. Read DEVELOPMENT_PLAN.md
+3. Read referenced specifications
+4. Read CORE_ARCHITECTURE.md
+5. Read ENGINE_PRINCIPLES.md
+6. Read AI_CODING_STANDARDS.md
+7. Implement only the current task
+8. Self-review implementation
+9. Update DEVELOPMENT_PLAN.md
+10. Stop
 
 Never begin a second feature without updating the plan.
 

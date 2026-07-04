@@ -43,7 +43,7 @@ Examples include:
 
 - Character Level
 - Attributes
-- Skill Trees
+- Ability progression
 - Passive Bonuses
 - Active Abilities
 - Traversal Abilities
@@ -99,7 +99,7 @@ Examples include:
 - Expanded Hub World
 - New Services
 - New Merchants
-- New Quests
+- New Adventures
 
 The world itself should feel like one of the player's greatest achievements.
 
@@ -212,7 +212,7 @@ Whenever a player encounters a difficult challenge, there should always be sever
 Examples include:
 
 - Improve equipment.
-- Unlock new skills.
+- Unlock new abilities.
 - Recruit or evolve companions.
 - Explore another region first.
 - Craft consumables.
@@ -292,7 +292,7 @@ The game should support adding entirely new progression systems without requirin
 # Open Questions
 
 - How many character levels should exist?
-- How are skill trees structured?
+- How is ability progression structured?
 - How are companions acquired and evolved?
 - What rarity system will equipment use?
 - What progression persists across seasonal content?
@@ -307,5 +307,5 @@ The game should support adding entirely new progression systems without requirin
 - COMBAT.md
 - COMPANIONS.md
 - EQUIPMENT.md
-- SKILLS.md
+- ABILITY_SYSTEM.md
 - HUB_WORLD.md

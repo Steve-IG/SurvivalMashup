@@ -23,7 +23,7 @@ Throughout the game, the player should evolve from a capable adventurer into a l
 
 The player is not defined by a character class.
 
-Instead, the player gradually creates their own identity through equipment, companions, movement, skills, and experimentation.
+Instead, the player gradually creates their own identity through equipment, companions, movement, abilities, and experimentation.
 
 By endgame, two experienced players should rarely control the same.
 
@@ -131,18 +131,18 @@ Weapon combat should feel somewhere between God of War and Diablo, emphasizing f
 
 ---
 
-### Active Skills
+### Active Abilities
 
-Skills provide impactful tactical abilities.
+Abilities provide impactful tactical options.
 
-Skills should resemble hero abilities found in games such as Marvel Rivals or Overwatch:
+Abilities should resemble hero abilities found in games such as Marvel Rivals or Overwatch:
 
 - High impact
 - Easy to activate
 - Visually satisfying
 - Distinct tactical purpose
 
-Skills may include:
+Abilities may include:
 
 - Burst damage
 - Area control
@@ -151,7 +151,7 @@ Skills may include:
 - Defense
 - Healing
 - Utility
-- Simulation interactions
+- World reactions
 
 The complexity comes from deciding when to use abilities rather than how to execute them.
 
@@ -231,12 +231,12 @@ Examples include:
 - New weapons
 - New companions
 - New movement modules
-- Passive skills
-- Active skills
+- Passive ability progression
+- Active abilities
 - Relics
 - Utility modules
 - Equipment
-- Simulation interactions
+- World reactions
 
 Progression should primarily increase player expression rather than simply increasing numerical power.
 
@@ -270,7 +270,7 @@ Players gain access to:
 
 - Additional weapon classes
 - New combo opportunities
-- Stronger skills
+- Stronger abilities
 - Better equipment
 - Companion synergies
 - Relics
@@ -305,8 +305,8 @@ A player's identity emerges from the combination of:
 - Weapon
 - Armor
 - Companion
-- Active Skills
-- Passive Skills
+- Active Abilities
+- Passive Ability Progression
 - Movement Modules
 - Utility Modules
 - Relics
@@ -375,5 +375,5 @@ The Player system is successful when:
 - COMBAT.md
 - COMPANIONS.md
 - WORLD_REACTION_SYSTEM.md
-- SKILLS.md
+- ABILITY_SYSTEM.md
 - EQUIPMENT.md

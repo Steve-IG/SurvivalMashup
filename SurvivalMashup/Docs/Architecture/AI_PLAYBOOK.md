@@ -30,6 +30,8 @@ Every task follows this process.
 
 ## 1. Understand
 
+Read `Docs/AI_AGENT_INDEX.md` first.
+
 Read relevant documentation.
 
 Identify dependencies.

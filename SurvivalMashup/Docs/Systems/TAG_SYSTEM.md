@@ -68,7 +68,7 @@ Shrine
 
 Portal
 
-Quest
+Adventure
 
 Ability
 
@@ -266,9 +266,9 @@ Ability
 
 Region
 
-Quest
+Adventure
 
-Simulation
+World Reaction
 
 Difficulty
 
@@ -316,11 +316,11 @@ Loot
 
 Dialogue
 
-Quest Progress
+Adventure Progress
 
 Crafting
 
-Simulation
+World Reaction
 
 Movement
 

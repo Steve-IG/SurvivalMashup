@@ -42,7 +42,7 @@ Fight Enemies
         ↓
 Gather Materials and Loot
         ↓
-Improve Equipment, Skills, and Companions
+Improve Equipment, Abilities, and Companions
         ↓
 Defeat the Regional Threat
         ↓
@@ -155,7 +155,7 @@ Each state changes gameplay by affecting:
 - Enemy presence
 - NPC behavior
 - Available merchants
-- Quests
+- Adventures
 - Resources
 - Environmental storytelling
 - Fast travel options

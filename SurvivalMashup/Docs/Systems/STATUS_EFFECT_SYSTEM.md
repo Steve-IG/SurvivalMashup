@@ -38,7 +38,7 @@ Instead, they describe:
 - Attribute Modifiers
 - Resource Modifiers
 - Gameplay Effects
-- Simulation Properties
+- World Properties
 - Duration
 - Stacking Rules
 - Visual Presentation
@@ -86,7 +86,7 @@ Complex effects emerge from combining:
 - Attribute Modifiers
 - Resource Modifiers
 - Tags
-- Simulation Properties
+- World Properties
 
 ---
 
@@ -134,7 +134,7 @@ Each Status Effect may define:
 - Attribute Modifiers
 - Resource Modifiers
 - Periodic Gameplay Effects
-- Simulation Properties
+- World Properties
 - Visual Effects
 - Audio Effects
 - Gameplay Events
@@ -261,9 +261,9 @@ These Tags drive interactions throughout the engine.
 
 ---
 
-# Simulation Integration
+# World Reaction Integration
 
-Status Effects interact with the Simulation System.
+Status Effects interact with the World Reaction System.
 
 Examples:
 
@@ -285,7 +285,7 @@ Applies:
 
 Water
 
-The Simulation System determines emergent interactions.
+The World Reaction System determines emergent interactions.
 
 ---
 
@@ -399,7 +399,7 @@ The Status Effect System succeeds when:
 - Gameplay remains deterministic.
 - Multiplayer behaves consistently.
 - AI understands Status Effects generically.
-- Status Effects compose naturally with Gameplay Effects, Attributes, Resources, and Simulation.
+- Status Effects compose naturally with Gameplay Effects, Attributes, Resources, and World Reactions.
 
 ---
 

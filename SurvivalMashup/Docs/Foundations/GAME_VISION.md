@@ -46,7 +46,7 @@ The journey intentionally follows a repeating cycle:
 - Enter a dangerous region feeling challenged.
 - Learn about the region and its threats.
 - Explore and gather resources.
-- Improve equipment, skills, and companions.
+- Improve equipment, abilities, and companions.
 - Master the challenges.
 - Defeat the region's greatest threat.
 - Liberate the region.
@@ -65,7 +65,7 @@ Its defining characteristics are:
 
 - A world that permanently changes because of the player's actions.
 - Strong "Hero Wave" progression that lets players genuinely feel overpowered before introducing the next challenge.
-- Deep build variety through weapons, skills, companions, crafting, and loot.
+- Deep build variety through weapons, abilities, companions, crafting, and loot.
 - Cooperative gameplay designed around shared adventure rather than competition.
 - Procedural adventures that encourage long-term replayability.
 

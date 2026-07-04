@@ -35,7 +35,7 @@ The player's actions have permanent, meaningful impact.
 - Regions have distinct states of progression.
 - Defeating major threats permanently changes the environment.
 - Friendly NPCs return to liberated regions.
-- Merchants, services, companions, and quests become available.
+- Merchants, services, companions, and adventures become available.
 - Dangerous enemies disappear from reclaimed areas and are replaced by peaceful life.
 - Earlier regions remain relevant throughout the game.
 
@@ -51,7 +51,7 @@ Players should feel:
 
 This pillar requires persistent world-state tracking.
 
-Regions should support progression states (e.g., Occupied → Liberated → Restored) that drive environmental changes, NPC behavior, available services, quests, and encounter tables.
+Regions should support progression states (e.g., Occupied → Liberated → Restored) that drive environmental changes, NPC behavior, available services, adventures, and encounter tables.
 
 ---
 
@@ -107,14 +107,14 @@ Enemy scaling should be region-based rather than globally synchronized with the 
 
 Players should feel free to create their own playstyle.
 
-Weapons, companions, skills, crafting, elemental interactions, and equipment should combine into many viable builds rather than one optimal strategy.
+Weapons, companions, abilities, crafting, elemental interactions, and equipment should combine into many viable builds rather than one optimal strategy.
 
 Experimentation is rewarded.
 
 ## Design Goals
 
 - Multiple effective combat styles.
-- Diverse skill trees.
+- Diverse ability progression paths.
 - Distinct companion roles.
 - Wide variety of weapons and equipment.
 - Elemental strengths and weaknesses.

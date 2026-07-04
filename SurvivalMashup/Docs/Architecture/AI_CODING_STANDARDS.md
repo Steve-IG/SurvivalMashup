@@ -32,6 +32,7 @@ Never sacrifice readability for cleverness.
 
 Before writing code:
 
+- Read `Docs/AI_AGENT_INDEX.md`.
 - Read the AI Playbook.
 - Read Current Sprint.
 - Read Decision Log.

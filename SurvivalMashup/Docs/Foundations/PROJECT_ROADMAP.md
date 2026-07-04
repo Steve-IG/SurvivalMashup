@@ -150,12 +150,12 @@ Including:
 - Inventory
 - Equipment
 - Crafting
-- Skills
+- Abilities
 - Companions
 - Regions
 - Hub World
-- Simulation
-- Quests
+- World Reaction
+- Adventures
 - Building foundations
 
 ---
@@ -169,11 +169,11 @@ Primary focus:
 - New regions
 - New companions
 - Weapons
-- Skills
+- Abilities
 - Resources
 - Enemies
 - Bosses
-- Quests
+- Adventures
 
 The architecture should remain largely stable during this phase.
 
@@ -227,7 +227,7 @@ Potential additions include:
 - New companions
 - Additional weapon classes
 - New damage properties
-- New simulation interactions
+- New world reactions
 - Community events
 
 The game should grow through content rather than architectural rewrites.
@@ -268,7 +268,7 @@ Major systems should generally be implemented in the following order:
 13. Progression
 14. Regions
 15. Hub World
-16. Quests
+16. Adventures
 17. Multiplayer
 18. Procedural Generation
 

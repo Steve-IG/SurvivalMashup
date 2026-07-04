@@ -16,6 +16,8 @@ A consistent repository structure is essential for long-term maintainability, AI
 
 When adding new code or content, follow this document before creating new folders or files.
 
+Documentation authority, canonical terminology, and AI read order are defined in `Docs/AI_AGENT_INDEX.md`.
+
 ---
 
 # Design Philosophy
@@ -167,7 +169,7 @@ Systems/
 
     Tags/
 
-    Simulation/
+    WorldReaction/
 
     Inventory/
 
@@ -179,7 +181,7 @@ Systems/
 
     Dialogue/
 
-    Quest/
+    Adventure/
 
     Save/
 
@@ -258,7 +260,7 @@ Content/
 
     LootTables/
 
-    Quests/
+    Adventures/
 
     Dialogue/
 
@@ -308,7 +310,7 @@ Tests/
 
     Equipment/
 
-    Simulation/
+    WorldReaction/
 ```
 
 ---
@@ -418,7 +420,7 @@ Enemy
 
 Weapon
 
-Quest
+Adventure
 
 Companion
 
@@ -488,7 +490,7 @@ camelCase
 
 Constants:
 
-PascalCase
+UPPER_CASE only when truly constant
 
 Avoid abbreviations unless universally understood.
 

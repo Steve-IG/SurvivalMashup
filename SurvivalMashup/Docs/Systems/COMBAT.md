@@ -79,7 +79,7 @@ Preparation may include:
 - Companion selection
 - Elemental loadouts
 - Consumables
-- Skill choices
+- Ability choices
 
 Preparation should provide meaningful advantages without becoming mandatory micromanagement.
 
@@ -284,7 +284,7 @@ Players should customize combat through combinations of:
 
 - Weapons
 - Armor
-- Skills
+- Abilities
 - Passive bonuses
 - Companions
 - Consumables
@@ -362,4 +362,4 @@ New weapons, abilities, and enemies should be addable primarily through data rat
 - COMPANIONS.md
 - ENEMIES.md
 - WEAPONS.md
-- SKILLS.md
+- ABILITY_SYSTEM.md

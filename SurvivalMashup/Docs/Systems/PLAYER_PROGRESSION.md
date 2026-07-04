@@ -61,7 +61,7 @@ Mastery comes from:
 
 - Learning enemy behaviors
 - Combining abilities
-- Understanding simulation interactions
+- Understanding world reactions
 - Efficient resource management
 
 ---
@@ -111,7 +111,7 @@ Unlocks include:
 - First companion
 - Better equipment
 - New crafting recipes
-- Additional skills
+- Additional abilities
 - Expanded inventory
 
 Players begin experimenting.
@@ -282,8 +282,8 @@ Players should regularly unlock exciting capabilities throughout the game.
 # Related Documents
 
 - PLAYER.md
-- SKILLS.md
+- ABILITY_SYSTEM.md
 - COMPANIONS.md
 - COMBAT.md
 - PROGRESSION.md
-- SIMULATION.md
+- WORLD_REACTION_SYSTEM.md

@@ -3,7 +3,7 @@
 **Status:** Living Specification
 **Version:** 1.0
 **Owner:** Gameplay Architecture
-**Dependencies:** Ability System, Simulation System, Resource System, Event System
+**Dependencies:** Ability System, World Reaction System, Resource System, Event System
 
 ---
 
@@ -11,7 +11,7 @@
 
 The Gameplay Effect System is responsible for executing gameplay outcomes.
 
-Abilities, equipment, companions, enemies, quests, interactions, consumables, and environmental systems should rarely contain gameplay logic directly.
+Abilities, equipment, companions, enemies, adventures, interactions, consumables, and environmental systems should rarely contain gameplay logic directly.
 
 Instead, they execute one or more Gameplay Effects.
 
@@ -48,7 +48,7 @@ Harvest Tree
 - Destroy Object
 - Spawn Resources
 - Award Experience
-- Trigger Quest Progress
+- Trigger Adventure Progress
 
 ---
 
@@ -147,7 +147,7 @@ Examples:
 - UI
 - Audio
 - Achievements
-- Quests
+- Adventures
 - Tutorials
 - Analytics
 - AI
@@ -280,7 +280,7 @@ These effects should communicate gameplay but should not contain gameplay logic 
 
 ---
 
-## Quest
+## Adventure
 
 Examples:
 
@@ -374,9 +374,9 @@ Tags drive interactions throughout the engine.
 
 ---
 
-# Simulation Integration
+# World Reaction Integration
 
-Effects communicate with the Simulation System through properties rather than custom logic.
+Effects communicate with the World Reaction System through properties rather than custom logic.
 
 Examples:
 
@@ -390,7 +390,7 @@ Apply Electricity Property
 
 Apply Corruption Property
 
-The Simulation System determines what happens next.
+The World Reaction System determines what happens next.
 
 Effects never simulate the world directly.
 
@@ -414,7 +414,7 @@ Ability Activated
 
 Region Liberated
 
-Quest Completed
+Adventure Completed
 
 Other systems react through subscriptions rather than direct references.
 
@@ -450,7 +450,7 @@ Mobility Value
 
 Crowd Control
 
-Simulation Value
+World Reaction Value
 
 Preferred Range
 

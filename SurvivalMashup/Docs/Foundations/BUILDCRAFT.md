@@ -15,7 +15,7 @@ The objective is not simply to increase player power, but to maximize player exp
 
 Every major gameplay system should contribute to build diversity.
 
-The most memorable player experiences should emerge naturally from combining weapons, movement, companions, skills, equipment, simulation interactions, and utility systems in unexpected ways.
+The most memorable player experiences should emerge naturally from combining weapons, movement, companions, abilities, equipment, world reactions, and utility systems in unexpected ways.
 
 ---
 
@@ -60,8 +60,8 @@ Systems should be designed so that new content can be introduced without requiri
 Examples include:
 
 - Weapons
-- Active Skills
-- Passive Skills
+- Active Abilities
+- Passive Ability progression
 - Movement Modules
 - Utility Modules
 - Companions
@@ -182,19 +182,19 @@ Players may freely customize their active companion but may only switch companio
 
 ---
 
-## Active Skills
+## Active Abilities
 
-Active skills define the player's signature abilities.
+Active abilities define the player's signature actions.
 
-Skills should dramatically influence combat style.
+Abilities should dramatically influence combat style.
 
 The objective is to expand tactical options rather than increase complexity.
 
 ---
 
-## Passive Skills
+## Passive Ability Progression
 
-Passive skills reshape how the player approaches combat, exploration, progression, and simulation.
+Passive ability progression reshapes how the player approaches combat, exploration, progression, and world reactions.
 
 They should encourage specialization without restricting experimentation.
 
@@ -237,7 +237,7 @@ Utility progression should reduce friction without eliminating meaningful gamepl
 
 ## Elemental Affinity
 
-Elements influence both combat and the Simulation System.
+Elements influence both combat and the World Reaction System.
 
 Examples include:
 
@@ -322,12 +322,12 @@ Every major gameplay system should interact with other systems.
 
 Examples include:
 
-- Skills modifying movement.
+- Abilities modifying movement.
 - Movement affecting combat.
 - Companions enhancing elemental effects.
 - Elements interacting with the environment.
 - Utility supporting exploration.
-- Relics changing simulation behavior.
+- Relics changing world reaction behavior.
 
 No system should exist in isolation.
 
@@ -357,7 +357,7 @@ The Buildcraft system is successful when:
 - Experimentation is enjoyable.
 - Every new unlock expands player possibilities.
 - Build diversity is high.
-- Simulation interactions encourage creativity.
+- World reactions encourage creativity.
 - Players develop unique identities.
 - Co-op teams naturally adopt complementary playstyles.
 - Emergent gameplay creates memorable stories.
@@ -371,9 +371,9 @@ The Buildcraft system is successful when:
 - PLAYER_PROGRESSION.md
 - PLAYER.md
 - COMBAT.md
-- SIMULATION.md
+- WORLD_REACTION_SYSTEM.md
 - COMPANIONS.md
-- SKILLS.md
+- ABILITY_SYSTEM.md
 - EQUIPMENT.md
-- INVENTORY.md
-- CRAFTING.md
+- INVENTORY_SYSTEM.md
+- CRAFTING_SYSTEM.md

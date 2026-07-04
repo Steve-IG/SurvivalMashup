@@ -16,6 +16,8 @@ The framework favors composition over inheritance, data over hardcoded logic, an
 
 Its goal is to ensure that every gameplay system can interact with every gameplay object through shared interfaces rather than specialized code.
 
+`Docs/Foundations/GAMEPLAY_OBJECT.md` defines the conceptual design role of Gameplay Objects. This document defines the runtime framework that implements that concept.
+
 ---
 
 # Design Philosophy
@@ -35,7 +37,7 @@ It is an object with:
 - Attributes
 - Gameplay Tags
 - Gameplay Effects
-- Simulation Properties
+- World Properties
 - Harvestable Component
 
 Likewise, a player is not special.
@@ -48,7 +50,7 @@ The player is an object with:
 - Inventory
 - Equipment
 - Companion Manager
-- Quest Tracker
+- Adventure Tracker
 
 The same philosophy applies throughout the game.
 
@@ -96,7 +98,7 @@ Gameplay Tags
 
 Events
 
-Simulation Properties
+World Properties
 
 No system should invent parallel terminology.
 
@@ -174,7 +176,7 @@ Stores runtime resource values.
 
 Examples:
 
-Health
+Current Health
 
 Mana
 
@@ -254,9 +256,9 @@ Optional.
 
 ---
 
-## Quest Component
+## Adventure Component
 
-Tracks quest progress.
+Tracks adventure progress, active objectives, and region experience state.
 
 Player-only.
 
@@ -282,9 +284,9 @@ Rescue
 
 ---
 
-## Simulation Component
+## World Properties Component
 
-Stores world simulation properties.
+Stores world properties used by the World Reaction System.
 
 Examples:
 

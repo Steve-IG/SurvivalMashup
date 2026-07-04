@@ -69,7 +69,7 @@ Players acquire companions through a variety of methods, including:
 - Rescuing them.
 - Discovering them while exploring.
 - Purchasing them from specialized merchants.
-- Completing quests.
+- Completing adventures.
 - Liberating regions.
 
 Companion acquisition should feel exciting and memorable.
@@ -154,7 +154,7 @@ Growth should unlock new gameplay possibilities rather than simply increasing da
 
 Companions should interact naturally with:
 
-- Player skills
+- Player abilities
 - Equipment
 - Damage types
 - Crafting
@@ -229,7 +229,7 @@ Companions are designed to encourage emergent problem solving.
 Players should frequently discover creative solutions by combining:
 
 - Companion abilities.
-- Player skills.
+- Player abilities.
 - Equipment.
 - Elements.
 - Environmental interactions.
@@ -283,4 +283,4 @@ This allows designers to add new companions with minimal engineering effort.
 - PLAYER.md
 - WORLD.md
 - DAMAGE_TYPES.md
-- SKILLS.md
+- ABILITY_SYSTEM.md

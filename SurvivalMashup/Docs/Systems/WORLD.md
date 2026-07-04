@@ -68,7 +68,7 @@ Potential features include:
 - Crafting stations
 - Merchants
 - Companion management
-- Skill upgrades
+- Ability upgrades
 - Storage
 - NPCs rescued from liberated regions
 - Seasonal events
@@ -130,7 +130,7 @@ Typical features include:
 - Friendly NPCs (when appropriate)
 - Crafting
 - Merchants
-- Quest givers
+- Adventure givers
 - Fast travel point
 
 ---
@@ -224,7 +224,7 @@ Examples include:
 - Friendly NPCs return.
 - Roads become safer.
 - Merchants establish shops.
-- New quests become available.
+- New adventures become available.
 - New companions become recruitable.
 - Additional crafting options unlock.
 - Music becomes more hopeful.
@@ -276,7 +276,7 @@ These states affect:
 - Enemy populations
 - NPC behavior
 - Available merchants
-- Quests
+- Adventures
 - Resources
 - Visual presentation
 - Music
