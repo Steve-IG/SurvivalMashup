@@ -438,6 +438,111 @@ The engine should become easier to extend over time, not harder.
 
 ---
 
+# Principle 21
+
+## Stable Identifiers
+
+Every definition and every persistent gameplay object is addressed by a durable, stable identifier.
+
+Stable identifiers are the contract that lets saves, networking, analytics, and tooling reference content without holding live object references or depending on asset paths, class names, or load order.
+
+Rules:
+
+- A shipped identifier never changes. Renaming a display name, asset, class, or folder must not change the identifier.
+- Definitions are referenced by identifier, never by direct asset reference, across a save or network boundary.
+- Identifiers are resolved through the Data Registry, which is the one authoritative mapping from identifier to definition.
+- Runtime interned handles (such as tag indices) are session-local performance details and are never persisted; the stable string identifier is what crosses a persistence boundary.
+- Changing an identifier is a breaking change: rare, intentional, and documented, exactly as with event contract evolution.
+
+See `Docs/Architecture/DATA_REGISTRY.md`.
+
+---
+
+# Principle 22
+
+## Composition Root
+
+Gameplay Objects are assembled in one authoritative location.
+
+Runtime and gameplay code consume already-composed objects; they never construct capabilities dynamically at call sites. A single composition root performs dependency injection, resolves intra-object dependencies, and enforces assembly order, so wiring stays consistent, testable, and extensible.
+
+If gameplay code is newing up capability components inline, the composition root is being bypassed and the design should be corrected.
+
+Canonical detail: `Docs/Systems/GAMEPLAY_FRAMEWORK.md`, Composition Root.
+
+---
+
+# Principle 23
+
+## Framework System Template
+
+Foundational systems share a standard shape.
+
+Where applicable, each system defines: a Definition (immutable data), Runtime State (separate from the definition), Registry integration, Events (past-tense facts), Tests, and Documentation with a System Ownership block.
+
+Consistency lets AI and engineers understand any system by knowing one template, and prevents each system from inventing its own structure.
+
+Canonical detail: `Docs/Systems/GAMEPLAY_FRAMEWORK.md`, Framework System Template.
+
+---
+
+# Principle 24
+
+## Composition Over Specialization
+
+New gameplay emerges by composing existing atomic pieces — Gameplay Effects, capabilities, tags, modifiers, conditions — never by writing specialized monolithic implementations.
+
+A "Burning" status is a composition: a granted tag, a periodic damage effect, an attribute modifier. It is not a `Burning.cs`. A fire sword is a composition: equipment tags, a granted ability, an ignite-chance effect. It is not a `FireSword.cs`.
+
+Rules:
+
+- Gameplay Effects are atomic: one deterministic action each. Complex outcomes are sequences of atomic effects.
+- When a feature tempts a new specialized class, first attempt to express it by composing existing atoms.
+- Specialize only when composition genuinely cannot express the behavior — and then add a new *atom*, not a new monolith, so the next feature can compose it.
+
+This is the content-facing corollary of Principle 3 (Composition Over Inheritance): Principle 3 governs how code is structured; this principle governs how gameplay is authored.
+
+---
+
+# Principle 25
+
+## Persistence Boundary
+
+Every system draws a clear line between the state it must persist and the state it can rebuild. Three terms are canonical across the engine:
+
+- **Authoritative State** is the minimal, irreducible source of truth a system owns — the values that cannot be derived from anything else. Current Health, a cooldown's remaining seconds, a status's remaining duration and stack count, the items in an inventory. Authoritative state is what a save must capture.
+- **Derived State** is anything computable from authoritative state plus immutable definitions. An attribute's current value (base plus modifiers), a resource's maximum bound to an attribute, hierarchical tag ancestor counts, "is on cooldown". Derived state is never the source of truth and is never persisted; it is recomputed.
+- **Reconstruction Over Serialization** is the default: prefer rebuilding runtime structure by re-running deterministic composition over serializing that structure. On load, the composition root rebuilds each object from its definition, systems re-apply their contributions (a status re-grants its tags and modifiers), and only the authoritative leaf values are restored on top. We serialize the few numbers that are truly authoritative, not the object graph.
+
+Rules:
+
+- **Serialize authoritative state only.** If a value can be derived, do not save it. Duplicated derived state in a save is a bug waiting to desynchronize (One Source of Truth, Principle 16).
+- **Restore, do not replay.** Rehydration sets authoritative values directly through event-quiet restore APIs; it does not re-run the gameplay that originally produced them. Reconstruction must publish no gameplay facts.
+- **Reconstruct through the owning system.** The Save System restores a value back to the system that owns it; that system re-establishes its derived state. The Save System never interprets or repairs gameplay state (see `Docs/Architecture/CORE_ARCHITECTURE.md`).
+- **Definitions are referenced, never embedded.** Persisted state references definitions by stable identifier (Principle 21); the definition supplies everything immutable.
+
+Every core system document includes a Persistence Boundary block stating, explicitly, what is authoritative, what is derived, what is serialized, and what is reconstructed. This principle governs the Save Framework and every system it touches.
+
+---
+
+# Principle 26
+
+## Construction Before Participation
+
+A gameplay object is fully constructed and internally consistent before it participates in the simulation.
+
+- **Construction is event-quiet.** Composing an object — factory composition, capability wiring, seeding initial authoritative state, and restoring saved state — publishes no gameplay events. The object is being assembled; nothing is observing it yet.
+- **Activation marks the beginning of observable gameplay.** An object enters the simulation by activating. Activation registers it and publishes exactly one lifecycle fact (`GameplayObjectSpawned`) that announces the fully-formed object; listeners bind on that fact and read the object's already-consistent state. Per-capability facts (a tag added, an ability granted, an attribute changed) are for changes to a live object, not for the initial state a spawn already carries.
+- **Teardown is event-quiet on the far side of its announcement.** Destruction publishes its one lifecycle fact (`GameplayObjectDestroyed`) and then disposes capabilities quietly; end-of-life cleanup (a status revoking its tags and modifiers) is not replayed as gameplay.
+
+This is enforced by the lifecycle itself, not by "quiet mode" flags threaded through the engine. Each object owns an event boundary that is closed during construction and restoration and opens at activation, so capabilities publish exactly as they always do and observability is a property of *when* in the lifecycle they run. One mechanism therefore unifies **spawning** (seed initial state, activate), **loading** (restore authoritative state, activate), and future **streaming** (compose, restore, activate; deactivate closes the boundary again) — all are "construct quietly, then activate."
+
+This is the lifecycle counterpart of Principle 25 (Persistence Boundary): reconstruction restores authoritative state event-quietly and re-establishes derived state by composition, and Principle 26 guarantees that doing so publishes no gameplay facts until the object goes live.
+
+Canonical detail: `Docs/Systems/GAMEPLAY_FRAMEWORK.md`, Object Lifecycle.
+
+---
+
 # Architectural Test
 
 Before implementing any feature, ask:

@@ -1,0 +1,19 @@
+[project]
+name = "asset-knowledge-base"
+version = "1.0.0"
+description = "ToyChest Unity Asset Store knowledge base generator"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "requests>=2.31",
+    "beautifulsoup4>=4.12",
+    "lxml>=5.0",
+    "PyYAML>=6.0",
+]
+
+[project.scripts]
+build-asset-kb = "build_asset_kb:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"

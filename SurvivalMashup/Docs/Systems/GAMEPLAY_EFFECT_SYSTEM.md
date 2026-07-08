@@ -25,10 +25,10 @@ Primary Runtime Objects:
 - Effect execution contexts and effect result data.
 
 Published Events:
-- Damage Applied, Enemy Defeated, Item Collected, Tree Harvested, Ability Activated, Region Liberated, Adventure Completed.
+- None directly in Milestone 0. Atomic effects mutate owning systems, whose own events (Resource Changed, Attribute Changed, tag transitions) carry the facts. Domain outcome events (Damage Applied, Enemy Defeated, Item Collected, ...) are published by their owning systems as those systems arrive (Damage System, Loot System, ...).
 
 Consumed Events:
-- TBD
+- None.
 
 ---
 
@@ -96,6 +96,18 @@ Everything is an Effect.
 ---
 
 # Core Principles
+
+## Atomic Effects
+
+Approved Milestone 0 decision: **Gameplay Effects are atomic.** Each effect performs exactly one deterministic gameplay action — Damage, Heal, Add Resource, Remove Resource, Add Tag, Remove Tag, Apply Modifier. Complex gameplay is produced by composing sequences of atomic effects, never by creating monolithic effects (see `Docs/Architecture/ENGINE_PRINCIPLES.md`, Principle 24, Composition Over Specialization).
+
+Effects own no duration, no scheduling, and no targeting: the Status Effect System schedules, the Ability System targets. Effect sequences are executed through the single Gameplay Effect Runner, in list order, each effect gated by its own reusable conditions.
+
+## Context over Ownership
+
+Effects never receive unrestricted access to gameplay objects. The execution context carries **capability views** — the participants' resource, attribute, and tag capabilities — not live object references. An effect can mutate exactly what the invoker wired into the context, and nothing else.
+
+This keeps effects executable against anything that exposes the right capabilities (a composed Gameplay Object, sibling capabilities wired at composition time, or bare capabilities in a test), keeps invokers in control of what an effect may touch, and prevents effects from growing hidden dependencies on object internals.
 
 ## Composition Over Custom Code
 
@@ -496,6 +508,25 @@ Instead:
 - Compose it with existing effects.
 
 The system should scale to thousands of abilities over the lifetime of the project.
+
+## Planned Extension Points
+
+These extensions are anticipated and require no contract changes; each arrives only with a documented need:
+
+- **Conditional effects:** richer reusable condition modules (attribute thresholds, resource percentages, world state) composed onto any effect, extending the existing per-effect condition list.
+- **Scalable effects:** effect magnitudes derived from context — caster attributes, stack counts, charge time — instead of fixed authored values. Scaling inputs travel in the execution context; effects stay deterministic.
+- **Probabilistic effects:** chance-gated execution (ignite chance on hit) driven by an injected deterministic random source, so outcomes remain reproducible for testing, replays, and networking.
+
+---
+
+# Persistence Boundary
+
+Per Engine Principle 25:
+
+- **Authoritative:** none. Gameplay Effects are instantaneous, stateless, deterministic operations; they hold no runtime state between executions.
+- **Derived:** nothing persistent — an effect's outcome lives in the resource, attribute, or tag it mutated, owned by that system.
+- **Serialized:** nothing.
+- **Reconstructed:** nothing to reconstruct. Effects are pure functions of their definition and the target state at execution time. The scheduling that repeatedly runs periodic effects is authoritative to the Status Effect System (its periodic accumulator), not here.
 
 ---
 

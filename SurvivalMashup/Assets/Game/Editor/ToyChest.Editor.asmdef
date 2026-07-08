@@ -1,0 +1,30 @@
+{
+    "name": "ToyChest.Editor",
+    "rootNamespace": "ToyChest.Editor",
+    "references": [
+        "ToyChest.Core",
+        "ToyChest.Framework",
+        "ToyChest.Systems.Tags",
+        "ToyChest.Systems.Attributes",
+        "ToyChest.Systems.Resources",
+        "ToyChest.Systems.GameplayEffects",
+        "ToyChest.Systems.StatusEffects",
+        "ToyChest.Systems.Abilities",
+        "ToyChest.Systems.Items",
+        "ToyChest.Systems.Inventory",
+        "ToyChest.Systems.Equipment",
+        "ToyChest.Systems.Save",
+        "ToyChest.Gameplay"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

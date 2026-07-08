@@ -1,0 +1,20 @@
+{
+    "name": "ToyChest.Systems.Interactions",
+    "rootNamespace": "ToyChest.Systems.Interactions",
+    "references": [
+        "ToyChest.Core",
+        "ToyChest.Framework",
+        "ToyChest.Systems.Tags",
+        "ToyChest.Systems.GameplayEffects",
+        "ToyChest.Systems.Abilities"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

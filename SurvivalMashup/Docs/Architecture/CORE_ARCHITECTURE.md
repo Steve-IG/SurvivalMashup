@@ -454,6 +454,8 @@ The architecture is successful if:
 - Docs/Architecture/CODING_PRINCIPLES.md
 - Docs/Architecture/ENGINE_PRINCIPLES.md
 - Docs/Architecture/PROJECT_ARCHITECTURE.md
+- Docs/Architecture/EVENT_SYSTEM.md
+- Docs/Architecture/DATA_REGISTRY.md
 - Docs/Architecture/GAMEPLAY_OBJECT.md
 - Docs/Systems/GAMEPLAY_FRAMEWORK.md
 - Docs/Systems/WORLD_REACTION_SYSTEM.md

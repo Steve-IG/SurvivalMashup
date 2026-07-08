@@ -24,10 +24,25 @@ Primary Runtime Objects:
 - Inventory Components and Item Instance collections.
 
 Published Events:
-- Item Added, Item Removed, Stack Changed, Inventory Full, Inventory Cleared, Ownership Changed.
+- Item Added, Item Removed, Stack Changed, Inventory Full, Item Transferred.
 
 Consumed Events:
-- TBD
+- None.
+
+---
+
+# Milestone 0 Implementation (approved decisions)
+
+The implemented Milestone 0 subset (`ToyChest.Systems.Inventory`):
+
+- **InventorySet capability:** composed by the factory when the object definition declares an `InventoryDefinition` (slot capacity as data). Any Gameplay Object may own one.
+- **Slot-based capacity** per the approved initial model. Capacity math counts merge space in existing stacks plus free slots; alternative capacity models are future `InventoryDefinition` configuration.
+- **Deterministic, all-or-nothing operations:** stacks keep insertion order; adds merge into existing stacks of the same definition in that order, then place the remainder as a new stack; removals consume stacks in that order. An add or removal that cannot complete in full mutates nothing.
+- **Stack management:** `TrySplit` and `TryMerge` reorganize stacks without crossing the inventory boundary; `TryTakeStack` hands a whole stack out (equipping, dropping); `TryTransferTo` moves a stack between inventories transactionally.
+- **Event facts:** `ItemAdded` / `ItemRemoved` report quantities crossing the inventory boundary; `StackChanged` reports quantity changes of stacks that remain; `InventoryFull` reports rejected adds; `ItemTransferred` reports ownership transfer between inventories. Emptied stacks leave silently — the boundary event carries the fact.
+- **Ownership transfer** is inventory-to-inventory in Milestone 0; routing through the Relationship System arrives with that system.
+
+Sorting, filtering, and search are presentation-side queries over `Stacks` and remain specified below. World items (dropped Gameplay Objects) arrive with world systems.
 
 ---
 
@@ -436,6 +451,17 @@ Gameplay Events
 Save System
 
 Definition Composition
+
+---
+
+# Persistence Boundary
+
+Per Engine Principle 25:
+
+- **Authoritative:** the slot contents — for each occupied slot, the item instance (its `ItemInstanceId`, its definition id, and its stack count).
+- **Derived:** occupancy counts, capacity availability, and stack-merge results.
+- **Serialized:** per occupied slot — item definition id, item instance id, and stack count. Slot capacity is definition data, not saved.
+- **Reconstructed:** the `InventorySet` is rebuilt from the `InventoryDefinition` (capacity), and item instances are recreated from their definitions and placed back into their slots. Item identity persists through `ItemInstanceId` (Principle 21). The event-quiet restore hook is added with the Save Framework, which owns the serialized shape.
 
 ---
 

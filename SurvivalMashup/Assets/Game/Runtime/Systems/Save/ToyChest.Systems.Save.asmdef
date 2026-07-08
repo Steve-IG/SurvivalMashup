@@ -1,0 +1,23 @@
+{
+    "name": "ToyChest.Systems.Save",
+    "rootNamespace": "ToyChest.Systems.Save",
+    "references": [
+        "ToyChest.Core",
+        "ToyChest.Framework",
+        "ToyChest.Systems.Resources",
+        "ToyChest.Systems.Abilities",
+        "ToyChest.Systems.StatusEffects",
+        "ToyChest.Systems.Items",
+        "ToyChest.Systems.Inventory",
+        "ToyChest.Systems.Equipment"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

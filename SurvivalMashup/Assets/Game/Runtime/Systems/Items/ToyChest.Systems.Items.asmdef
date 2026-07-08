@@ -1,0 +1,19 @@
+{
+    "name": "ToyChest.Systems.Items",
+    "rootNamespace": "ToyChest.Systems.Items",
+    "references": [
+        "ToyChest.Core",
+        "ToyChest.Framework",
+        "ToyChest.Systems.Tags",
+        "ToyChest.Systems.Attributes"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

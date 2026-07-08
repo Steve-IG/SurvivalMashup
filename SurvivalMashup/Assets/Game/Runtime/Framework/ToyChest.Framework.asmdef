@@ -1,0 +1,16 @@
+{
+    "name": "ToyChest.Framework",
+    "rootNamespace": "ToyChest.Framework",
+    "references": [
+        "ToyChest.Core"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

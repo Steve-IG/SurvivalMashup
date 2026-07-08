@@ -1,0 +1,28 @@
+{
+    "name": "ToyChest.Gameplay",
+    "rootNamespace": "ToyChest.Gameplay",
+    "references": [
+        "ToyChest.Core",
+        "ToyChest.Framework",
+        "ToyChest.Systems.Tags",
+        "ToyChest.Systems.Attributes",
+        "ToyChest.Systems.Resources",
+        "ToyChest.Systems.GameplayEffects",
+        "ToyChest.Systems.StatusEffects",
+        "ToyChest.Systems.Abilities",
+        "ToyChest.Systems.Interactions",
+        "ToyChest.Systems.Items",
+        "ToyChest.Systems.Inventory",
+        "ToyChest.Systems.Equipment",
+        "ToyChest.Systems.Save"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,20 @@
+{
+    "name": "ToyChest.Systems.GameplayEffects",
+    "rootNamespace": "ToyChest.Systems.GameplayEffects",
+    "references": [
+        "ToyChest.Core",
+        "ToyChest.Framework",
+        "ToyChest.Systems.Tags",
+        "ToyChest.Systems.Attributes",
+        "ToyChest.Systems.Resources"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

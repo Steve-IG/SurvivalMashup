@@ -471,6 +471,17 @@ can all be implemented by defining new attributes.
 
 ---
 
+# Persistence Boundary
+
+Per Engine Principle 25:
+
+- **Authoritative:** none of its own. Base values are immutable definition data; the current value is fully derived.
+- **Derived:** each attribute's current value (base plus the modifier stack, clamped) and all query results.
+- **Serialized:** nothing by the Attribute System. Modifiers are owned by their contributing sources (status effects, equipment) and saved or reconstructed there, never duplicated here.
+- **Reconstructed:** the `AttributeSet` is rebuilt from the object definition; contributing sources re-apply their modifiers during their own reconstruction; the current value is recomputed. There is deliberately no attribute-value restore API, because there is no independent authoritative attribute state to restore.
+
+---
+
 # Success Criteria
 
 The Attribute System succeeds when:

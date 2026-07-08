@@ -33,3 +33,8 @@ SurvivalMashup/Packages/Coplay/Editor/
 
 # Cursor local state (keep rules/config if added later)
 .cursor/
+
+# Asset Knowledge Base scrape cache
+Tools/AssetKnowledgeBase/cache/
+**/__pycache__/
+*.pyc

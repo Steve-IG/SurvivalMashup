@@ -24,10 +24,28 @@ Primary Runtime Objects:
 - Equipment Components, equipped Item Instances, and active equipment state.
 
 Published Events:
-- Item Equipped, Item Unequipped, Equipment Changed, Ability Granted, Ability Removed, Equipment Requirement Failed.
+- Item Equipped, Item Unequipped, Equip Failed (with reason).
 
 Consumed Events:
-- TBD
+- None.
+
+Ability grant/revoke facts remain published by the Ability System (`AbilityGranted` / `AbilityRevoked`); Equipment does not duplicate them. An aggregate Equipment Changed event is future work if a subscriber needs it.
+
+---
+
+# Milestone 0 Implementation (approved decisions)
+
+The implemented Milestone 0 subset (`ToyChest.Systems.Equipment`):
+
+- **EquipmentSet capability:** composed by the factory when the object definition declares equipment slots. Slot layouts are data: `EquipmentSlotDefinition` assets listed per object type, so companions and players differ only in authoring.
+- **EquippableDefinition** is the Item System's equippable Definition Component, owned by this system: allowed slots (a ring lists Ring 1 and Ring 2), required owner tags, and the contributions.
+- **Contributions compose existing systems, exactly revocable:** granted tags go through the reference-counted tag container (two items granting the same tag coexist); attribute modifiers register with the equipped `ItemInstance` as the modifier source, so unequip revokes precisely that item's contribution; abilities are granted through the Ability System; statuses are applied through the Status Effect System. No gameplay logic lives in Equipment.
+- **Deterministic validation order**, first failing check reported (`EquipResult`): equippable → slot known → slot allowed → slot free → owner requirements. `CanEquip` runs the same validation without committing. Occupied slots reject; swap is an explicit unequip-then-equip by the caller.
+- **Transactional equip:** all validation (including contribution capability checks, e.g. a modifier targeting an attribute the owner lacks) completes before any contribution activates, so a rejected equip mutates nothing.
+- **Already-active handling:** an ability already granted or a status already active from another source is skipped and never revoked by unequip — each equip entry revokes exactly what it activated. Two equipped items sharing the same granted ability or status is a known Milestone 0 limitation (the first unequip removes it); refcounted grants are a future extension if authoring hits it.
+- **Inventory independence:** equip/unequip operate on `ItemInstance` values; the caller (interaction, UI, AI) moves instances between inventory and equipment. Equipment never reaches into inventories (Capability Independence).
+
+Level/adventure/faction requirements, resource modifiers, World Property contributions, and presentation contributions are future work and remain specified below.
 
 ---
 
@@ -511,6 +529,17 @@ World Reaction System
 Gameplay Events
 
 Definition Composition
+
+---
+
+# Persistence Boundary
+
+Per Engine Principle 25:
+
+- **Authoritative:** which item instance is equipped in each slot.
+- **Derived:** the tags, attribute modifiers, granted abilities, and statuses each equipped item activates — all re-applied on equip through their owning systems.
+- **Serialized:** per occupied slot — the equipped item's definition id and instance id. The slot layout is definition data.
+- **Reconstructed:** the `EquipmentSet` is rebuilt from its slot layout; re-equipping each restored item re-activates its contributions through the owning systems (tags, attributes, abilities, statuses). Because those contributions are re-applied on equip, no equipment-derived state is serialized — a clean example of Reconstruction Over Serialization.
 
 ---
 

@@ -295,6 +295,17 @@ Conservation Behavior
 
 ---
 
+# Persistence Boundary
+
+Per Engine Principle 25:
+
+- **Authoritative:** each resource's current value.
+- **Derived:** the maximum (literal from the definition, or bound to an attribute), and the `IsDepleted` / `IsFull` flags.
+- **Serialized:** per resource, its current value keyed by `DefinitionId`. Maximums and regeneration rates are definition data, not saved.
+- **Reconstructed:** the `ResourceSet` is rebuilt from the object definition; attribute-bound maximums re-resolve against the reconstructed attributes; each current value is restored with the event-quiet `ResourceValue.RestoreCurrent`. Restore against the already-restored maximum — reconstruct bound attributes (and the status/equipment modifiers that shape them) first.
+
+---
+
 # Success Criteria
 
 The Resource System succeeds when:

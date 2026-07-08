@@ -1,0 +1,94 @@
+# Curated taxonomy overrides for important ToyChest assets.
+# Keys match asset name (case-insensitive) or store_id.
+# When present, these values override automatic classification.
+
+"Dungeon Architect":
+  id: WORLD-001
+  category: World Generation
+  subcategory: Procedural Generation
+  tier: 1
+  recommendation: Prototype Candidate
+
+"Vault Inventory":
+  id: GAME-001
+  category: Gameplay Systems
+  subcategory: Inventory
+  tier: 1
+  recommendation: Core Candidate
+
+"JU TPS 3 - Third Person Shooter GameKit + Vehicle Physics":
+  id: GAME-002
+  category: Gameplay Systems
+  subcategory: Character Controller
+  tier: 1
+  recommendation: Core Candidate
+
+"PUN 2 - FREE":
+  id: NET-001
+  category: Networking
+  subcategory: Multiplayer
+  tier: 1
+  recommendation: Production Candidate
+
+"Motion Matching for Unity":
+  id: ANIM-001
+  category: Animation
+  subcategory: Character Animation
+  tier: 1
+  recommendation: Production Candidate
+
+"Modular Game UI Kit":
+  id: UI-001
+  category: UI
+  subcategory: UI Kit
+  tier: 1
+  recommendation: Production Candidate
+
+"SALSA LipSync Suite":
+  id: ANIM-002
+  category: Animation
+  subcategory: Lip Sync
+  tier: 2
+  recommendation: Production Candidate
+
+"Asset Hunter PRO":
+  id: EDIT-001
+  category: Editor Tools
+  subcategory: Project Maintenance
+  tier: 2
+  recommendation: Development Standard
+
+"Beautify 2 - Advanced Post Processing":
+  id: RENDER-001
+  category: Rendering
+  subcategory: Post Processing
+  tier: 2
+  recommendation: Reference
+
+"53895":
+  id: WORLD-001
+  category: World Generation
+  subcategory: Procedural Generation
+  tier: 1
+  recommendation: Prototype Candidate
+
+"93933":
+  id: GAME-001
+  category: Gameplay Systems
+  subcategory: Inventory
+  tier: 1
+  recommendation: Core Candidate
+
+"135296":
+  id: EDIT-001
+  category: Editor Tools
+  subcategory: Project Maintenance
+  tier: 2
+  recommendation: Development Standard
+
+"163949":
+  id: RENDER-001
+  category: Rendering
+  subcategory: Post Processing
+  tier: 2
+  recommendation: Reference

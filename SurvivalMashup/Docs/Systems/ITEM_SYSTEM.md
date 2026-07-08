@@ -31,6 +31,19 @@ Consumed Events:
 
 ---
 
+# Milestone 0 Implementation (approved decisions)
+
+The implemented Milestone 0 foundation (`ToyChest.Systems.Items`) is the minimal model Inventory and Equipment operate on:
+
+- **Definition/instance split:** `ItemDefinition` (immutable asset: display name, organizational category, descriptive tags, max stack size, Definition Components) and `ItemInstance` (runtime state: stable `ItemInstanceId`, quantity), per Engine Principle 14.
+- **Definition Component model:** `ItemComponentDefinition` is the abstract base; an item gains capabilities by composing component assets, queried by type (`TryGetComponent<T>`). Downstream systems define their own components in their own assemblies — the Equipment System owns `EquippableDefinition` — so the Items assembly stays dependency-light and no item subclasses exist.
+- **Quantity ownership:** quantity lives on the instance but is mutated only by the owning Inventory System through `SetQuantity`; every other system treats it as read-only. Quantity is validated against the definition's max stack size.
+- **Stable identity:** `ItemInstanceId` is GUID-backed with a string form for save boundaries, mirroring `GameplayObjectId`.
+
+Durability, charges, quality, affixes, value, and consumable components are future Definition Components and instance state; they remain specified below.
+
+---
+
 # Purpose
 
 The Item System defines every collectible, craftable, equippable, consumable, or tradable object in the game.

@@ -9,7 +9,7 @@
 ## System Ownership
 
 This system owns:
-- Tag vocabulary, tag definitions, tag storage, tag query APIs, and aggregated active tag sets.
+- Tag vocabulary, tag definitions, the tag hierarchy, tag storage, tag query APIs, and aggregated active tag sets.
 
 This system does NOT own:
 - Behavior triggered by tags, Damage reactions, AI decisions, Ability rules, or presentation.
@@ -18,16 +18,16 @@ Primary Responsibilities:
 - Provide a passive universal descriptor layer for identity, state, capability, and gameplay queries.
 
 Primary Data:
-- Tag definitions, tag categories, stable identifiers, and metadata.
+- Tag definitions, hierarchical tag paths, tag categories, stable identifiers, and metadata.
 
 Primary Runtime Objects:
-- Gameplay Tag Components and active tag sets.
+- The Gameplay Tag Table (interned hierarchy), Gameplay Tag Containers, and aggregated active tag sets.
 
 Published Events:
-- TBD
+- `GameplayTagAdded`, `GameplayTagRemoved` (category Tag). Published by the object's Gameplay Tag Container — the Gameplay Tag capability — on the absent/present transitions only, attributed to the owning `GameplayObjectId`. This completes the bridge between tag changes and the Event Bus while keeping tag ownership with the Tag System.
 
 Consumed Events:
-- TBD
+- None.
 
 ---
 
@@ -153,6 +153,45 @@ No custom gameplay code required.
 
 ---
 
+# Tag Hierarchy
+
+Tags are hierarchical. This model was approved during the Milestone 0 architecture review and supersedes the earlier flat vocabulary.
+
+A tag is a dot-separated path of segments:
+
+```
+Combat
+Combat.Melee
+Combat.Ranged
+
+Element
+Element.Fire
+Element.Fire.Burning
+
+Interaction
+Interaction.Harvest
+Interaction.Open
+```
+
+Registering a tag automatically registers every ancestor on its path. `Element.Fire.Burning` implies that `Element.Fire` and `Element` exist.
+
+## Matching Semantics
+
+Queries support ancestor matching:
+
+- An object holding `Element.Fire.Burning` matches queries for `Element.Fire.Burning`, `Element.Fire`, and `Element`.
+- Matching is directional. Holding `Element.Fire` does **not** match a query for `Element.Fire.Burning`. The child is more specific than what the object claims to be.
+- Exact-match queries are available for the rare cases where hierarchy must be ignored.
+
+## Hierarchy Design Guidance
+
+- Parents express general families; leaves express specifics.
+- Prefer deepening an existing family over inventing a new root when the meaning is related. `Element.Lightning` beats a new `Lightning` root.
+- Keep depth practical — two to four segments cover nearly every case.
+- Systems should query at the most general level that expresses their rule. Fire resistance cares about `Element.Fire`, not about every burning variant.
+
+---
+
 # Tag Categories
 
 ## Identity Tags
@@ -275,6 +314,24 @@ Capability Tags rarely change.
 
 ---
 
+# Semantic Tags vs State Tags
+
+Tags fall into two broad kinds, and systems should treat them differently.
+
+**Semantic Tags** describe what an object *is* or *can do*. Identity Tags and Capability Tags are semantic. They are typically permanent, usually authored on the definition, and change rarely if ever during play. Systems use semantic tags to decide whether an interaction is possible at all: a Harvest ability requires `Harvestable`; Fire damage looks for `Element.Fire` weakness.
+
+**State Tags** describe an object's *current, temporary condition*. They change continuously during play and are almost always contributed by transient runtime sources (status effects, abilities, world reactions). Systems use state tags to decide what is happening right now: `State.Burning`, `State.Frozen`, `State.Channeling`.
+
+The practical distinctions:
+
+- **Volatility:** semantic tags are stable; state tags churn. Tooling and networking may treat them differently for this reason.
+- **Source:** semantic tags usually come from the object's own definition; state tags usually come from other runtime systems.
+- **Publication:** state-tag transitions are the interesting events for reactive systems (UI, audio, AI). Semantic-tag changes are rare enough to be treated as exceptional.
+
+This distinction is a modeling guideline, not an engine branch. The Tag System stores and queries both kinds identically; only authors and reacting systems care which kind a given tag is. Prefer namespacing state tags under a `State.` root so the two kinds are visually obvious in data and traces.
+
+---
+
 # Tag Ownership
 
 Tags may originate from many systems.
@@ -303,7 +360,36 @@ World Event
 
 The active tag set is the union of all contributing sources.
 
+## Runtime Ownership Rules
+
+Runtime tag ownership is explicit and reference-counted. These rules are how the union above is actually maintained without sources corrupting one another:
+
+- **Each source owns only the tags it added.** A source adds a tag when its contribution begins (equip, status apply, region enter) and removes exactly that tag when its contribution ends (unequip, status expire, region exit).
+- **Tags are reference-counted per object.** If three sources contribute `State.Wet`, the tag is present with a count of three. It becomes absent only when the last source removes it. A source must never remove a tag it did not add.
+- **Presence is a transition, not a toggle.** The container raises Tag Added only when a tag goes from absent to present, and Tag Removed only when it goes from present to absent. Intermediate count changes are silent. Reacting systems therefore see a clean on/off signal regardless of how many sources overlap.
+- **No source may clear the whole set.** There is no "remove all tags" authority, because that would destroy other sources' contributions. Tearing down an object destroys its container outright instead.
+- **The Gameplay Tag Container owns the aggregation.** Individual systems own their own add/remove calls; the container owns the counts, the ancestor roll-up, and the transition notifications. No system reads or mutates another system's counts.
+
 ---
+
+# Tag Change Events
+
+The Gameplay Tag Container is the Gameplay Tag capability component, and it owns publication of tag change facts to the Event Bus. On the absent-to-present transition it publishes `GameplayTagAdded`; on the present-to-absent transition it publishes `GameplayTagRemoved`. Both carry the owning `GameplayObjectId` and the tag.
+
+- **Transitions only.** Because tags are reference-counted, intermediate count changes are silent. Reacting systems (UI, audio, AI, World Reaction) see a clean on/off signal regardless of how many sources overlap, matching the ownership rules above.
+- **Ownership preserved.** The Tag System owns tag facts; no other system publishes them. This completes the bridge that earlier docs deferred, without moving tag ownership into the framework or the Event System.
+- **Composed with a bus, or silent.** A container composed with an Event Bus publishes; a container built without one (isolated tests) still raises its local C# callbacks. Publication is additive over the existing transition callbacks.
+
+Enumeration for serialization, debugging, and tooling (`CopyTagsTo`) returns the present tags in deterministic registration order (Engine Principle 17), so a container's serialized tag list is stable.
+
+# Persistence Boundary
+
+Per Engine Principle 25:
+
+- **Authoritative:** per object, the set of tag paths currently present and, where it matters, the count and source of each contribution. In practice most state tags are contributed by other runtime systems (status effects, equipment, regions) and are reconstructed when those sources are reconstructed.
+- **Derived:** the interned `GameplayTag` handles (session-local), the hierarchical ancestor counts, and all query results — rebuilt from the present tags and the tag hierarchy.
+- **Serialized:** tag *paths* (stable, human-readable), never interned indices. Only genuinely authoritative tags — those not re-established by another reconstructing system — need saving.
+- **Reconstructed:** the container is rebuilt empty; sources re-add their tags during their own reconstruction (a restored status re-grants its tags), and ancestor counts are recomputed on each add. Reconstruction adds tags through the normal path; broad event-quiet reconstruction is a Save Framework concern.
 
 # Queries
 
@@ -311,17 +397,19 @@ Systems should query tags rather than gameplay classes.
 
 Examples:
 
-HasTag()
+HasTag() — hierarchical; matches the tag or any descendant the object holds.
 
-HasAllTags()
+HasTagExact() — ignores hierarchy.
 
-HasAnyTag()
+HasAllTags() — hierarchical; every queried tag must match.
 
-HasNone()
+HasAnyTag() — hierarchical; at least one queried tag must match.
+
+HasNone() — hierarchical; no queried tag may match.
 
 TagCount()
 
-Querying tags should be inexpensive.
+Querying tags should be inexpensive. Hierarchical queries are O(1) lookups against pre-aggregated ancestor counts, not tree walks.
 
 ---
 
@@ -555,6 +643,15 @@ This enables generic decision making.
 
 ---
 
+# Editor Tooling
+
+Extension points for tag tooling (editor-only, layered on the runtime system without changing it):
+
+- **Gameplay Tag Browser (future):** an editor window that displays the full interned tag hierarchy as a tree, shows each tag's definition, description, and category, and lets designers pick tags for authoring fields instead of typing raw paths. It reads the Gameplay Tag Table and the registered `TagDefinition` assets; it introduces no runtime behavior. This is the authoring counterpart to the Milestone 0 runtime Gameplay Tag viewer.
+- **Tag validation pass (future):** flags authored tag paths that reference unregistered tags, duplicate definitions, or naming-convention violations.
+
+---
+
 # Future Expansion
 
 Future systems should prefer adding tags over creating custom logic.
@@ -579,8 +676,10 @@ The Tag System succeeds when:
 
 # Implementation Notes
 
-- Tags should be immutable data assets or generated constants with stable IDs.
-- Runtime objects should expose efficient tag query APIs.
-- Tag lookups must be optimized because they occur frequently.
-- Avoid string comparisons at runtime; use IDs or hashed values internally.
-- Tags should remain lightweight and never contain gameplay logic.
+- Tags are authored as immutable `TagDefinition` assets (stable ID = the tag path) and registered through the Data Registry at startup; code may also register paths directly for tests and tooling.
+- Tag paths are interned once per session into the Gameplay Tag Table. Runtime identity is an interned index (`GameplayTag`), never a string. Paths appear only at authoring, serialization, and debugging boundaries.
+- Tag Containers maintain counted tag multisets: the same tag added by several sources (equipment, status effects, region) is reference-counted, and the tag disappears only when every source removes it.
+- Containers additionally maintain aggregated ancestor counts, making hierarchical `HasTag` queries O(1) dictionary lookups with zero allocation.
+- The table and containers are plain C# and fully testable outside Unity.
+- Tags remain lightweight descriptors and never contain gameplay logic.
+- Serialization stores tag paths (human-readable and stable across sessions); the interned indices are session-local and never persisted.

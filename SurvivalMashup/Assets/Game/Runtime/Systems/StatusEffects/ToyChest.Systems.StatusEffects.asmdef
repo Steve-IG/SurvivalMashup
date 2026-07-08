@@ -1,0 +1,21 @@
+{
+    "name": "ToyChest.Systems.StatusEffects",
+    "rootNamespace": "ToyChest.Systems.StatusEffects",
+    "references": [
+        "ToyChest.Core",
+        "ToyChest.Framework",
+        "ToyChest.Systems.Tags",
+        "ToyChest.Systems.Attributes",
+        "ToyChest.Systems.Resources",
+        "ToyChest.Systems.GameplayEffects"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

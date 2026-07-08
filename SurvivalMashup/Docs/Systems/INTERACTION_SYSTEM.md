@@ -24,10 +24,24 @@ Primary Runtime Objects:
 - Interaction Components, interaction queries, available interaction results, and execution context.
 
 Published Events:
-- TBD
+- Interaction Executed, Interaction Failed (with reason).
 
 Consumed Events:
-- TBD
+- None.
+
+---
+
+# Milestone 0 Implementation (approved decisions)
+
+The implemented Milestone 0 subset (`ToyChest.Systems.Interactions`):
+
+- **Interactions are abilities:** `InteractionDefinition` (immutable asset: verb, priority, interactor tag gates) references the `AbilityDefinition` that executes. The interactable owns the ability; a Self-mode ability acts on the interactable (open, activate), a Provided-mode ability receives the interactor as target (harvest into the interactor). All gameplay consequences live in the ability's Gameplay Effects.
+- **InteractionSet capability:** composed by the factory when the object definition declares interactions; the referenced abilities are auto-granted to the object's Ability Set at composition. Objects without the capability are not interactable.
+- **InteractionSystem orchestrator:** plain C#, built at bootstrap with injected Event Bus and tag table. `CanInteract` validates without committing; `QueryAvailable` collects valid interactions across candidates; `TrySelectBest` picks the highest-priority valid interaction (ties resolve to the earliest candidate, deterministically); `TryInteract` validates, activates, and publishes.
+- **Deterministic validation order**, first failing check reported (`InteractionResult`): interactable → advertised → interactor required tags → interactor blocking tags → ability validation (`AbilityRejected` wraps the ability's own reason, which the Ability System publishes in detail).
+- **Discovery boundary:** spatial discovery (range, line of sight) is a thin Unity adapter concern — the adapter supplies the deterministically ordered candidate list; this system never touches the scene. Players and AI use the same entry points.
+
+Distance/line-of-sight validation rules, adventure/region gates, and UI prompt presentation are future work and remain specified below.
 
 ---
 
@@ -372,6 +386,17 @@ Economy System
 Crafting System
 
 Adventure System
+
+---
+
+# Persistence Boundary
+
+Per Engine Principle 25:
+
+- **Authoritative:** none. Interactions are configuration-only, defined entirely by the object's definition; the `InteractionSet` holds no mutable runtime state.
+- **Derived:** the available interactions and their priority ordering, resolved from the definition.
+- **Serialized:** nothing.
+- **Reconstructed:** rebuilt entirely from the object definition when the object is composed. Interaction outcomes are ability activations, whose runtime state (cooldowns) is owned and restored by the Ability System.
 
 ---
 

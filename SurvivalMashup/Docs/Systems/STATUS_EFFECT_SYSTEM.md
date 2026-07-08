@@ -53,6 +53,14 @@ The system should be generic, data-driven, and reusable across all gameplay obje
 
 ---
 
+# Ownership Split (approved Milestone 0 decision)
+
+Gameplay Effects are instantaneous deterministic operations. Status Effects own duration, stacking, refresh rules, expiration, and periodic execution — and deliver gameplay by repeatedly executing Gameplay Effects. Neither duplicates the other: no duration logic exists in the Gameplay Effect System, and no gameplay mutation is implemented inside the Status Effect System.
+
+Milestone 0 implements the stacking subset RefreshDuration, IgnoreDuplicate, ReplaceExisting, and IncreaseStacks (attribute modifiers applied once per stack, so magnitude scales; duration refreshes on stack). Independent Instances and fully custom models are future extensions. Per-stack periodic magnitude scaling arrives with the Increase Magnitude model.
+
+---
+
 # Design Philosophy
 
 Status Effects do not contain gameplay logic.
@@ -412,6 +420,17 @@ Examples of future Status Effects:
 - Camouflage
 
 All should be implementable without engine changes.
+
+---
+
+# Persistence Boundary
+
+Per Engine Principle 25:
+
+- **Authoritative:** the set of active statuses and, per status, its stack count, remaining duration, and periodic accumulator.
+- **Derived:** the granted tags and attribute modifiers each status contributes, and `IsExpired` — all re-established on restore.
+- **Serialized:** per active status — definition id, stacks, remaining duration, and periodic accumulator.
+- **Reconstructed:** `StatusEffectSet.Restore` recreates each status, re-applies its contributions (granted tags once, attribute modifiers once per stack), and restores its timers, running no on-apply effects and publishing no events. Because a restored status re-grants its tags and modifiers, the tag and attribute systems do not separately serialize those contributions.
 
 ---
 

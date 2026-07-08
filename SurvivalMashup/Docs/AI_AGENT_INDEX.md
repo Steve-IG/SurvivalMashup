@@ -113,6 +113,13 @@ Use it for:
 - Project structure
 - Event/save/addressable architecture
 
+Canonical infrastructure specifications (authoritative once created):
+
+- `Docs/Architecture/EVENT_SYSTEM.md` — event transport architecture.
+- `Docs/Architecture/DATA_REGISTRY.md` — canonical runtime source for gameplay definitions.
+- `Docs/Architecture/ENGINE_STARTUP.md` — canonical engine initialization sequence (bootstrap through gameplay start).
+- `Docs/Architecture/SAVE_SYSTEM.md` — canonical persistence architecture (capture, restore, serialization contract, versioning).
+
 ## Development
 
 `Docs/Development/DEVELOPMENT_PLAN.md` is the operational task list. It answers what should be worked on next.

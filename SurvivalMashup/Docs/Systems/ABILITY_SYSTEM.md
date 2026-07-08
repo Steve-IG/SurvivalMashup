@@ -23,10 +23,42 @@ Primary Runtime Objects:
 - Ability instances, equipped loadouts, cooldown state, and activation state.
 
 Published Events:
-- TBD
+- Ability Granted, Ability Revoked, Ability Activated, Ability Activation Failed (with reason), Ability Cooldown Started, Ability Cooldown Ended.
 
 Consumed Events:
-- TBD
+- None.
+
+---
+
+# Milestone 0 Implementation (approved decisions)
+
+Abilities are **orchestration**: Gameplay Effects answer *what happens*; abilities answer *when and why*. No gameplay mutation is implemented inside the Ability System — effects execute through the Gameplay Effect Runner, and costs mutate through the Resource System.
+
+Abilities are **deterministic recipes**: for identical inputs (owner state, target, definition), an activation attempt produces identical outcomes — the same validation result, the same costs, the same effect sequence in the same order. No randomness, wall-clock time, or presentation state participates in activation; time enters only as injected tick deltas.
+
+Ability Definitions contain **configuration, not gameplay behavior**: gates, costs, a cooldown, a target mode, and references to the Gameplay Effects that own every mutation. Engine code interprets that configuration; authoring a new ability is authoring data.
+
+The implemented Milestone 0 subset (`ToyChest.Systems.Abilities`):
+
+- **Definition/instance split:** `AbilityDefinition` (immutable asset: category, tags, target mode, tag gates, costs, cooldown, effect sequence) and `AbilityInstance` (runtime cooldown state), per Engine Principle 14.
+- **AbilitySet capability:** composed onto every Gameplay Object by the factory; abilities declared on the object definition are granted at composition, and runtime grant/revoke supports progression and equipment.
+- **Deterministic activation pipeline**, first failing check reported: granted → target validity → owner tag gates (required, then blocking; hierarchical match) → cooldown → costs. `CanActivate` runs the same validation without committing anything, for UI and AI.
+- **Costs:** generic resource id + amount pairs, all-or-nothing; validation never throws for a missing resource — an actor lacking the resource simply cannot afford the ability.
+- **Cooldowns:** fixed seconds, owned by the Ability System, advanced through the object's `Tick` with injected time. Charge-based, recharge, conditional, and shared-group cooldowns are future extensions.
+- **Targeting contract:** the ability declares its target mode (`Self` or `Provided`); the activator (input, AI, interaction) selects and supplies the concrete target. Spatial modes (ground, area, projectile) arrive with the world systems able to answer them.
+- **AbilityActivated** is published when the activation is committed (validation passed, costs paid, cooldown started), before effect dispatch, so the event trace reads causally: activation → effect consequences.
+- **AbilityCategory value type:** the organizational category is exposed as a lightweight string-backed `AbilityCategory` struct with ordinal equality (`AbilityCategory.None` for uncategorized abilities). Data-driven — a new category is an authored string, not code. Deliberately not an enum (categories are content) and not a Gameplay Tag (categories are organizational and never queried by gameplay logic). Category remains purely organizational and never affects behavior.
+
+## Future activation extension points
+
+The Milestone 0 activation model is Instant: validation and commit happen in one deterministic step. The following extension points are reserved; each extends the pipeline **between validation and commit** without changing the definition/instance split, the targeting contract, or the effect dispatch contract:
+
+- **Cast Time** — a validated activation enters a casting window before committing; commit happens when the window completes.
+- **Channeling** — the commit sustains over time, executing effect sequences while the channel holds.
+- **Interruptibility** — data-driven rules for what cancels a casting or channeling window (damage, movement, tags), publishing an interruption fact.
+- **Multi-stage activation** — activations that progress through authored stages (charge → aim → release), each stage with its own gates and effects.
+
+Evolution trees, unlock requirements, loadouts, AI usage metadata, and the remaining activation models are future work and remain specified below.
 
 ---
 
@@ -487,6 +519,17 @@ Cooldown synchronization
 Resource synchronization
 
 should all be considered during implementation.
+
+---
+
+# Persistence Boundary
+
+Per Engine Principle 25:
+
+- **Authoritative:** which abilities are granted from a persistent source, and each granted ability's remaining cooldown.
+- **Derived:** `IsOnCooldown` and every validation result (affordability, tag gates, targeting).
+- **Serialized:** per persistently granted ability — definition id plus remaining cooldown. Grants that originate from the object definition, equipment, or progression are reconstructed by those sources rather than saved here.
+- **Reconstructed:** abilities are re-granted (through the definition, equipment, or progression), then each cooldown is restored with the event-quiet `AbilitySet.RestoreCooldown`. Reconstruction publishes no ability facts.
 
 ---
 
