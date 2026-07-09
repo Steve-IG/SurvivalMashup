@@ -19,6 +19,7 @@ namespace ToyChest.Systems.Attributes
         private readonly Dictionary<DefinitionId, AttributeValue> _attributes =
             new Dictionary<DefinitionId, AttributeValue>();
 
+        private readonly List<AttributeValue> _ordered = new List<AttributeValue>();
         private readonly IEventBus _eventBus;
         private readonly GameplayObjectId _owner;
 
@@ -36,6 +37,14 @@ namespace ToyChest.Systems.Attributes
 
         /// <summary>Number of attributes in the set.</summary>
         public int Count => _attributes.Count;
+
+        /// <summary>
+        /// The attributes in deterministic registration order, for tooling and inspection.
+        /// Each <see cref="AttributeValue"/> exposes its definition and current computed value;
+        /// attribute state is fully derived and never persisted (Engine Principle 25). Mirrors
+        /// <c>ResourceSet.Resources</c> and <c>AbilitySet.Abilities</c> for capability parity.
+        /// </summary>
+        public IReadOnlyList<AttributeValue> Attributes => _ordered;
 
         /// <summary>
         /// Adds an attribute from its definition and returns the runtime value.
@@ -58,6 +67,7 @@ namespace ToyChest.Systems.Attributes
             var value = new AttributeValue(definition);
             value.ValueChanged += (previous, next) => PublishChange(id, previous, next);
             _attributes.Add(id, value);
+            _ordered.Add(value);
             return value;
         }
 

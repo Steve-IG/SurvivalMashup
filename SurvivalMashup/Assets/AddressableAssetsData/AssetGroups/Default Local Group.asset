@@ -14,7 +14,403 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
   m_GroupName: Default Local Group
   m_GUID: ef0e386f01351ab4e8c78214c7e34046
-  m_SerializeEntries: []
+  m_SerializeEntries:
+  - m_GUID: 00651fc31c9693a4ca5cb6c4e9c7d582
+    m_Address: Assets/Game/Content/Definitions/Tag_Equipment_Lucky.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0108e2ee4d783214eb29d65f901682e7
+    m_Address: Assets/Game/Content/Definitions/Res_LootCharge.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 017579de046b5f84ba4e4337f1657871
+    m_Address: Assets/Game/Content/Definitions/Ability_LootEquipmentCache.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 073fd21e373a4fc3b6f4614303d61ee3
+    m_Address: Assets/Game/Content/Definitions/Item_Relic.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 07491b79047aef644ba2b55bbb57e828
+    m_Address: Assets/Game/Content/Definitions/Fx_AddItem_ScrapMetal.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 07ea3ecdb6bf3964a99e859ae30b89e8
+    m_Address: Assets/Game/Content/Definitions/Tag_Object_Container_Crate.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0b1dbcd5828c4b9e9b72ddc2a289b640
+    m_Address: Assets/Game/Content/Definitions/Obj_HealingShrine.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 106981fc59ce5074c9051e5720476594
+    m_Address: Assets/Game/Content/Definitions/Attr_MaxHealth.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 11b6d7c2186d44ccb1fb0d7fed64933f
+    m_Address: Assets/Game/Content/Definitions/Fx_Damage_Spikes.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 15e8cb10327bedc4ba497427d4234caf
+    m_Address: Assets/Game/Content/Definitions/Interaction_Open.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 16436434f81a01b4499452435d730f9a
+    m_Address: Assets/Game/Content/Definitions/Item_ScrapMetal.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 16efab6c482a4017a415637a194c062a
+    m_Address: Assets/Game/Content/Definitions/Obj_SpikeTrap.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2156444778ca432bb76afb91539e626b
+    m_Address: Assets/Game/Content/Definitions/Res_MachineCharge.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2cf0dc5a88d735e4cac2def156838335
+    m_Address: Assets/Game/Content/Definitions/Inventory_Crate.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2fad935523c0d5d43a72168da54aa164
+    m_Address: Assets/Game/Content/Definitions/Obj_WoodenCrate.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 31aaee2c47084b8794130f5e4c7d35e7
+    m_Address: Assets/Game/Content/Definitions/Tag_Object_Objective.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 31e99cb0e0af7ab46a7698cdf93d619e
+    m_Address: Assets/Game/Content/Definitions/Item_FieldRation.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 33de3a0c289847d3a4428e74f4c0a6d7
+    m_Address: Assets/Game/Content/Definitions/Obj_Player.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 46555dccb08ddc54794153a220466ad0
+    m_Address: Assets/Game/Content/Definitions/Ability_GreetTraveler.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 535f3ee9735327f4093eacd036c42c95
+    m_Address: Assets/Game/Content/Definitions/Obj_Villager.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5886be3d95b8b004db182710fce40110
+    m_Address: Assets/Game/Content/Definitions/Fx_Heal_SecondWind.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5ad649ace9e2475296f927b4840b8496
+    m_Address: Assets/Game/Content/Definitions/Obj_Campfire.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5c89a1d4a36aa6848bd46e3949ea4c48
+    m_Address: Assets/Game/Content/Definitions/Ability_OpenCrate.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 61b3da9d98ed4ef68848bab84c67fc4f
+    m_Address: Assets/Game/Content/Definitions/Obj_PoisonPool.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6f6d43da770062c4e88ae8574f94c826
+    m_Address: Assets/Game/Content/Definitions/Fx_AddItem_LuckyCharm.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6fbd28277ab6478fbe9d1b50a33f01e1
+    m_Address: Assets/Game/Content/Definitions/Interaction_ActivateMachine.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 709ccf7aae347894094f5622e6ae4abc
+    m_Address: Assets/Game/Content/Definitions/Item_BootsOfSwiftness.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7556ffb476693c64d99a4b386efc8cf1
+    m_Address: Assets/Game/Content/Definitions/Tag_Equipment_Swift.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 75580e1364864213904119864949e81d
+    m_Address: Assets/Game/Content/Definitions/Tag_State_Poisoned.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 78e58cd1444df8d4fbad71057b4fadfe
+    m_Address: Assets/Game/Content/Definitions/Equippable_BootsOfSwiftness.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7d1fcc5434b4472ba983033a8f1e11a3
+    m_Address: Assets/Game/Content/Definitions/Status_Warmth.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7ece03e78dee60f47bd525a5ad5a2379
+    m_Address: Assets/Game/Content/Definitions/Equippable_LuckyCharm.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7fad044952b4400da0215ddeff9356d1
+    m_Address: Assets/Game/Content/Definitions/Status_Poison.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 81a46916ebb04cf44a413a168bf4e4bd
+    m_Address: Assets/Game/Content/Definitions/Item_LuckyCharm.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8740ae89d23e1434990ac9355a783f87
+    m_Address: Assets/Game/Content/Definitions/Interaction_Greet.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 89fe143bc98279e4abd32a702a1c9d10
+    m_Address: Assets/Game/Content/Definitions/Tag_Actor_Npc.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8da31a57baf44f058911347891b11601
+    m_Address: Assets/Game/Content/Definitions/Fx_Heal_Warmth.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9dc2f9aa5a04ae1459668ce669a3243b
+    m_Address: Assets/Game/Content/Definitions/Inventory_Player.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9dca547010bd56f4580af8c47ce9869a
+    m_Address: Assets/Game/Content/Definitions/Fx_AddItem_FieldRation.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9f47198e35cc4fa9be9e19039ca6a535
+    m_Address: Assets/Game/Content/Definitions/Interaction_Pray.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a3f05bd33c334859a2107c57d1dac237
+    m_Address: Assets/Game/Content/Definitions/Fx_Damage_Poison.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a74ff1b7c4aa4d91a02acc0ec6013878
+    m_Address: Assets/Game/Content/Definitions/Tag_Object_Restorative.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ab0c47e1c71442b18aca9a09e1730297
+    m_Address: Assets/Game/Content/Definitions/Fx_AddItem_Relic.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ac9d8e973902473f9da79d43bfa380b1
+    m_Address: Assets/Game/Content/Definitions/Status_Spikes.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: aecfbe9ded0db0a439639f409009bf24
+    m_Address: Assets/Game/Content/Definitions/Interaction_LootEquipment.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: af788542d4efc2549a5d27e8402df13c
+    m_Address: Assets/Game/Content/Definitions/Ability_SecondWind.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b44cd26603424ed69c136d275fc114cb
+    m_Address: Assets/Game/Content/Definitions/Fx_Heal_Shrine.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b4aef981c1c4626469135d78214843bf
+    m_Address: Assets/Game/Content/Definitions/Fx_Heal_LuckyRegen.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b6aa17fce2b54421aead4ef0a2410f97
+    m_Address: Assets/Game/Content/Definitions/Ability_HealingShrine.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bad34d537fb7e20489b659992c8eb2d4
+    m_Address: Assets/Game/Content/Definitions/Res_Health.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bc68cb3f5bb916442a4bf8f52e6ce875
+    m_Address: Assets/Game/Content/Definitions/Slot_Boots.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: be9f678723c5400c96b3f19a2f5d2aba
+    m_Address: Assets/Game/Content/Definitions/Obj_AncientMachine.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c4af0488d02fa534997ad30f63784694
+    m_Address: Assets/Game/Content/Definitions/Tag_Object_State_Open.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c4c29f18bdc52364f8930815d3595858
+    m_Address: Assets/Game/Content/Definitions/Interaction_Loot.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c5745a38888a4e345b302a3ebe5373eb
+    m_Address: Assets/Game/Content/Definitions/Ability_LootSupplyCrate.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d03e951807e066d4a8c7655232fb8a63
+    m_Address: Assets/Game/Content/Definitions/Res_GiftCharge.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d7296c890dd9d9c4d9be36b874d0eb44
+    m_Address: Assets/Game/Content/Definitions/Obj_SupplyCrate.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e25d1d7c3f750704e851905d41d6a8eb
+    m_Address: Assets/Game/Content/Definitions/Obj_EquipmentCache.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e422b3cf51e66ab448a2d4e71b5e35ac
+    m_Address: Assets/Game/Content/Definitions/Fx_AddTag_Open.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e9420c330203b784f82f26cd8fb7ce0f
+    m_Address: Assets/Game/Content/Definitions/Slot_Charm.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f02adcfafb2c418d9dd22d3a72ed4435
+    m_Address: Assets/Game/Content/Definitions/Ability_ActivateMachine.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f4848e7e42c649f282b47c02ad017ea7
+    m_Address: Assets/Game/Content/Definitions/Tag_Actor_Player.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fa04240ff9c740a099d5a8297970fcd2
+    m_Address: Assets/Game/Content/Definitions/Tag_Object_Hazard.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fb5f0a23388d35a40b5bc421ea93a639
+    m_Address: Assets/Game/Content/Definitions/Fx_AddItem_BootsOfSwiftness.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fe19181425e6f9d448d2c019be6982aa
+    m_Address: Assets/Game/Content/Definitions/Status_LuckyRegen.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fe9d5449a1ed4ee88998e55350086e6c
+    m_Address: Assets/Game/Content/Definitions/Attr_MovementSpeed.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 8eab1a6a1626e214b9dbc347de1d8bd4, type: 2}
   m_SchemaSet:

@@ -1,0 +1,17 @@
+{
+    "name": "ToyChest.Gameplay.Npc",
+    "rootNamespace": "ToyChest.Gameplay.Npc",
+    "references": [
+        "ToyChest.Framework",
+        "ToyChest.Systems.Attributes"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

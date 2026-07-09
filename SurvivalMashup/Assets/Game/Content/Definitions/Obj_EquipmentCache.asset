@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 846792f3b3fcea74fa6b36977b1c2d04, type: 3}
+  m_Name: Obj_EquipmentCache
+  m_EditorClassIdentifier: ToyChest.Gameplay::ToyChest.Gameplay.Objects.GameplayObjectDefinition
+  _definitionId: object.equipment_cache
+  _displayName: Equipment Cache
+  _attributes: []
+  _resources:
+  - {fileID: 11400000, guid: 0108e2ee4d783214eb29d65f901682e7, type: 2}
+  _initialTags:
+  - {fileID: 11400000, guid: 07ea3ecdb6bf3964a99e859ae30b89e8, type: 2}
+  _abilities: []
+  _inventory: {fileID: 0}
+  _equipmentSlots: []
+  _interactions:
+  - {fileID: 11400000, guid: aecfbe9ded0db0a439639f409009bf24, type: 2}

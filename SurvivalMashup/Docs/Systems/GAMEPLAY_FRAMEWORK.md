@@ -586,6 +586,8 @@ AI interacts with gameplay objects through the same interfaces as the player sys
 
 AI should not receive privileged access to gameplay internals.
 
+Validated (Milestone 1, Review Group 5): the first autonomous world actor — a Villager NPC — is an ordinary Gameplay Object composed from authored data, with no privileged access. Its simple autonomous movement is a thin Unity adapter (`NpcWanderLocomotion`, `ToyChest.Gameplay.Npc`) over a pure, deterministic planner (`WanderMotor`), the NPC counterpart to the player's locomotion adapter; it reads movement speed from the same authored attribute and is driven by `Update`, not by any manager, scheduler, or global update service. The player interacts with the NPC through the ordinary Interaction → Ability → Gameplay Effect path, and the NPC's authoritative state persists through the ordinary Save System. This confirms autonomous behaviour attaches at the thin-adapter seam (and, in future, as a capability) without new framework concepts — consistent with the AI extension point below.
+
 ---
 
 # Save System
@@ -724,7 +726,7 @@ Why:
 
 Future consumers of the composition root — all of which reuse the same factory rather than composing objects their own way:
 
-- **Prefab composition:** a prefab carries a `GameplayObjectBehaviour` and a definition reference; instantiation invokes the factory and binds the result.
+- **Prefab composition:** a prefab carries a `GameplayObjectBehaviour` and a definition reference; instantiation invokes the factory and binds the result. *Realized (Milestone 1) by `GameplayObjectSpawner` (`ToyChest.Gameplay`)* — the canonical scene-composition adapter, which runs the factory and binds to the sibling behaviour when the Boot layer injects the scene's services (`GameplaySceneContext` / `IGameplaySceneParticipant`). See `Docs/Architecture/PROJECT_ARCHITECTURE.md`, Scene composition.
 - **Runtime procedural spawning:** spawners and directors (Region Director, encounter systems) request objects from the factory by definition.
 - **Save reconstruction:** the load path rebuilds each object from its definition through the factory, then restores capability state into the composed capabilities.
 - **Networking:** the server-authoritative spawn path composes through the factory and replicates identity plus capability state; clients reconstruct through the same root.

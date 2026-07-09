@@ -2,8 +2,11 @@ using System;
 using NUnit.Framework;
 using ToyChest.Framework.Data;
 using ToyChest.Framework.Modifiers;
+using ToyChest.Framework.Objects;
 using ToyChest.Systems.Attributes;
 using ToyChest.Systems.GameplayEffects;
+using ToyChest.Systems.Inventory;
+using ToyChest.Systems.Items;
 using ToyChest.Systems.Resources;
 using ToyChest.Systems.Tags;
 using ToyChest.Tests.Resources;
@@ -100,6 +103,31 @@ namespace ToyChest.Tests.Effects
 
             _effects.CreateRemoveTag("fx.douse", burning).TryExecute(in _context);
             Assert.IsFalse(_tags.HasTagExact(_tagTable.GetTag("State.Burning")));
+        }
+
+        [Test]
+        public void AddItem_AddsAuthoredStackToTargetInventory()
+        {
+            ItemDefinition scrap = _effects.CreateItem("item.scrap", maxStackSize: 99);
+            var inventory = new InventorySet(default, null, slotCapacity: 8);
+            var context = new EffectContext(
+                default, new EffectTarget(_resources, _attributes, _tags, inventory), _tagTable);
+
+            _effects.CreateAddItem("fx.loot", scrap, quantity: 3).TryExecute(in context);
+
+            Assert.AreEqual(3, inventory.QuantityOf(new DefinitionId("item.scrap")),
+                "Add Item deposits the authored quantity into the target's inventory.");
+        }
+
+        [Test]
+        public void AddItem_MissingInventory_FailsClearly()
+        {
+            ItemDefinition scrap = _effects.CreateItem("item.scrap");
+            var addItem = _effects.CreateAddItem("fx.loot", scrap, quantity: 1);
+
+            // The default context target carries no inventory.
+            var exception = Assert.Throws<InvalidOperationException>(() => addItem.TryExecute(in _context));
+            StringAssert.Contains("fx.loot", exception.Message);
         }
 
         [Test]

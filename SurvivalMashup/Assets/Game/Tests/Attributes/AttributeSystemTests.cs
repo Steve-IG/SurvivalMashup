@@ -132,5 +132,21 @@ namespace ToyChest.Tests.Attributes
             Assert.Throws<KeyNotFoundException>(() => set.GetValue(new DefinitionId("attribute.missing")));
             Assert.IsFalse(set.TryGetValue(new DefinitionId("attribute.missing"), out _));
         }
+
+        [Test]
+        public void Set_EnumeratesInRegistrationOrder()
+        {
+            var set = new AttributeSet();
+            set.AddAttribute(_factory.Create("attribute.max-health", 100f));
+            set.AddAttribute(_factory.Create("attribute.attack", 20f));
+            set.AddAttribute(_factory.Create("attribute.armor", 5f));
+
+            IReadOnlyList<AttributeValue> attributes = set.Attributes;
+            Assert.AreEqual(3, attributes.Count);
+            Assert.AreEqual(new DefinitionId("attribute.max-health"), attributes[0].Definition.Id);
+            Assert.AreEqual(new DefinitionId("attribute.attack"), attributes[1].Definition.Id);
+            Assert.AreEqual(new DefinitionId("attribute.armor"), attributes[2].Definition.Id);
+            Assert.AreEqual(20f, attributes[1].CurrentValue, Tolerance);
+        }
     }
 }

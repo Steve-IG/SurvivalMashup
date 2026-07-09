@@ -59,6 +59,10 @@ Gameplay Effects are instantaneous deterministic operations. Status Effects own 
 
 Milestone 0 implements the stacking subset RefreshDuration, IgnoreDuplicate, ReplaceExisting, and IncreaseStacks (attribute modifiers applied once per stack, so magnitude scales; duration refreshes on stack). Independent Instances and fully custom models are future extensions. Per-stack periodic magnitude scaling arrives with the Increase Magnitude model.
 
+## Applying a status is a caller concern (Milestone 1, Review Group 7)
+
+Applying a status effect is done by the **caller** — equipment, an ability caller, or a world adapter — invoking `StatusEffectSet.Apply`, not by a Gameplay Effect. There is deliberately **no `ApplyStatus` Gameplay Effect**: the Status Effect System already depends on the Gameplay Effect System (a status executes effect sequences), so an effect that applied a status would make `GameplayEffects → StatusEffects` circular. This mirrors the Review Group 6 decision that kept *equipping* a caller concern for the same reason. Environmental status sources (hazard/aura volumes) are thin Unity adapters that call `Apply` on the occupant's set; damage-over-time and healing-over-time are ordinary periodic statuses executing existing `DamageEffect`/`HealEffect` sequences, so no new effect vocabulary was needed.
+
 ---
 
 # Design Philosophy

@@ -71,6 +71,8 @@ Game/
 
     Content/
 
+    Scenes/
+
     Editor/
 
     Tests/
@@ -120,13 +122,16 @@ Contains project-wide infrastructure.
 
 Examples:
 
-- Bootstrap
 - Dependency Injection
 - Service Registration
 - Configuration
 - Logging
 
 Core should remain small and stable.
+
+**Bootstrap placement.** The *application bootstrap* — the composition entry point that wires the whole stack (Gameplay, Save, Addressables) and drives the startup sequence in `Docs/Architecture/ENGINE_STARTUP.md` — lives in a dedicated top-of-stack assembly (`ToyChest.Boot`, `Runtime/Boot/`), not in Core. It sits *above* every layer because it must reference all of them, so placing it in Core would invert the one-directional dependency rule below. Core holds only the small, stable bootstrap *infrastructure* that lower layers may depend on (configuration, logging). Nothing references `ToyChest.Boot`.
+
+**Dev tooling placement.** Runtime debugging tools (currently the read-only `GameplayDebugOverlay`) live in a separate top-of-stack assembly `ToyChest.Debugging` (`Runtime/Debugging/`), also referenced by nothing. It sits above the stack so it may inspect every system, and is kept out of `ToyChest.Boot` so the production startup assembly carries no debug UI. Debug tools only read live state; they never mutate gameplay.
 
 ---
 
@@ -274,6 +279,30 @@ Content/
 ```
 
 Content should primarily consist of ScriptableObject assets and other authoring data.
+
+Definitions loaded at runtime carry the Addressables `definitions` label; `AddressablesDefinitionSource` (`ToyChest.Boot`) loads every labelled asset into the Data Registry at startup, so authoring a new definition is creating the asset and labelling it — no code change. The first authored content, `Content/Definitions/` (the Wooden Crate smoke set), demonstrates the full pipeline.
+
+---
+
+# Scenes/
+
+`Assets/Game/Scenes` is the canonical home for first-party ToyChest scenes, separate from any third-party sample scenes.
+
+```
+Scenes/
+
+    Bootstrap.unity          (application entry; ENGINE_STARTUP.md phase 1; first in Build Settings)
+
+    VerticalSlice.unity      (Milestone 1 gameplay scene; player, camera, interactables)
+
+    Hub.unity                (placeholder)
+
+    MissionPrototype.unity   (placeholder)
+```
+
+`Bootstrap.unity` holds the `GameBootstrap` entry point (`ToyChest.Boot`) and performs engine initialization only. After startup it transitions into `VerticalSlice.unity`, the dedicated gameplay scene where all Milestone 1 gameplay lives (`Docs/Development/MILESTONE_1_VERTICAL_SLICE.md`). Bootstrap is ordered first in Build Settings, VerticalSlice second, so a build launches through the startup path and then into gameplay. Hub and MissionPrototype are placeholders until their gameplay systems exist.
+
+**Scene composition.** Scene-authored Gameplay Objects (the player, interactables, props) are composed by `GameplayObjectSpawner` (`ToyChest.Gameplay`), the canonical Unity adapter that runs the existing `GameplayObjectFactory` and binds the result to the sibling `GameplayObjectBehaviour`. The Boot layer injects the assembled services into each loaded gameplay scene once through a small `GameplaySceneContext` / `IGameplaySceneParticipant` seam — scene components never fetch a global or a service locator. This is the "prefab composition" extension point named in `Docs/Systems/GAMEPLAY_FRAMEWORK.md`, and it is the standard scene composition path until streaming/scene-loading systems arrive.
 
 ---
 
@@ -448,9 +477,15 @@ ToyChest.Inventory
 
 ToyChest.Gameplay
 
+ToyChest.Gameplay.Player
+
 ToyChest.UI
 
 Keep dependencies explicit and minimal.
+
+Player-facing Unity behavior (movement, input, camera, interaction) lives in `ToyChest.Gameplay.Player`, a thin-adapter assembly above `ToyChest.Gameplay`. It composes existing engine capabilities and references Unity's Input System; it holds no gameplay rules.
+
+NPC-facing Unity behavior lives in `ToyChest.Gameplay.Npc` (`Runtime/Gameplay/Npc/`), the parallel thin-adapter assembly for autonomous world actors. Like the player adapters it holds no gameplay rules: `NpcWanderLocomotion` reads the composed object's Movement Speed attribute and drives a `CharacterController` from the pure, deterministic `WanderMotor` (the NPC counterpart to `LocomotionMotor`). An NPC is an ordinary Gameplay Object composed by the same `GameplayObjectSpawner`; its identity, resources, interactions, and abilities are authored data, not code. The assembly references only `ToyChest.Framework` and `ToyChest.Systems.Attributes` — it has no dependency on the player assembly, no input, and introduces no manager, scheduler, or behavior framework.
 
 ---
 

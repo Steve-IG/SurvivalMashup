@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 08d394ba3de2a4f469c603b2cb49ca82, type: 3}
+  m_Name: Ability_HealingShrine
+  m_EditorClassIdentifier: ToyChest.Systems.Abilities::ToyChest.Systems.Abilities.AbilityDefinition
+  _definitionId: ability.healing_shrine
+  _displayName: Pray
+  _category: Interaction
+  _tags: []
+  _targetMode: 1
+  _requiredOwnerTags: []
+  _blockedByOwnerTags: []
+  _costs: []
+  _cooldownSeconds: 0
+  _effects:
+  - {fileID: 11400000, guid: b44cd26603424ed69c136d275fc114cb, type: 2}

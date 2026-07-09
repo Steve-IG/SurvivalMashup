@@ -99,13 +99,13 @@ Everything is an Effect.
 
 ## Atomic Effects
 
-Approved Milestone 0 decision: **Gameplay Effects are atomic.** Each effect performs exactly one deterministic gameplay action — Damage, Heal, Add Resource, Remove Resource, Add Tag, Remove Tag, Apply Modifier. Complex gameplay is produced by composing sequences of atomic effects, never by creating monolithic effects (see `Docs/Architecture/ENGINE_PRINCIPLES.md`, Principle 24, Composition Over Specialization).
+Approved Milestone 0 decision: **Gameplay Effects are atomic.** Each effect performs exactly one deterministic gameplay action — Damage, Heal, Add Resource, Remove Resource, Add Tag, Remove Tag, Apply Modifier, Add Item. Complex gameplay is produced by composing sequences of atomic effects, never by creating monolithic effects (see `Docs/Architecture/ENGINE_PRINCIPLES.md`, Principle 24, Composition Over Specialization). New atomic effects extend this vocabulary as gameplay needs them (Add Item arrived with the Milestone 1 loot loop, depositing an authored item into the target's inventory).
 
 Effects own no duration, no scheduling, and no targeting: the Status Effect System schedules, the Ability System targets. Effect sequences are executed through the single Gameplay Effect Runner, in list order, each effect gated by its own reusable conditions.
 
 ## Context over Ownership
 
-Effects never receive unrestricted access to gameplay objects. The execution context carries **capability views** — the participants' resource, attribute, and tag capabilities — not live object references. An effect can mutate exactly what the invoker wired into the context, and nothing else.
+Effects never receive unrestricted access to gameplay objects. The execution context carries **capability views** — the participants' resource, attribute, tag, and inventory capabilities — not live object references. An effect can mutate exactly what the invoker wired into the context, and nothing else. New capability views are added to this seam only when an atomic effect needs one (the inventory view arrived with the Add Item effect); each remains optional, and an effect fails clearly when a capability it requires is absent.
 
 This keeps effects executable against anything that exposes the right capabilities (a composed Gameplay Object, sibling capabilities wired at composition time, or bare capabilities in a test), keeps invokers in control of what an effect may touch, and prevents effects from growing hidden dependencies on object internals.
 

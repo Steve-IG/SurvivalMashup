@@ -297,7 +297,7 @@ namespace ToyChest.Systems.Abilities
 
         private static bool IsEmpty(in EffectTarget target)
         {
-            return target.Resources == null && target.Attributes == null && target.Tags == null;
+            return target.Resources == null && target.Attributes == null && target.Tags == null && target.Inventory == null;
         }
     }
 }

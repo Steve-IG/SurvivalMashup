@@ -20,13 +20,14 @@ Every AI implementation session should begin with:
 
 1. `Docs/AI_AGENT_INDEX.md`
 2. `Docs/Development/DEVELOPMENT_PLAN.md`
-3. `Docs/Architecture/CORE_ARCHITECTURE.md`
-4. `Docs/Architecture/ENGINE_PRINCIPLES.md`
-5. `Docs/Architecture/CODING_PRINCIPLES.md`
-6. `Docs/Architecture/AI_CODING_STANDARDS.md`
-7. `Docs/Architecture/PROJECT_ARCHITECTURE.md`
-8. Task-specific `Docs/Systems/*.md`
-9. Relevant `Docs/Foundations/*.md`
+3. `Docs/Development/MILESTONE_1_VERTICAL_SLICE.md` (the Milestone 1 gameplay contract)
+4. `Docs/Architecture/CORE_ARCHITECTURE.md`
+5. `Docs/Architecture/ENGINE_PRINCIPLES.md`
+6. `Docs/Architecture/CODING_PRINCIPLES.md`
+7. `Docs/Architecture/AI_CODING_STANDARDS.md`
+8. `Docs/Architecture/PROJECT_ARCHITECTURE.md`
+9. Task-specific `Docs/Systems/*.md`
+10. Relevant `Docs/Foundations/*.md`
 
 Do not begin implementation from chat history, older design drafts, or inferred intent.
 

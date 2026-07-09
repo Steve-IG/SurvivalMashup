@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 846792f3b3fcea74fa6b36977b1c2d04, type: 3}
+  m_Name: Obj_WoodenCrate
+  m_EditorClassIdentifier: ToyChest.Gameplay::ToyChest.Gameplay.Objects.GameplayObjectDefinition
+  _definitionId: object.wooden_crate
+  _displayName: Wooden Crate
+  _attributes:
+  - {fileID: 11400000, guid: 106981fc59ce5074c9051e5720476594, type: 2}
+  _resources:
+  - {fileID: 11400000, guid: bad34d537fb7e20489b659992c8eb2d4, type: 2}
+  _initialTags:
+  - {fileID: 11400000, guid: 07ea3ecdb6bf3964a99e859ae30b89e8, type: 2}
+  _abilities: []
+  _inventory: {fileID: 11400000, guid: 2cf0dc5a88d735e4cac2def156838335, type: 2}
+  _equipmentSlots: []
+  _interactions:
+  - {fileID: 11400000, guid: 15e8cb10327bedc4ba497427d4234caf, type: 2}

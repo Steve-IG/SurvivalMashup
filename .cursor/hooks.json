@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "hooks": {
+    "afterMCPExecution": [
+      {
+        "command": "powershell -NoProfile -ExecutionPolicy Bypass -File .cursor/hooks/unity-save-after-mcp.ps1",
+        "timeout": 5
+      }
+    ]
+  }
+}

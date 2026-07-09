@@ -117,8 +117,17 @@ namespace ToyChest.Gameplay.Objects
 
             capabilities.Add(tags);
 
+            // Inventory before the owner target so effects can mutate the owner's own inventory
+            // (e.g. a Self-targeted Add Item) through the same capability view.
+            InventorySet inventory = null;
+            if (definition.Inventory != null)
+            {
+                inventory = new InventorySet(id, gate, definition.Inventory.SlotCapacity);
+                capabilities.Add(inventory);
+            }
+
             // Abilities and statuses last: both are wired to the sibling capabilities above.
-            var ownerTarget = new EffectTarget(resources, attributes, tags);
+            var ownerTarget = new EffectTarget(resources, attributes, tags, inventory);
 
             var abilities = new AbilitySet(id, gate, _context.TagTable, _effectRunner, ownerTarget);
             foreach (AbilityDefinition ability in definition.Abilities)
@@ -135,11 +144,6 @@ namespace ToyChest.Gameplay.Objects
                 _effectRunner,
                 ownerTarget);
             capabilities.Add(statuses);
-
-            if (definition.Inventory != null)
-            {
-                capabilities.Add(new InventorySet(id, gate, definition.Inventory.SlotCapacity));
-            }
 
             if (definition.EquipmentSlots.Count > 0)
             {

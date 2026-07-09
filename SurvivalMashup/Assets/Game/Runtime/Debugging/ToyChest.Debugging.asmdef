@@ -1,0 +1,26 @@
+{
+    "name": "ToyChest.Debugging",
+    "rootNamespace": "ToyChest.Debugging",
+    "references": [
+        "ToyChest.Core",
+        "ToyChest.Framework",
+        "ToyChest.Systems.Tags",
+        "ToyChest.Systems.Attributes",
+        "ToyChest.Systems.Resources",
+        "ToyChest.Systems.Abilities",
+        "ToyChest.Systems.Inventory",
+        "ToyChest.Systems.Interactions",
+        "ToyChest.Gameplay",
+        "ToyChest.Boot",
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -28,6 +28,24 @@ If documentation is ambiguous or conflicting, implementation should pause and re
 
 ---
 
+## Milestone 0 Complete
+
+The ToyChest gameplay engine is now considered **architecturally stable**.
+
+Future implementation should extend existing systems rather than introduce new framework concepts.
+
+When implementing gameplay:
+
+* Prefer composition over new abstractions.
+* Reuse existing systems whenever possible.
+* Avoid architectural refactoring unless a real deficiency is discovered.
+* Changes to Framework or Core architecture require explicit approval.
+* Favor gameplay iteration over engine expansion.
+
+The focus of future milestones is building **ToyChest**, not redesigning the engine.
+
+---
+
 # Beginning a Session
 
 At the start of every implementation session:
@@ -212,6 +230,25 @@ Architecture Review →
 Next Review Group
 
 Do not begin the next review group until the current one has been reviewed and approved.
+
+---
+
+# Unity MCP / Autonomous Workflow
+
+When driving the Unity Editor through Coplay MCP, Unity's **"Scene has been modified — save?"** modal blocks the editor main thread and causes MCP timeouts. The project prevents this with three layers (always on; do not disable without replacing them):
+
+1. **`SceneAutoSave`** (`Assets/Game/Editor/SceneAutoSave.cs`) — editor-side auto-save at reload, Play, scene-switch, 2s debounce, and sentinel polling.
+2. **`SaveAll`** (`Tools/CoplayScripts/SaveAll.cs`) — explicit flush via `execute_script` when you need an immediate save.
+3. **Cursor hook** (`.cursor/hooks.json` → `afterMCPExecution`) — drops `SurvivalMashup/.cursor/unity-save-requested` after scene-mutating Coplay MCP tools so Unity flushes on the next editor frame.
+
+**Agent rules when using Coplay MCP:**
+
+* After batches of scene/prefab MCP edits, call `SaveAll` (or `save_scene` plus `SaveAll` when both scene and assets changed).
+* Before `execute_script` that compiles, `open_scene`, or `play_game`, call `SaveAll` if anything was mutated in the same batch.
+* Prefer saving scenes to disk with real paths (untitled scenes are intentionally skipped to avoid Save-As dialogs).
+* Use git for rollback; auto-save replaces Unity's discard prompt by design.
+
+**If MCP still times out:** confirm Unity has recompiled `SceneAutoSave` (domain reload), check the Cursor **Hooks** output channel for hook errors, and verify the sentinel file appears briefly under `SurvivalMashup/.cursor/` after MCP mutations.
 
 ---
 

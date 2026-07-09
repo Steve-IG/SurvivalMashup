@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d39bf6d11f914b46a5c7da223a9c45c, type: 3}
+  m_Name: Equippable_BootsOfSwiftness
+  m_EditorClassIdentifier: ToyChest.Systems.Equipment::ToyChest.Systems.Equipment.EquippableDefinition
+  _allowedSlots:
+  - {fileID: 11400000, guid: bc68cb3f5bb916442a4bf8f52e6ce875, type: 2}
+  _requiredOwnerTags: []
+  _grantedTags:
+  - {fileID: 11400000, guid: 7556ffb476693c64d99a4b386efc8cf1, type: 2}
+  _attributeModifiers:
+  - _attributeId: attribute.movement_speed
+    _operation: 0
+    _value: 3
+  _grantedAbilities: []
+  _appliedStatusEffects: []

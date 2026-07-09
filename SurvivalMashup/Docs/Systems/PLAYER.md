@@ -19,16 +19,30 @@ Primary Responsibilities:
 - Define how controlling the player should feel and how player capabilities should expand over time.
 
 Primary Data:
-- TBD
+- The `Obj_Player` `GameplayObjectDefinition` and the attribute/resource/tag definitions it composes (Movement Speed, Maximum Health, Current Health, `Actor.Player`). The player owns no bespoke data type — it is authored composition.
 
 Primary Runtime Objects:
-- Player Gameplay Object and its composed capability components.
+- Player Gameplay Object and its composed capability components. Player-specific Unity behavior lives in thin adapters (`ToyChest.Gameplay.Player`) that own no gameplay state.
 
 Published Events:
-- TBD
+- None owned by the Player system directly; player actions publish through the systems that own them (Ability, Interaction, Resource, Framework lifecycle).
 
 Consumed Events:
-- TBD
+- None required by the Milestone 1 slice; UI/presentation may observe the systems' events.
+
+---
+
+# Milestone 1 Implementation (approved decisions)
+
+The playable player is built **entirely through composition and authored data on the frozen Milestone 0 engine** — there is no player-specific engine code, no `Player.cs` gameplay class. The player is a `GameplayObjectDefinition` (`Obj_Player`) composed of existing capabilities; Unity-facing behavior is thin adapters that read the composed object.
+
+- **Player as data.** `Obj_Player` composes a Movement Speed and a Maximum Health `AttributeDefinition`, the shared bound Current Health `ResourceDefinition`, and an `Actor.Player` identity `TagDefinition`. Inventory, equipment, abilities, and interactions are added the same way — as authored capabilities — in later review groups.
+- **Movement ownership.** Movement *speed* is an authored **Attribute** (one source of truth); *locomotion* is a thin `PlayerLocomotion` adapter that reads that attribute off the composed object and drives a `CharacterController`, with the direction math isolated in the pure, deterministic `LocomotionMotor`. Discrete traversal (jump, dash, dodge) is later, **Ability**-driven work.
+- **Input.** `PlayerInputBridge` reads the authored `Player.inputactions` (Unity Input System) and forwards intent: the move vector to `PlayerLocomotion`, the interact button to `PlayerInteractor`. It makes no gameplay decisions.
+- **Interaction.** `PlayerInteractor` performs only scene-facing proximity discovery, producing a deterministically ordered candidate list routed to the existing `InteractionSystem`; all validation and execution stay in the engine.
+- **Camera.** A minimal `ThirdPersonCameraRig` follow establishes the camera foundation; it can be replaced by a Cinemachine rig with no engine impact, since locomotion reads the active camera's facing.
+- **Scene composition.** The player is a scene object composed by `GameplayObjectSpawner` (see `Docs/Architecture/PROJECT_ARCHITECTURE.md`, Scene composition), not by bespoke player spawning.
+- **Death and respawn (Review Group 7).** Death is not a system: it is the existing **Resource Depleted** transition on Current Health. Respawn is intentionally minimal and manager-free — a pure, unit-tested `PlayerRespawn` helper (the respawn counterpart to `InventoryEquip`) restores a downed player to a clean state using only existing capability operations (refill resources through the Resource System, clear active statuses through the Status Effect System), and a thin `PlayerRespawnController` listens for the health-depleted signal and, deferred one frame so it never mutates the status set mid-tick, restores state and moves the player to an authored spawn-point Transform. A spawn point is just a scene `Transform`; there is no checkpoint system.
 
 ---
 

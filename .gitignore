@@ -32,7 +32,13 @@ Desktop.ini
 SurvivalMashup/Packages/Coplay/Editor/
 
 # Cursor local state (keep rules/config if added later)
-.cursor/
+.cursor/*
+!.cursor/hooks.json
+!.cursor/hooks/
+!.cursor/hooks/**
+
+# Unity editor sentinel for MCP auto-save (transient)
+SurvivalMashup/.cursor/unity-save-requested
 
 # Asset Knowledge Base scrape cache
 Tools/AssetKnowledgeBase/cache/

@@ -17,7 +17,10 @@
         "ToyChest.Systems.Inventory",
         "ToyChest.Systems.Equipment",
         "ToyChest.Systems.Save",
-        "ToyChest.Gameplay"
+        "ToyChest.Gameplay",
+        "ToyChest.Gameplay.Player",
+        "ToyChest.Gameplay.Npc",
+        "ToyChest.Boot"
     ],
     "includePlatforms": [
         "Editor"

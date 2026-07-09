@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using ToyChest.Framework.Modifiers;
 using ToyChest.Systems.GameplayEffects;
+using ToyChest.Systems.Items;
 using ToyChest.Systems.StatusEffects;
 using ToyChest.Systems.Tags;
 using UnityEditor;
@@ -76,6 +77,29 @@ namespace ToyChest.Tests.Effects
             var serialized = new SerializedObject(effect);
             serialized.FindProperty("_definitionId").stringValue = id;
             serialized.FindProperty("_tag").objectReferenceValue = tag;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            return effect;
+        }
+
+        public ItemDefinition CreateItem(string id, int maxStackSize = 99)
+        {
+            var item = ScriptableObject.CreateInstance<ItemDefinition>();
+            Track(item);
+            var serialized = new SerializedObject(item);
+            serialized.FindProperty("_definitionId").stringValue = id;
+            serialized.FindProperty("_maxStackSize").intValue = maxStackSize;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            return item;
+        }
+
+        public AddItemEffect CreateAddItem(string id, ItemDefinition item, int quantity)
+        {
+            var effect = ScriptableObject.CreateInstance<AddItemEffect>();
+            Track(effect);
+            var serialized = new SerializedObject(effect);
+            serialized.FindProperty("_definitionId").stringValue = id;
+            serialized.FindProperty("_item").objectReferenceValue = item;
+            serialized.FindProperty("_quantity").intValue = quantity;
             serialized.ApplyModifiedPropertiesWithoutUndo();
             return effect;
         }

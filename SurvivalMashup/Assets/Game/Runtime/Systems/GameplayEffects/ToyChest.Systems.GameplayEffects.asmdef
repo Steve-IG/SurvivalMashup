@@ -6,7 +6,9 @@
         "ToyChest.Framework",
         "ToyChest.Systems.Tags",
         "ToyChest.Systems.Attributes",
-        "ToyChest.Systems.Resources"
+        "ToyChest.Systems.Resources",
+        "ToyChest.Systems.Items",
+        "ToyChest.Systems.Inventory"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

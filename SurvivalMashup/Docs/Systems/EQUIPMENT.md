@@ -49,6 +49,33 @@ Level/adventure/faction requirements, resource modifiers, World Property contrib
 
 ---
 
+# Milestone 1 Integration (Review Group 6)
+
+Review Group 6 validated that equipment modifies gameplay entirely through the existing Gameplay Object architecture, using authored data only. No new framework concepts were introduced.
+
+**The equip "caller".** Capability Independence means the Equipment System never reaches into inventories, so *moving* an Item Instance between a bag and a slot is a caller concern. That caller is two small pieces in the `ToyChest.Gameplay.Player` assembly (which already depends on Equipment, Inventory, and Items):
+- `InventoryEquip` — a pure, Unity-free static helper that orchestrates whole-stack moves between an `InventorySet` and an `EquipmentSet`. It validates with `EquipmentSet.CanEquip` before removing anything (a rejected candidate leaves the bag untouched) and is all-or-nothing on unequip (no room in the bag ⇒ the item stays equipped), so no item is ever lost. It is deterministic and unit-testable without a scene.
+- `PlayerEquipmentController` — a thin `MonoBehaviour` adapter (the same shape as `PlayerInteractor`) that turns an `Equip` input press into a call on `InventoryEquip` for its authored managed slots. It owns no rules. `PlayerInputBridge` gained an `Equip` action that toggles it.
+
+**Why no `EquipItemEffect`.** Routing equip through a generic Gameplay Effect was rejected: `GameplayEffects` cannot see `EquipmentSet` without `EffectTarget` referencing the Equipment assembly, and Equipment already references `GameplayEffects` — a dependency cycle. The caller pattern (interaction/UI/input adapter) is the intended integration point and avoids it. See Risks / Technical Debt below.
+
+**Authored content (all under `Assets/Game/Content/Definitions`, Addressables label `definitions`):**
+- *Boots of Swiftness* (`item.boots_of_swiftness`, slot `slot.boots`): `+3` Movement Speed attribute modifier and the `Equipment.Swift` tag.
+- *Lucky Charm* (`item.lucky_charm`, slot `slot.charm`): `+25` Maximum Health attribute modifier (Current Health's maximum tracks it via the existing attribute-bound resource), the `Equipment.Lucky` tag, the granted `Second Wind` ability (self heal on a cooldown), and the passive infinite periodic `Lucky Regen` status.
+- *Equipment Cache* (`object.equipment_cache`): grants both items into the bag through the existing loot interaction/ability/`AddItemEffect` path — equipment pickup reuses the Review Group 4 loot loop with no new mechanism.
+- `Obj_Player` gained the two equipment slots; the `Player` prefab carries `PlayerEquipmentController` (managed slots: Boots, Charm) and the `EquipmentCache` is placed in `VerticalSlice`.
+
+**Verified end-to-end** (deterministic tests + an in-editor playtest trace): pickup → equip activates every contribution through its owning system → unequip revokes every contribution and returns the item → the equipped loadout and all grants round-trip through the Save System unchanged (Movement Speed 5→8, Maximum Health 50→75, both tags, the ability, and the status all restored on reload).
+
+## Risks / Technical Debt (Review Group 6)
+
+- **Shared grant refcounting (carried from Milestone 0).** Two equipped items granting the *same* ability or status still share one grant; the first unequip removes it. Not exercised by the authored content (each grant is unique). A refcounted grant is the fix if authoring ever hits it — no architectural change.
+- **Resource modifiers via attributes only.** "+Maximum Health" is authored as a *Maximum Health attribute* modifier, and Current Health's maximum follows it through the existing attribute-bound resource. Direct equipment *resource* modifiers (e.g. a flat current-value bump independent of an attribute) remain future work as specified below.
+- **Equip is a caller concern, by design.** There is deliberately no generic equip Gameplay Effect (it would create a `GameplayEffects → Equipment` dependency cycle). Non-player equippers (companions, AI) will each need their own thin caller, or a shared interaction, when they arrive. This is an accepted seam, not a missing engine feature.
+- **Demo toggle.** `PlayerEquipmentController.Toggle()` equips/unequips *all* managed slots at once — a single-button demonstration of the caller, not final equip UX. Slot-by-slot selection belongs to a future inventory/equipment UI.
+
+---
+
 # Purpose
 
 The Equipment System manages items that are actively equipped by Gameplay Objects.

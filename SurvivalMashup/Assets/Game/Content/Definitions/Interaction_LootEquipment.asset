@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c7949d0075c0d843b91a7ddb2edeb26, type: 3}
+  m_Name: Interaction_LootEquipment
+  m_EditorClassIdentifier: ToyChest.Systems.Interactions::ToyChest.Systems.Interactions.InteractionDefinition
+  _definitionId: interaction.loot_equipment
+  _displayName: Take
+  _ability: {fileID: 11400000, guid: 017579de046b5f84ba4e4337f1657871, type: 2}
+  _priority: 10
+  _requiredInteractorTags:
+  - {fileID: 11400000, guid: f4848e7e42c649f282b47c02ad017ea7, type: 2}
+  _blockedByInteractorTags: []
