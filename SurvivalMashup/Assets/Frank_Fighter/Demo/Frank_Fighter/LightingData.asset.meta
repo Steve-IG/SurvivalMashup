@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: ac56f42d6bd4cff43aa217781925a52e
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 112000000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 137306
+  packageName: Frank RPG Fighter
+  packageVersion: 1.1
+  assetPath: Assets/Frank_Fighter/Demo/Frank_Fighter/LightingData.asset
+  uploadId: 837888

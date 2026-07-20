@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 8bd7499242e56814996d638464aea4d9
+timeCreated: 1547532675
+licenseType: Store
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 138889
+  packageName: Frank RPG Mage
+  packageVersion: 1.1
+  assetPath: Assets/Frank_Fighter/Demo/Frank_Mage.unity
+  uploadId: 837898

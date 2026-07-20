@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 1ac1655d23675204d8108c84aab0e74c
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4890085278179872738
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 138889
+  packageName: Frank RPG Mage
+  packageVersion: 1.1
+  assetPath: Assets/Frank_Fighter/Demo/Frank_MageSettings.lighting
+  uploadId: 837898

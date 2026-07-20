@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: f65237fe155e52f4192dff2c7781539e
+timeCreated: 1518098687
+licenseType: Store
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 133704
+  packageName: RPG VFX Bundle
+  packageVersion: 6.0.5
+  assetPath: Assets/Hovl Studio/HSFiles/Materials/Flare3cg.mat
+  uploadId: 952632

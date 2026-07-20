@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: b9bdb80bc0fcb514290dbeb1d2ce6cbe
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 138858
+  packageName: Frank RPG Archer
+  packageVersion: 1.1
+  assetPath: Assets/Frank_Fighter/Assets/Animations/FBX Animation/Root_Motion/Test.controller
+  uploadId: 837934
