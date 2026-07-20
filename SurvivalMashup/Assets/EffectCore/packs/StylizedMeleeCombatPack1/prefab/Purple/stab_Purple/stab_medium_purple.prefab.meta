@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 48315fcd75c699e43b961dade920da60
+timeCreated: 1482852364
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/packs/StylizedMeleeCombatPack1/prefab/Purple/stab_Purple/stab_medium_purple.prefab
+  uploadId: 413727

@@ -1,0 +1,20 @@
+fileFormatVersion: 2
+guid: d1cbcf8d48432984389910c315e3e773
+timeCreated: 1515361011
+licenseType: Store
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/packs/StylizedMeleeCombatPack1/WebBuild/scripts/TimeController.cs
+  uploadId: 413727

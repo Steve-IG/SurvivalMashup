@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 702fccd061a129b45998a1bfe6af2449
+timeCreated: 1482926631
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/packs/StylizedMeleeCombatPack1/prefab/Purple/slash_Purple/slash_heavy_purple.prefab
+  uploadId: 413727

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 168de9375fff6924bbe350e64f17dfb2
+timeCreated: 1482852364
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/packs/StylizedMeleeCombatPack1/prefab/Blue/stab_Blue/stab_weak_Blue.prefab
+  uploadId: 413727

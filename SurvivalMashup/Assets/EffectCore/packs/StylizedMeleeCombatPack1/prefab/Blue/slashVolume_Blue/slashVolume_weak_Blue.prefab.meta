@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: b0634f033a04fd846af588b8ce88f451
+timeCreated: 1481471222
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/packs/StylizedMeleeCombatPack1/prefab/Blue/slashVolume_Blue/slashVolume_weak_Blue.prefab
+  uploadId: 413727

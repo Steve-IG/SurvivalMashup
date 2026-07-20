@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 003c9a4899ac8b74fb7a7ff044aa2a9d
+timeCreated: 1488405478
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/materials/slash/emptymaterial.mat
+  uploadId: 413727

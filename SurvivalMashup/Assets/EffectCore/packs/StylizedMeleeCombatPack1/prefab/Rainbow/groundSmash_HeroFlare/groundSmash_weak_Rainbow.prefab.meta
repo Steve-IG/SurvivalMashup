@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 95ee3a3f787448c4ab0cecdd37daf97e
+timeCreated: 1483016083
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/packs/StylizedMeleeCombatPack1/prefab/Rainbow/groundSmash_HeroFlare/groundSmash_weak_Rainbow.prefab
+  uploadId: 413727

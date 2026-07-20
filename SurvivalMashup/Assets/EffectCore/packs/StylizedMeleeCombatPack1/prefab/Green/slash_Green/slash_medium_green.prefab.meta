@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: 48a97f0c9c46527458051aa89f28115b
+timeCreated: 1513719707
+licenseType: Store
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 100100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/packs/StylizedMeleeCombatPack1/prefab/Green/slash_Green/slash_medium_green.prefab
+  uploadId: 413727

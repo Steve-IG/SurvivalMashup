@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: eebb932399884444a84ce2ea44c7b522
+timeCreated: 1482852364
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/packs/StylizedMeleeCombatPack1/prefab/White/stab_White/stab_medium_white.prefab
+  uploadId: 413727

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 921a91516cb1d4f4da1702cc303b581b
+timeCreated: 1478435619
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/materials/slash/slash_heavy_glow_additive.mat
+  uploadId: 413727

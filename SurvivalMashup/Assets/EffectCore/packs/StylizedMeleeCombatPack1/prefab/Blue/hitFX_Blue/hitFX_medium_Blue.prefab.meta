@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 149f4c873f67b1040a4bf504c031894e
+timeCreated: 1479935578
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/packs/StylizedMeleeCombatPack1/prefab/Blue/hitFX_Blue/hitFX_medium_Blue.prefab
+  uploadId: 413727

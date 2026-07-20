@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 2a2836ab3430a3143b21f4e33fd190dc
+timeCreated: 1482852364
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/packs/StylizedMeleeCombatPack1/prefab/DarkBlue/stab_DarkBlue/stab_weak_darkBlue.prefab
+  uploadId: 413727

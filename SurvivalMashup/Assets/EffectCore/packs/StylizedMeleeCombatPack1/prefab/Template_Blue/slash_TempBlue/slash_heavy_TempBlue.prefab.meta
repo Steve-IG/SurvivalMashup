@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: a46b50b9ccbbea44f90d060bd461052b
+timeCreated: 1482926631
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/packs/StylizedMeleeCombatPack1/prefab/Template_Blue/slash_TempBlue/slash_heavy_TempBlue.prefab
+  uploadId: 413727

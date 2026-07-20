@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: c32c39230f843f644b319be07ec22683
+timeCreated: 1534264551
+licenseType: Store
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 25800000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/packs/StylizedMeleeCombatPack1/scenes/StylizedMeleePack1/LightingData.asset
+  uploadId: 413727

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 05336fb7e80397246bc3da6c6a04ac97
+timeCreated: 1482926631
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/packs/StylizedMeleeCombatPack1/prefab/DarkBlue/slash_DarkBlue/slash_heavy_darkBlue.prefab
+  uploadId: 413727

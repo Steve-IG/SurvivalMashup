@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: aa4492488f4465f41a2ae99c8f113119
+timeCreated: 1483010279
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/packs/StylizedMeleeCombatPack1/prefab/DarkBlue/stab_DarkBlue/stab_heavy_darkBlue.prefab
+  uploadId: 413727

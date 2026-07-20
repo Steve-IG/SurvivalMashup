@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 96e5103563acfe04b931c529e5a5fc04
+timeCreated: 1483013115
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/packs/StylizedMeleeCombatPack1/prefab/RedGreen/groundSmash_redgreen/groundSmash_heavy_redgreen.prefab
+  uploadId: 413727

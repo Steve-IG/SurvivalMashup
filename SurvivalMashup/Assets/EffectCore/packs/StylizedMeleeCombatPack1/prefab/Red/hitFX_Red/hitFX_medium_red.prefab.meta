@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 138787a5a15d4e148ac9c4e8caddf136
+timeCreated: 1479935578
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/packs/StylizedMeleeCombatPack1/prefab/Red/hitFX_Red/hitFX_medium_red.prefab
+  uploadId: 413727

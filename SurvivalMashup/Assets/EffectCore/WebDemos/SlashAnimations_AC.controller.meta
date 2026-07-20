@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: d27fd1a02fd80484287f7a752e827606
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/WebDemos/SlashAnimations_AC.controller
+  uploadId: 413727

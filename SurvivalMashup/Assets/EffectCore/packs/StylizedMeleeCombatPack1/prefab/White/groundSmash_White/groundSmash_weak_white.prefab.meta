@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: feba5e40c081ef749aa5c20af66feb87
+timeCreated: 1483016083
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/packs/StylizedMeleeCombatPack1/prefab/White/groundSmash_White/groundSmash_weak_white.prefab
+  uploadId: 413727

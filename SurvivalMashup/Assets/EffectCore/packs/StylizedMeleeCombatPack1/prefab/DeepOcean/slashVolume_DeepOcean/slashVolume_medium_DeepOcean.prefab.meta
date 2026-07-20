@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: bb8dec55b2e5051499c575c92c7b70b8
+timeCreated: 1513719707
+licenseType: Store
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 100100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/packs/StylizedMeleeCombatPack1/prefab/DeepOcean/slashVolume_DeepOcean/slashVolume_medium_DeepOcean.prefab
+  uploadId: 413727

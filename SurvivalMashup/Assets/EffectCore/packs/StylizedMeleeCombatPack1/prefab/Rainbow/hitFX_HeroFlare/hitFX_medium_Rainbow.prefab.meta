@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 28d0dee5d04408e4f9e4a3af5c7f0d89
+timeCreated: 1479935578
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/packs/StylizedMeleeCombatPack1/prefab/Rainbow/hitFX_HeroFlare/hitFX_medium_Rainbow.prefab
+  uploadId: 413727

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 46708cf2c2dfdeb4590d68639bcb71ac
+timeCreated: 1482852364
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/packs/StylizedMeleeCombatPack1/prefab/Rainbow/stab_HeroFlare/stab_weak_Rainbow.prefab
+  uploadId: 413727

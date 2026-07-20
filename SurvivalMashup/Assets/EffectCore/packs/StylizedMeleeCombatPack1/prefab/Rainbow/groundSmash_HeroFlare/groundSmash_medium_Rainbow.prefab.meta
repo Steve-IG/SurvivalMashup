@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 4ab98eaf7b2717246b5b7d580991abb0
+timeCreated: 1482933090
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/packs/StylizedMeleeCombatPack1/prefab/Rainbow/groundSmash_HeroFlare/groundSmash_medium_Rainbow.prefab
+  uploadId: 413727

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: ca7aa5115a2a24843adc24bbc470704e
+timeCreated: 1482926631
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/packs/StylizedMeleeCombatPack1/prefab/Rainbow/slashVolume_HeroFlare/slashVolume_heavy_Rainbow.prefab
+  uploadId: 413727

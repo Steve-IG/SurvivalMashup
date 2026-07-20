@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 16f6c8ae14d2b864e96b696af70ba771
+timeCreated: 1482933090
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/packs/StylizedMeleeCombatPack1/prefab/Green/groundSmash_Green/groundSmash_medium_green.prefab
+  uploadId: 413727

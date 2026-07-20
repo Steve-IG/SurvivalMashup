@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: c92e8b8d69c459e4e97d88ead1e6bb83
+timeCreated: 1482852364
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/packs/StylizedMeleeCombatPack1/prefab/DeepOcean/stab_DeepOcean/stab_weak_DeepOcean.prefab
+  uploadId: 413727

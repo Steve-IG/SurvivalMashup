@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 06560ad2087ac9b46837c3c9f0bb53eb
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/models/Materials/slash_slash_fat_180Mat.mat
+  uploadId: 413727

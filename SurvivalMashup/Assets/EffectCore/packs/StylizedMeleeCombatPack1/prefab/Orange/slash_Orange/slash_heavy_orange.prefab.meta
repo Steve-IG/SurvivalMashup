@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: d4d61848b94b143449b9418ccc2796b3
+timeCreated: 1482926631
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/packs/StylizedMeleeCombatPack1/prefab/Orange/slash_Orange/slash_heavy_orange.prefab
+  uploadId: 413727

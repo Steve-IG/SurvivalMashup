@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: 6859c9e9eea91e644bb847d75ae0dcd7
+timeCreated: 1513719707
+licenseType: Store
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 100100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/packs/StylizedMeleeCombatPack1/prefab/Rainbow/slash_HeroFlare/slash_medium_Rainbow.prefab
+  uploadId: 413727

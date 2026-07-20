@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 67d2fa965ddcabe40ae22978289fbc1a
+timeCreated: 1488405478
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/materials/generic/fullcircle_faded_ztestAlways_additive.mat
+  uploadId: 413727

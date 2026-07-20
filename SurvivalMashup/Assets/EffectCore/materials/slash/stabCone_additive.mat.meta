@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: c8c337ee1bbd0f842936802e553b6a7f
+timeCreated: 1488405478
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/materials/slash/stabCone_additive.mat
+  uploadId: 413727

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: d7d2833237f800f42b3e6e1862ac9f4d
+timeCreated: 1482926631
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/packs/StylizedMeleeCombatPack1/prefab/Green/slashVolume_Green/slashVolume_heavy_green.prefab
+  uploadId: 413727

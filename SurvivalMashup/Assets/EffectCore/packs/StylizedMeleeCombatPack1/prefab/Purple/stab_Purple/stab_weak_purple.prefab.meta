@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: c0d70c8943056384fa5a209f01d63c1e
+timeCreated: 1482852364
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/packs/StylizedMeleeCombatPack1/prefab/Purple/stab_Purple/stab_weak_purple.prefab
+  uploadId: 413727

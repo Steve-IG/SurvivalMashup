@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 771478febc2444e418171d5868e9412f
+timeCreated: 1482926631
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/packs/StylizedMeleeCombatPack1/prefab/White/slash_White/slash_heavy_white.prefab
+  uploadId: 413727

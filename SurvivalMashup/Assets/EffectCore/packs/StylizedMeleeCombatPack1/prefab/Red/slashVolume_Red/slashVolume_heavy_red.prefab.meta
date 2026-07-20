@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: ac3db2660e2bc934c85cfe092b70f273
+timeCreated: 1482926631
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/packs/StylizedMeleeCombatPack1/prefab/Red/slashVolume_Red/slashVolume_heavy_red.prefab
+  uploadId: 413727

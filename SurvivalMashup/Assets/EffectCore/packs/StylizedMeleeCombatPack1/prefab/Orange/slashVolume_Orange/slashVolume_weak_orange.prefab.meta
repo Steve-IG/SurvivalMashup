@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 8d528a2df53cc0d43904733f9e627537
+timeCreated: 1481471222
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/packs/StylizedMeleeCombatPack1/prefab/Orange/slashVolume_Orange/slashVolume_weak_orange.prefab
+  uploadId: 413727

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: faed9e251749df948bf1edbc6e840c2b
+timeCreated: 1482933090
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/packs/StylizedMeleeCombatPack1/prefab/DeepOcean/groundSmash_DeepOcean/groundSmash_medium_DeepOcean.prefab
+  uploadId: 413727

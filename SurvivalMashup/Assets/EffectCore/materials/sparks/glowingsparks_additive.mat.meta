@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 73c6ed346c849bd44a04cf750a051496
+timeCreated: 1488405478
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/materials/sparks/glowingsparks_additive.mat
+  uploadId: 413727

@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 8f45a5badc1aa86419e2412ec614a1bc
+timeCreated: 1483302225
+licenseType: Store
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/packs/StylizedMeleeCombatPack1/scenes/StylizedMeleePack1.unity
+  uploadId: 413727

@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: af0ab3c5d17489746bef55ff6ef70699
+timeCreated: 1513719707
+licenseType: Store
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 100100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/packs/StylizedMeleeCombatPack1/prefab/White/slashVolume_White/slashVolume_medium_white.prefab
+  uploadId: 413727

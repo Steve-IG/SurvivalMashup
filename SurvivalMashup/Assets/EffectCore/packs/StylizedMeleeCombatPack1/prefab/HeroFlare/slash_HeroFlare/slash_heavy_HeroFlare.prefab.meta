@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: cc27ec9f8b70a864da625084bbe7d0ed
+timeCreated: 1482926631
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/packs/StylizedMeleeCombatPack1/prefab/HeroFlare/slash_HeroFlare/slash_heavy_HeroFlare.prefab
+  uploadId: 413727

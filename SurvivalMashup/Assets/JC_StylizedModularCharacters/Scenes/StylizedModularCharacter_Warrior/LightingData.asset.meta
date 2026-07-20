@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 460dd44f55a11444f9fd504efdd42794
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 112000000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 339584
+  packageName: Stylized Fantasy Warrior Outfit
+  packageVersion: 1.0
+  assetPath: Assets/JC_StylizedModularCharacters/Scenes/StylizedModularCharacter_Warrior/LightingData.asset
+  uploadId: 804670

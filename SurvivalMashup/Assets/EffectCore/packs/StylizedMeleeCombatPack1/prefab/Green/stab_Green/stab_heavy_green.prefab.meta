@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 985a6697e36e858498ddee2fb8f1d45f
+timeCreated: 1483010279
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/packs/StylizedMeleeCombatPack1/prefab/Green/stab_Green/stab_heavy_green.prefab
+  uploadId: 413727

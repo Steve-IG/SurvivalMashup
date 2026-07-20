@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 8569b854e74f8e24a877b7a191766a73
+timeCreated: 1481471222
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/packs/StylizedMeleeCombatPack1/prefab/Red/slash_Red/slash_weak_red.prefab
+  uploadId: 413727

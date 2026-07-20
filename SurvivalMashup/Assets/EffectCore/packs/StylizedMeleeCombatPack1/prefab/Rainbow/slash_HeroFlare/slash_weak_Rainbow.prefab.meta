@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 0412e109cad4053489adc067fedde70f
+timeCreated: 1481471222
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/packs/StylizedMeleeCombatPack1/prefab/Rainbow/slash_HeroFlare/slash_weak_Rainbow.prefab
+  uploadId: 413727

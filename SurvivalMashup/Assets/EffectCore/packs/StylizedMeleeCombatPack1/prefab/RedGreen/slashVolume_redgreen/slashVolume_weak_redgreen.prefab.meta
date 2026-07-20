@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: c591bfd2b659e6d4fa3c207f20e470ca
+timeCreated: 1481471222
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/packs/StylizedMeleeCombatPack1/prefab/RedGreen/slashVolume_redgreen/slashVolume_weak_redgreen.prefab
+  uploadId: 413727

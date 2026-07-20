@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 7a801ddac4fd7214ca5e6023d83c902a
+timeCreated: 1488405478
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/materials/generic/fullcircle_faded_additive.mat
+  uploadId: 413727

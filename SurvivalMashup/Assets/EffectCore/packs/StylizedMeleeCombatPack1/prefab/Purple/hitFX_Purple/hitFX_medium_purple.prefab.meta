@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 76809fcf0ef66c34e9e88146ced3873b
+timeCreated: 1479935578
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/packs/StylizedMeleeCombatPack1/prefab/Purple/hitFX_Purple/hitFX_medium_purple.prefab
+  uploadId: 413727

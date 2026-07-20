@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: beeeb24c41d8f044fbe394a271f13be1
+timeCreated: 1483010279
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/packs/StylizedMeleeCombatPack1/prefab/Rainbow/stab_HeroFlare/stab_heavy_Rainbow.prefab
+  uploadId: 413727

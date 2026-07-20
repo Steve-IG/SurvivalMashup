@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: a44e858c515be734e9579d861818a082
+timeCreated: 1481471222
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/packs/StylizedMeleeCombatPack1/prefab/White/slashVolume_White/slashVolume_weak_white.prefab
+  uploadId: 413727

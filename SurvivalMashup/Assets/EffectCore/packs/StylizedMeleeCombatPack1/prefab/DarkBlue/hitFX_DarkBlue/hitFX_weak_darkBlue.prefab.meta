@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 77df8287d01a06a4db7fdd2097f13029
+timeCreated: 1482929650
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/packs/StylizedMeleeCombatPack1/prefab/DarkBlue/hitFX_DarkBlue/hitFX_weak_darkBlue.prefab
+  uploadId: 413727

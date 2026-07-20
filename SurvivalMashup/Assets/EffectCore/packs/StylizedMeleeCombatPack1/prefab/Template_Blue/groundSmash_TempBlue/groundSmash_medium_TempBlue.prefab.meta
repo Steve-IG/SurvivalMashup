@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: daa96485e7e3d224ca5a048f6db36bfb
+timeCreated: 1482933090
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/packs/StylizedMeleeCombatPack1/prefab/Template_Blue/groundSmash_TempBlue/groundSmash_medium_TempBlue.prefab
+  uploadId: 413727

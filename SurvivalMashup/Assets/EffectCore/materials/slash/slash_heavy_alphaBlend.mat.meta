@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 592f84ec99e02d2488c27103966d9276
+timeCreated: 1478435619
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/materials/slash/slash_heavy_alphaBlend.mat
+  uploadId: 413727

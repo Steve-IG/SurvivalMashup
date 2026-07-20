@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 83fafbd057eeb5c45b7c8bc40ee17604
+timeCreated: 1482852364
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 80637
+  packageName: Stylized Melee Pack 1
+  packageVersion: 1.63
+  assetPath: Assets/EffectCore/packs/StylizedMeleeCombatPack1/prefab/Orange/stab_Orange/stab_medium_orange.prefab
+  uploadId: 413727
