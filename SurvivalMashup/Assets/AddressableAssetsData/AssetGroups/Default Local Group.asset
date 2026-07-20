@@ -21,6 +21,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - definitions
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 00edaae61a79415a97bfa2a3f9e54e6c
+    m_Address: Assets/Game/Content/Definitions/Item_MonsterFang.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0108e2ee4d783214eb29d65f901682e7
     m_Address: Assets/Game/Content/Definitions/Res_LootCharge.asset
     m_ReadOnly: 0
@@ -29,6 +35,12 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 017579de046b5f84ba4e4337f1657871
     m_Address: Assets/Game/Content/Definitions/Ability_LootEquipmentCache.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0490f37d3d5148e1a8924f2db3b51c2e
+    m_Address: Assets/Game/Content/Definitions/Fx_Damage_PlayerStrike.asset
     m_ReadOnly: 0
     m_SerializedLabels:
     - definitions
@@ -219,6 +231,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - definitions
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8414d27e074c49b2a76a70f3845d1bc9
+    m_Address: Assets/Game/Content/Definitions/Obj_Grunt.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8740ae89d23e1434990ac9355a783f87
     m_Address: Assets/Game/Content/Definitions/Interaction_Greet.asset
     m_ReadOnly: 0
@@ -227,6 +245,12 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 89fe143bc98279e4abd32a702a1c9d10
     m_Address: Assets/Game/Content/Definitions/Tag_Actor_Npc.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8d16100453574e788533310e7bb4df83
+    m_Address: Assets/Game/Content/Definitions/Attr_EnemySpeed.asset
     m_ReadOnly: 0
     m_SerializedLabels:
     - definitions
@@ -339,14 +363,32 @@ MonoBehaviour:
     m_SerializedLabels:
     - definitions
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c4c6810253ba4c7a9d6c10de29c29d03
+    m_Address: Assets/Game/Content/Definitions/Tag_Actor_Enemy.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c5745a38888a4e345b302a3ebe5373eb
     m_Address: Assets/Game/Content/Definitions/Ability_LootSupplyCrate.asset
     m_ReadOnly: 0
     m_SerializedLabels:
     - definitions
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cb88e85482f241f9a6812778b8c141a1
+    m_Address: Assets/Game/Content/Definitions/Fx_Damage_EnemyStrike.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d03e951807e066d4a8c7655232fb8a63
     m_Address: Assets/Game/Content/Definitions/Res_GiftCharge.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d625497161084c49a05ace82f226d0a2
+    m_Address: Assets/Game/Content/Definitions/Ability_EnemyStrike.asset
     m_ReadOnly: 0
     m_SerializedLabels:
     - definitions
@@ -359,6 +401,12 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e25d1d7c3f750704e851905d41d6a8eb
     m_Address: Assets/Game/Content/Definitions/Obj_EquipmentCache.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e39f1bce09714e72bc6675cd3dddb23c
+    m_Address: Assets/Game/Content/Definitions/Ability_PlayerStrike.asset
     m_ReadOnly: 0
     m_SerializedLabels:
     - definitions

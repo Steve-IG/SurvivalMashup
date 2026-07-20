@@ -21,7 +21,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: bad34d537fb7e20489b659992c8eb2d4, type: 2}
   _initialTags:
   - {fileID: 11400000, guid: f4848e7e42c649f282b47c02ad017ea7, type: 2}
-  _abilities: []
+  _abilities:
+  - {fileID: 11400000, guid: e39f1bce09714e72bc6675cd3dddb23c, type: 2}
   _inventory: {fileID: 11400000, guid: 9dc2f9aa5a04ae1459668ce669a3243b, type: 2}
   _equipmentSlots:
   - {fileID: 11400000, guid: bc68cb3f5bb916442a4bf8f52e6ce875, type: 2}

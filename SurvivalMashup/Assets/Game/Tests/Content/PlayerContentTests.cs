@@ -60,8 +60,8 @@ namespace ToyChest.Tests.Content
             Assert.IsTrue(_services.Objects.Contains(player.Id));
 
             AttributeSet attributes = player.Get<AttributeSet>();
-            Assert.AreEqual(5f, attributes.GetValue(new DefinitionId(MovementSpeedId)), Tolerance,
-                "Movement Speed is an authored attribute the locomotion adapter reads.");
+            Assert.AreEqual(7f, attributes.GetValue(new DefinitionId(MovementSpeedId)), Tolerance,
+                "Movement Speed is an authored attribute the locomotion adapter reads (base raised to 7 in RG3).");
             Assert.AreEqual(50f, attributes.GetValue(new DefinitionId(MaxHealthId)), Tolerance);
 
             ResourceValue health = player.Get<ResourceSet>().GetResource(new DefinitionId(HealthId));

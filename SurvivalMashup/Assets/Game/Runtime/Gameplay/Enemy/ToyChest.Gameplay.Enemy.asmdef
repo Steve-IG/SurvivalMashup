@@ -1,0 +1,24 @@
+{
+    "name": "ToyChest.Gameplay.Enemy",
+    "rootNamespace": "ToyChest.Gameplay.Enemy",
+    "references": [
+        "ToyChest.Framework",
+        "ToyChest.Systems.Attributes",
+        "ToyChest.Systems.Resources",
+        "ToyChest.Systems.Abilities",
+        "ToyChest.Systems.GameplayEffects",
+        "ToyChest.Systems.Items",
+        "ToyChest.Systems.Inventory",
+        "ToyChest.Gameplay",
+        "ToyChest.Gameplay.Presentation"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

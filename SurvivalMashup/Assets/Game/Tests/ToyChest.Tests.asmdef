@@ -20,6 +20,7 @@
         "ToyChest.Gameplay",
         "ToyChest.Gameplay.Player",
         "ToyChest.Gameplay.Npc",
+        "ToyChest.Gameplay.Enemy",
         "ToyChest.Boot"
     ],
     "includePlatforms": [

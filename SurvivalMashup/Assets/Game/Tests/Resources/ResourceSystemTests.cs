@@ -83,7 +83,7 @@ namespace ToyChest.Tests.Resources
         public void Regenerate_RestoresByRateTimesDelta()
         {
             var value = new ResourceValue(
-                _factory.CreateLiteral("resource.stamina", 100f, startAtMaximum: false, startingValue: 0f, regenPerSecond: 10f));
+                _factory.CreateLiteral("resource.energy", 100f, startAtMaximum: false, startingValue: 0f, regenPerSecond: 10f));
 
             value.Regenerate(0.5f);
 

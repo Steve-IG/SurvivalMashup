@@ -103,8 +103,8 @@ namespace ToyChest.Tests.Content
             EquipAllManaged(player);
 
             AttributeSet attributes = player.Get<AttributeSet>();
-            Assert.AreEqual(8f, attributes.GetValue(new DefinitionId(MoveSpeedId)), Tolerance,
-                "Boots of Swiftness add +3 to the authored base Movement Speed of 5.");
+            Assert.AreEqual(10f, attributes.GetValue(new DefinitionId(MoveSpeedId)), Tolerance,
+                "Boots of Swiftness add +3 to the authored base Movement Speed of 7.");
             Assert.AreEqual(75f, attributes.GetValue(new DefinitionId(MaxHealthId)), Tolerance,
                 "The Lucky Charm adds +25 to the authored base Maximum Health of 50.");
             Assert.AreEqual(75f, player.Get<ResourceSet>().GetResource(new DefinitionId(HealthId)).Maximum, Tolerance,
@@ -132,7 +132,7 @@ namespace ToyChest.Tests.Content
             Assert.IsTrue(InventoryEquip.TryUnequipToInventory(bag, equipment, new DefinitionId(CharmSlotId), out _));
 
             AttributeSet attributes = player.Get<AttributeSet>();
-            Assert.AreEqual(5f, attributes.GetValue(new DefinitionId(MoveSpeedId)), Tolerance, "Movement Speed returns to base.");
+            Assert.AreEqual(7f, attributes.GetValue(new DefinitionId(MoveSpeedId)), Tolerance, "Movement Speed returns to base.");
             Assert.AreEqual(50f, attributes.GetValue(new DefinitionId(MaxHealthId)), Tolerance, "Maximum Health returns to base.");
             Assert.IsFalse(player.Get<GameplayTagContainer>().HasTag(_services.TagTable.GetTag(SwiftTag)));
             Assert.IsFalse(player.Get<GameplayTagContainer>().HasTag(_services.TagTable.GetTag(LuckyTag)));
@@ -161,7 +161,7 @@ namespace ToyChest.Tests.Content
             Assert.IsNotNull(equipment.GetEquipped(new DefinitionId(CharmSlotId)), "The charm stays equipped across save/reload.");
 
             AttributeSet attributes = restoredPlayer.Get<AttributeSet>();
-            Assert.AreEqual(8f, attributes.GetValue(new DefinitionId(MoveSpeedId)), Tolerance,
+            Assert.AreEqual(10f, attributes.GetValue(new DefinitionId(MoveSpeedId)), Tolerance,
                 "The equipment-granted Movement Speed modifier is re-applied on reload.");
             Assert.AreEqual(75f, attributes.GetValue(new DefinitionId(MaxHealthId)), Tolerance,
                 "The equipment-granted Maximum Health modifier is re-applied on reload.");

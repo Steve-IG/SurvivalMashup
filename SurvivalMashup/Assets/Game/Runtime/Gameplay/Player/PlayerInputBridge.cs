@@ -35,6 +35,22 @@ namespace ToyChest.Gameplay.Player
         private string _equipAction = "Equip";
 
         [SerializeField]
+        [Tooltip("Button action performing a melee attack.")]
+        private string _attackAction = "Attack";
+
+        [SerializeField]
+        [Tooltip("Button action held to sprint.")]
+        private string _sprintAction = "Sprint";
+
+        [SerializeField]
+        [Tooltip("Button action performing a jump.")]
+        private string _jumpAction = "Jump";
+
+        [SerializeField]
+        [Tooltip("Button action performing an evasive roll.")]
+        private string _rollAction = "Roll";
+
+        [SerializeField]
         [Tooltip("Locomotion adapter the move vector drives. Defaults to the sibling.")]
         private PlayerLocomotion _locomotion;
 
@@ -46,9 +62,17 @@ namespace ToyChest.Gameplay.Player
         [Tooltip("Equipment adapter the equip button toggles. Defaults to the sibling. Optional.")]
         private PlayerEquipmentController _equipment;
 
+        [SerializeField]
+        [Tooltip("Combat adapter the attack button triggers. Defaults to the sibling. Optional.")]
+        private PlayerCombat _combat;
+
         private InputAction _move;
         private InputAction _interact;
         private InputAction _equip;
+        private InputAction _attack;
+        private InputAction _sprint;
+        private InputAction _jump;
+        private InputAction _roll;
 
         private void Awake()
         {
@@ -65,6 +89,11 @@ namespace ToyChest.Gameplay.Player
             if (_equipment == null)
             {
                 _equipment = GetComponent<PlayerEquipmentController>();
+            }
+
+            if (_combat == null)
+            {
+                _combat = GetComponent<PlayerCombat>();
             }
         }
 
@@ -86,6 +115,10 @@ namespace ToyChest.Gameplay.Player
             _move = map.FindAction(_moveAction, throwIfNotFound: false);
             _interact = map.FindAction(_interactAction, throwIfNotFound: false);
             _equip = map.FindAction(_equipAction, throwIfNotFound: false);
+            _attack = map.FindAction(_attackAction, throwIfNotFound: false);
+            _sprint = map.FindAction(_sprintAction, throwIfNotFound: false);
+            _jump = map.FindAction(_jumpAction, throwIfNotFound: false);
+            _roll = map.FindAction(_rollAction, throwIfNotFound: false);
 
             if (_interact != null)
             {
@@ -95,6 +128,21 @@ namespace ToyChest.Gameplay.Player
             if (_equip != null)
             {
                 _equip.performed += OnEquip;
+            }
+
+            if (_attack != null)
+            {
+                _attack.performed += OnAttack;
+            }
+
+            if (_jump != null)
+            {
+                _jump.performed += OnJump;
+            }
+
+            if (_roll != null)
+            {
+                _roll.performed += OnRoll;
             }
 
             map.Enable();
@@ -112,10 +160,29 @@ namespace ToyChest.Gameplay.Player
                 _equip.performed -= OnEquip;
             }
 
+            if (_attack != null)
+            {
+                _attack.performed -= OnAttack;
+            }
+
+            if (_jump != null)
+            {
+                _jump.performed -= OnJump;
+            }
+
+            if (_roll != null)
+            {
+                _roll.performed -= OnRoll;
+            }
+
             _actions?.FindActionMap(_actionMap, throwIfNotFound: false)?.Disable();
             _move = null;
             _interact = null;
             _equip = null;
+            _attack = null;
+            _sprint = null;
+            _jump = null;
+            _roll = null;
         }
 
         private void Update()
@@ -123,6 +190,11 @@ namespace ToyChest.Gameplay.Player
             if (_locomotion != null && _move != null)
             {
                 _locomotion.SetMoveInput(_move.ReadValue<Vector2>());
+            }
+
+            if (_locomotion != null && _sprint != null)
+            {
+                _locomotion.SetSprint(_sprint.IsPressed());
             }
         }
 
@@ -134,6 +206,21 @@ namespace ToyChest.Gameplay.Player
         private void OnEquip(InputAction.CallbackContext context)
         {
             _equipment?.Toggle();
+        }
+
+        private void OnAttack(InputAction.CallbackContext context)
+        {
+            _combat?.TryAttack();
+        }
+
+        private void OnJump(InputAction.CallbackContext context)
+        {
+            _locomotion?.Jump();
+        }
+
+        private void OnRoll(InputAction.CallbackContext context)
+        {
+            _locomotion?.Roll();
         }
     }
 }
