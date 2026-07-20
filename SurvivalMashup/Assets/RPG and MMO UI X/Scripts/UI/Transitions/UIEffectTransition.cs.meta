@@ -1,0 +1,19 @@
+fileFormatVersion: 2
+guid: a73419a744265e046b79e73d7773783d
+timeCreated: 1498827480
+licenseType: Store
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 152053
+  packageName: RPG & MMO UI X
+  packageVersion: 1.5
+  assetPath: Assets/RPG and MMO UI X/Scripts/UI/Transitions/UIEffectTransition.cs
+  uploadId: 746521

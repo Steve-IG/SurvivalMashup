@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: a46d7346dce221a41acb0edc3c0a5851
+timeCreated: 1547467869
+licenseType: Store
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 137161
+  packageName: Frank Dual Sword
+  packageVersion: 1.2.1
+  assetPath: Assets/Frank_RPG_Dual/Documentation/Frank_RPG_Dual_MotionList.txt
+  uploadId: 830806

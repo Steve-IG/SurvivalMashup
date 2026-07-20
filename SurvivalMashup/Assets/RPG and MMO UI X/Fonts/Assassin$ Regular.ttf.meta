@@ -1,0 +1,29 @@
+fileFormatVersion: 2
+guid: e3b3cac647f19264f8534a79a4f15525
+TrueTypeFontImporter:
+  externalObjects: {}
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontName: Assassin$
+  fontNames:
+  - Assassin$
+  fallbackFontReferences: []
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  useLegacyBoundsCalculation: 0
+  shouldRoundAdvanceValue: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 152053
+  packageName: RPG & MMO UI X
+  packageVersion: 1.5
+  assetPath: Assets/RPG and MMO UI X/Fonts/Assassin$ Regular.ttf
+  uploadId: 746521

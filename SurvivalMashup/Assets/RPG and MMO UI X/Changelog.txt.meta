@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: e76ab7fb10b3bec4aafaeedd28526fc1
+timeCreated: 1523118586
+licenseType: Store
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 152053
+  packageName: RPG & MMO UI X
+  packageVersion: 1.5
+  assetPath: Assets/RPG and MMO UI X/Changelog.txt
+  uploadId: 746521

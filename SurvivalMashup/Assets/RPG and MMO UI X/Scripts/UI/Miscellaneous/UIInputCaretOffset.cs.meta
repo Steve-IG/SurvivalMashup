@@ -1,0 +1,19 @@
+fileFormatVersion: 2
+guid: aa78ecd71a60b764eaa9cd5800bef0f8
+timeCreated: 1499069732
+licenseType: Store
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 152053
+  packageName: RPG & MMO UI X
+  packageVersion: 1.5
+  assetPath: Assets/RPG and MMO UI X/Scripts/UI/Miscellaneous/UIInputCaretOffset.cs
+  uploadId: 746521

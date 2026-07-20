@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: fe7c820cb2fbb9c48bfcefff85d8cfd4
+timeCreated: 1547466365
+licenseType: Store
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 7400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 137161
+  packageName: Frank Dual Sword
+  packageVersion: 1.2.1
+  assetPath: Assets/Frank_RPG_Dual/Assets/Animations/Camera_Animation.anim
+  uploadId: 830806

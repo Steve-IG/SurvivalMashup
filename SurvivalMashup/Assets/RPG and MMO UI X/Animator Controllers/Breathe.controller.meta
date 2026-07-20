@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 241ebb75939c3fc4fa8fb9e0ef792b43
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 9100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 152053
+  packageName: RPG & MMO UI X
+  packageVersion: 1.5
+  assetPath: Assets/RPG and MMO UI X/Animator Controllers/Breathe.controller
+  uploadId: 746521

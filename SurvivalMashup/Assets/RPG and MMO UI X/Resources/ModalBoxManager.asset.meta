@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 68b463662c4a43d47b8e745ced4e2518
+timeCreated: 1484383026
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 152053
+  packageName: RPG & MMO UI X
+  packageVersion: 1.5
+  assetPath: Assets/RPG and MMO UI X/Resources/ModalBoxManager.asset
+  uploadId: 746521

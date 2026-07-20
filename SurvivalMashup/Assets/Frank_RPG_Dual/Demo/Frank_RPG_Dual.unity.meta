@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: eea88f739982b6147b93f464f92ea6d9
+timeCreated: 1547454809
+licenseType: Store
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 137161
+  packageName: Frank Dual Sword
+  packageVersion: 1.2.1
+  assetPath: Assets/Frank_RPG_Dual/Demo/Frank_RPG_Dual.unity
+  uploadId: 830806

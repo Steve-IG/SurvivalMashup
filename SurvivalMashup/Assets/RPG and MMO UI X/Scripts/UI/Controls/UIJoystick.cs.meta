@@ -1,0 +1,20 @@
+fileFormatVersion: 2
+guid: 0328d3157031a67419257cb97523332c
+timeCreated: 1521359788
+licenseType: Store
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 152053
+  packageName: RPG & MMO UI X
+  packageVersion: 1.5
+  assetPath: Assets/RPG and MMO UI X/Scripts/UI/Controls/UIJoystick.cs
+  uploadId: 746521

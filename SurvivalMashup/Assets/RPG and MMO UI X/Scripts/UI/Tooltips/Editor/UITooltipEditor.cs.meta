@@ -1,0 +1,19 @@
+fileFormatVersion: 2
+guid: f0c7ba5ff8890204fa5e4b2d5c72435a
+timeCreated: 1427746006
+licenseType: Store
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 152053
+  packageName: RPG & MMO UI X
+  packageVersion: 1.5
+  assetPath: Assets/RPG and MMO UI X/Scripts/UI/Tooltips/Editor/UITooltipEditor.cs
+  uploadId: 746521

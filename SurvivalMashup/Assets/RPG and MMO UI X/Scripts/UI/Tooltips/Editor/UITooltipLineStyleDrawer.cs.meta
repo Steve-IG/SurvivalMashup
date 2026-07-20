@@ -1,0 +1,20 @@
+fileFormatVersion: 2
+guid: 3fe626a0e09c9a8409c3897e601309d1
+timeCreated: 1524763629
+licenseType: Store
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 152053
+  packageName: RPG & MMO UI X
+  packageVersion: 1.5
+  assetPath: Assets/RPG and MMO UI X/Scripts/UI/Tooltips/Editor/UITooltipLineStyleDrawer.cs
+  uploadId: 746521

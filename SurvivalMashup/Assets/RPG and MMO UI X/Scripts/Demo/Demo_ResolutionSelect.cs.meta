@@ -1,0 +1,20 @@
+fileFormatVersion: 2
+guid: 99fe69ac8e5d3d34383108b52c0d4b63
+timeCreated: 1521400745
+licenseType: Store
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 152053
+  packageName: RPG & MMO UI X
+  packageVersion: 1.5
+  assetPath: Assets/RPG and MMO UI X/Scripts/Demo/Demo_ResolutionSelect.cs
+  uploadId: 746521

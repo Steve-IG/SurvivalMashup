@@ -1,0 +1,20 @@
+fileFormatVersion: 2
+guid: a792bdd65eea10346a0b7dce82b1b6d1
+timeCreated: 1525798886
+licenseType: Store
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 152053
+  packageName: RPG & MMO UI X
+  packageVersion: 1.5
+  assetPath: Assets/RPG and MMO UI X/Scripts/UI/Miscellaneous/UITooltipFlipBackground.cs
+  uploadId: 746521

@@ -1,0 +1,19 @@
+fileFormatVersion: 2
+guid: 7574bc813978c5b46834528f55244f08
+timeCreated: 1477595746
+licenseType: Store
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 152053
+  packageName: RPG & MMO UI X
+  packageVersion: 1.5
+  assetPath: Assets/RPG and MMO UI X/Scripts/UI/Bars/IUIProgressBar.cs
+  uploadId: 746521

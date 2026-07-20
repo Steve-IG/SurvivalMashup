@@ -1,0 +1,20 @@
+fileFormatVersion: 2
+guid: ad2c4a5f2ffeb8344bbaed559a0702da
+timeCreated: 1525105466
+licenseType: Store
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 152053
+  packageName: RPG & MMO UI X
+  packageVersion: 1.5
+  assetPath: Assets/RPG and MMO UI X/Scripts/UI/Transitions/UIToggleActiveTransition.cs
+  uploadId: 746521

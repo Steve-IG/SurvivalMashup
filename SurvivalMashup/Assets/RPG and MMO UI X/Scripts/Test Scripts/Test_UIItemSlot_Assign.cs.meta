@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: d97cec2c779d71a4a997fc41be00e596
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 152053
+  packageName: RPG & MMO UI X
+  packageVersion: 1.5
+  assetPath: Assets/RPG and MMO UI X/Scripts/Test Scripts/Test_UIItemSlot_Assign.cs
+  uploadId: 746521

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 551b0bd980c73ff45b7a98347dab887a
+timeCreated: 1485185626
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 152053
+  packageName: RPG & MMO UI X
+  packageVersion: 1.5
+  assetPath: Assets/RPG and MMO UI X/Resources/Databases/TalentDatabase.asset
+  uploadId: 746521

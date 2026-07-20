@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 62c8cd8a583556845b017769819bb1fb
+timeCreated: 1498938420
+licenseType: Store
+NativeFormatImporter:
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 152053
+  packageName: RPG & MMO UI X
+  packageVersion: 1.5
+  assetPath: Assets/RPG and MMO UI X/Resources/LoadingOverlayManager.asset
+  uploadId: 746521

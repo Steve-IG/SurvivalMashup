@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: aa61baeacd20a194bba7757e20b5560e
+timeCreated: 1523464954
+licenseType: Store
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 4343727234628468602
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 152053
+  packageName: RPG & MMO UI X
+  packageVersion: 1.5
+  assetPath: Assets/RPG and MMO UI X/Sprite Atlases/RnM UI 10 Logo.spriteatlas
+  uploadId: 746521

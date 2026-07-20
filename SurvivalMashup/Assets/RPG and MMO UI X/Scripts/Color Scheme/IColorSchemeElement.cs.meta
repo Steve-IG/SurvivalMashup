@@ -1,0 +1,20 @@
+fileFormatVersion: 2
+guid: 7a5b5daefbe0f2c48829a920df628707
+timeCreated: 1519393163
+licenseType: Store
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 152053
+  packageName: RPG & MMO UI X
+  packageVersion: 1.5
+  assetPath: Assets/RPG and MMO UI X/Scripts/Color Scheme/IColorSchemeElement.cs
+  uploadId: 746521

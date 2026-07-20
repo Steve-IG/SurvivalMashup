@@ -1,0 +1,19 @@
+fileFormatVersion: 2
+guid: b24bb1c6d89fe6d4e91eef73ad791841
+timeCreated: 1484644726
+licenseType: Store
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 152053
+  packageName: RPG & MMO UI X
+  packageVersion: 1.5
+  assetPath: Assets/RPG and MMO UI X/Scripts/UI/Miscellaneous/UIGlobeFillInverter.cs
+  uploadId: 746521

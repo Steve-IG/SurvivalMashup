@@ -1,0 +1,19 @@
+fileFormatVersion: 2
+guid: 35a2cf7b37f59174da2052873f5227ad
+timeCreated: 1503161386
+licenseType: Store
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 152053
+  packageName: RPG & MMO UI X
+  packageVersion: 1.5
+  assetPath: Assets/RPG and MMO UI X/Scripts/UI/Miscellaneous/UIWorldCanvasScaleByCamera.cs
+  uploadId: 746521

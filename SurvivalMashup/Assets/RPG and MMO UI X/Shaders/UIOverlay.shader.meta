@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 756630567069b7347a0f4fc9fa15d78e
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 152053
+  packageName: RPG & MMO UI X
+  packageVersion: 1.5
+  assetPath: Assets/RPG and MMO UI X/Shaders/UIOverlay.shader
+  uploadId: 746521

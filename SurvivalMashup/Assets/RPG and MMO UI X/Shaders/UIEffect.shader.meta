@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 4ca81453cebef0545bdc6eeed3a98c7f
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 152053
+  packageName: RPG & MMO UI X
+  packageVersion: 1.5
+  assetPath: Assets/RPG and MMO UI X/Shaders/UIEffect.shader
+  uploadId: 746521

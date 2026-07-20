@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 996d8b6a0a41d834881bca5d1581eaf3
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 100100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 152053
+  packageName: RPG & MMO UI X
+  packageVersion: 1.5
+  assetPath: Assets/RPG and MMO UI X/Prefabs/HUD/Nameplate.prefab
+  uploadId: 746521

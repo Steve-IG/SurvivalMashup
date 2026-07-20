@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: cacdc738fd7665e478986589bfbb5266
+timeCreated: 1428640794
+licenseType: Store
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 152053
+  packageName: RPG & MMO UI X
+  packageVersion: 1.5
+  assetPath: Assets/RPG and MMO UI X/Resources/Databases/SpellDatabase.asset
+  uploadId: 746521

@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: 2912d16ac57732d4e91a35b71a7f2001
+timeCreated: 1479170714
+licenseType: Store
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 152053
+  packageName: RPG & MMO UI X
+  packageVersion: 1.5
+  assetPath: Assets/RPG and MMO UI X/Materials/Character.mat
+  uploadId: 746521

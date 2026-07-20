@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 0786c30c569a5014987ac78b52f15461
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 100100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 152053
+  packageName: RPG & MMO UI X
+  packageVersion: 1.5
+  assetPath: Assets/RPG and MMO UI X/Prefabs/HUD/Tooltip.prefab
+  uploadId: 746521

@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 385f43cccb745b24c82462ced1f9b701
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 152053
+  packageName: RPG & MMO UI X
+  packageVersion: 1.5
+  assetPath: Assets/RPG and MMO UI X/Prefabs/HUD/Quest Tracker.prefab
+  uploadId: 746521

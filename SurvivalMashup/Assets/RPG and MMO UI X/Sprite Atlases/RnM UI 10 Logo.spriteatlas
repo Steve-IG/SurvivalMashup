@@ -1,0 +1,76 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!687078895 &4343727234628468602
+SpriteAtlas:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: RnM UI 10 Logo
+  m_EditorData:
+    serializedVersion: 2
+    textureSettings:
+      serializedVersion: 2
+      anisoLevel: 1
+      compressionQuality: 50
+      maxTextureSize: 2048
+      textureCompression: 0
+      filterMode: 0
+      generateMipMaps: 0
+      readable: 0
+      crunchedCompression: 0
+      sRGB: 1
+    platformSettings:
+    - serializedVersion: 3
+      m_BuildTarget: DefaultTexturePlatform
+      m_MaxTextureSize: 2048
+      m_ResizeAlgorithm: 0
+      m_TextureFormat: -1
+      m_TextureCompression: 0
+      m_CompressionQuality: 50
+      m_CrunchedCompression: 0
+      m_AllowsAlphaSplitting: 0
+      m_Overridden: 0
+      m_AndroidETC2FallbackOverride: 0
+      m_ForceMaximumCompressionQuality_BC6H_BC7: 1
+    packingSettings:
+      serializedVersion: 2
+      padding: 4
+      blockOffset: 1
+      allowAlphaSplitting: 0
+      enableRotation: 0
+      enableTightPacking: 0
+    variantMultiplier: 1
+    packables:
+    - {fileID: 102900000, guid: 167bf1b27122bef448123c07b2b9a706, type: 3}
+    totalSpriteSurfaceArea: 1819086
+    bindAsDefault: 1
+  m_MasterAtlas: {fileID: 0}
+  m_PackedSprites:
+  - {fileID: 21300000, guid: 0609bfa0aaa82fa45bdeee20f9eb48b2, type: 3}
+  - {fileID: 21300000, guid: 44a20c1276d2ea1479cbb44c43d40c98, type: 3}
+  - {fileID: 21300000, guid: 2455fd03aa48661448cc2ea318057994, type: 3}
+  - {fileID: 21300000, guid: 82757a657165546478d1cbc49afc2a89, type: 3}
+  - {fileID: 21300000, guid: 28fd25b72bd31b64b825e26710f0ecca, type: 3}
+  - {fileID: 21300000, guid: f51c42c81bba571438fbb3309cccd58a, type: 3}
+  - {fileID: 21300000, guid: 743f8b7a06f618e4a9f1ccc5e37f4495, type: 3}
+  - {fileID: 21300000, guid: 2920009a6d48783438de738ee217e846, type: 3}
+  - {fileID: 21300000, guid: bc77695b73c87e04fbd60925c80c89c9, type: 3}
+  - {fileID: 21300000, guid: 884f9c7d69036654197c9344383f200e, type: 3}
+  - {fileID: 21300000, guid: 17ee808e5b0c8a844ada42354206a20c, type: 3}
+  - {fileID: 21300000, guid: 9c4556cea66633b4cb62490a1fc2e316, type: 3}
+  m_PackedSpriteNamesToIndex:
+  - Logo_X
+  - Logo_Crystal_Overlay
+  - Logo_Background
+  - Logo_Crystal_Mask
+  - Logo_Glow
+  - Logo_FrameOverlay
+  - Logo_Texts
+  - Logo_InnerBorders
+  - Logo_Crystal
+  - Logo_Crystal_Overlay2
+  - Logo_Frame
+  - Logo_X_Overlay
+  m_Tag: RnM UI 10 Logo
+  m_IsVariant: 0

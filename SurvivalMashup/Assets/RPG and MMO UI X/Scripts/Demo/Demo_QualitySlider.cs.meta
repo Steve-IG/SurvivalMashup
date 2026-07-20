@@ -1,0 +1,20 @@
+fileFormatVersion: 2
+guid: 8e2a8eee28e640e49b55c706be75c318
+timeCreated: 1523199600
+licenseType: Store
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 152053
+  packageName: RPG & MMO UI X
+  packageVersion: 1.5
+  assetPath: Assets/RPG and MMO UI X/Scripts/Demo/Demo_QualitySlider.cs
+  uploadId: 746521
