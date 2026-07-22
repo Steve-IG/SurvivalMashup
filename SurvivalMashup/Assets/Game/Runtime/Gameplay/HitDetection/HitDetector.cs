@@ -89,8 +89,13 @@ namespace ToyChest.Gameplay.HitDetection
                     continue;
                 }
 
+                // Containment and ordering use the stable transform position (deterministic), but the
+                // reported contact point is the real point on the target's surface nearest the query
+                // origin — i.e. where the fist/blade actually meets the body. Impact presentation reads
+                // this, so VFX land on the contact rather than at an approximated body offset.
+                Vector3 contactPoint = ClosestSurfacePoint(collider, origin);
                 float sqrDistance = (targetPosition - origin).sqrMagnitude;
-                _results.Add(new HitResult(candidate, targetPosition, sqrDistance));
+                _results.Add(new HitResult(candidate, contactPoint, sqrDistance));
             }
 
             // Deterministic nearest-first order so resolution never depends on physics query order.
@@ -103,6 +108,20 @@ namespace ToyChest.Gameplay.HitDetection
             }
 
             return _sorted;
+        }
+
+        // The point on the collider's surface nearest the query origin. Collider.ClosestPoint is exact for
+        // primitives and CharacterControllers (what characters use); a non-convex MeshCollider does not
+        // support it, so those fall back to the bounding box, which is still far closer than the object's
+        // pivot.
+        private static Vector3 ClosestSurfacePoint(Collider collider, Vector3 origin)
+        {
+            if (collider is MeshCollider mesh && !mesh.convex)
+            {
+                return collider.bounds.ClosestPoint(origin);
+            }
+
+            return collider.ClosestPoint(origin);
         }
 
         // A GameplayObject can carry several colliders; count each object once.

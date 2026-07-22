@@ -68,6 +68,15 @@ namespace ToyChest.Gameplay.HitDetection
         /// <summary>The attacker-side filter (tag + layers).</summary>
         public HitFilter Filter => new HitFilter(_targetTag, _layers);
 
+        /// <summary>Whether this region's anchor has been bound to a live transform.</summary>
+        public bool IsBound => _anchor != null && _anchor.IsBound;
+
+        /// <summary>The live world origin this region would query from. Read-only; for debug visualization.</summary>
+        public Vector3 Origin => _anchor.Origin;
+
+        /// <summary>The live world forward this region faces. Read-only; for debug visualization.</summary>
+        public Vector3 Forward => _anchor.Forward;
+
         /// <summary>Binds this region's anchor to the owner and model animator; call once at startup.</summary>
         public void Bind(Transform owner, Animator animator)
         {

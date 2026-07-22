@@ -33,7 +33,7 @@ namespace ToyChest.Gameplay.Enemy
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(CharacterController))]
-    public sealed class EnemyCombatant : MonoBehaviour
+    public sealed class EnemyCombatant : MonoBehaviour, IAttackContactReceiver
     {
         [SerializeField]
         [Tooltip("The behaviour whose composed object is this enemy. Defaults to the sibling.")]
@@ -70,6 +70,16 @@ namespace ToyChest.Gameplay.Enemy
         [SerializeField]
         [Tooltip("Physics layers the strike's hit query searches for the player.")]
         private LayerMask _targetLayers = ~0;
+
+        [SerializeField]
+        [Tooltip("Humanoid bone the strike's hit volume originates from — match it to the attack animation. " +
+                 "RightHand for a punch/claw, RightFoot (or LeftFoot) for a kick, Head for a headbutt. " +
+                 "Falls back to the body transform if the rig is not humanoid or lacks the bone.")]
+        private HumanBodyBones _attackBone = HumanBodyBones.RightHand;
+
+        [SerializeField]
+        [Tooltip("Local offset from the anchor bone, in the bone's local space (e.g. +Z to reach past the foot).")]
+        private Vector3 _attackOffset;
 
         [SerializeField]
         [Tooltip("Definition id of the enemy's attack ability, activated against the player when in range.")]
@@ -156,11 +166,12 @@ namespace ToyChest.Gameplay.Enemy
             _motor = new PursuitMotor();
             _detector = new HitDetector();
 
-            // The claw uses the identical authoring the player's punch does — a cone anchored to this
-            // humanoid's right hand — proving one attack authoring is reused across different characters
-            // with no enemy-specific hit code. Only the model, rig, and filter tag differ.
+            // The strike uses the identical authoring the player's punch does — a cone anchored to an
+            // authored humanoid bone — proving one attack authoring is reused across different characters
+            // with no enemy-specific hit code. Only the model, rig, bone, and filter tag differ, so
+            // swapping the attack animation to a kick is a matter of pointing _attackBone at a foot.
             var volume = new HitVolume(HitShape.Cone, _attackRange, _attackConeHalfAngle, multiTarget: false, maxTargets: 1);
-            var anchor = new HitVolumeAnchor(HitAnchorSpace.HumanoidBone, HumanBodyBones.RightHand, Vector3.zero, HitFacing.Owner);
+            var anchor = new HitVolumeAnchor(HitAnchorSpace.HumanoidBone, _attackBone, _attackOffset, HitFacing.Owner);
             _strike = new HitVolumeEmitter(volume, anchor, _playerTag, _targetLayers);
             _strike.Bind(transform, GetComponentInChildren<Animator>());
 
@@ -324,6 +335,29 @@ namespace ToyChest.Gameplay.Enemy
             }
         }
 
+        /// <summary>
+        /// Lands the telegraphed strike on the attack animation's contact frame (the canonical
+        /// <c>OnAttackContact</c> event, relayed by <see cref="AttackContactRelay"/>) instead of at the end
+        /// of the wind-up timer — the same seam the player uses, so one authored clip serves both. Ignored
+        /// unless the enemy is currently winding up, so a stray or repeated event can never add a second
+        /// blow; with no event authored the wind-up timer still lands it.
+        /// </summary>
+        public void NotifyAnimationContact()
+        {
+            if (_dead || _attackPhase != AttackPhase.WindUp)
+            {
+                return;
+            }
+
+            if (TryAttack())
+            {
+                Struck?.Invoke();
+            }
+
+            _attackPhase = AttackPhase.Recover;
+            _attackTimer = _recoverSeconds;
+        }
+
         private bool TryAttack()
         {
             GameplayObject enemy = _behaviour.Object;
@@ -355,22 +389,43 @@ namespace ToyChest.Gameplay.Enemy
             _dead = true;
             _deathTimer = _deathDelay;
             _lastPlanarSpeed = 0f;
+            StopBeingHittable();
             Died?.Invoke();
+        }
+
+        /// <summary>
+        /// Removes the corpse from hit detection the instant it dies. Teardown is deliberately deferred so
+        /// the death animation can play, but during that window the enemy must not be hittable — hit
+        /// detection resolves colliders, so disabling them is what stops a dead enemy from soaking further
+        /// blows. Disabling the <see cref="CharacterController"/> also ends its movement, so the death
+        /// tick stops driving it.
+        /// </summary>
+        private void StopBeingHittable()
+        {
+            Collider[] colliders = GetComponentsInChildren<Collider>(true);
+            for (int i = 0; i < colliders.Length; i++)
+            {
+                colliders[i].enabled = false;
+            }
         }
 
         private void DeathTick(float delta)
         {
-            // Let the death animation / dissolve play while the corpse settles under gravity, then tear down.
-            if (_controller.isGrounded && _verticalVelocity < 0f)
+            // Let the death animation / dissolve play, then tear down. The controller is disabled on death
+            // (so the corpse cannot be hit), which also means it no longer moves — settling stops here.
+            if (_controller.enabled)
             {
-                _verticalVelocity = -2f;
-            }
-            else
-            {
-                _verticalVelocity -= _gravity * delta;
-            }
+                if (_controller.isGrounded && _verticalVelocity < 0f)
+                {
+                    _verticalVelocity = -2f;
+                }
+                else
+                {
+                    _verticalVelocity -= _gravity * delta;
+                }
 
-            _controller.Move(new Vector3(0f, _verticalVelocity, 0f) * delta);
+                _controller.Move(new Vector3(0f, _verticalVelocity, 0f) * delta);
+            }
 
             _deathTimer -= delta;
             if (_deathTimer <= 0f)

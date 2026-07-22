@@ -44,20 +44,19 @@ namespace ToyChest.Gameplay.Player
 
         [Header("Juice")]
         [SerializeField]
-        [Tooltip("Hit flash on the model. Defaults to the first one found in children.")]
-        private HitFlash _hitFlash;
-
-        [SerializeField]
         [Tooltip("Camera-shake impulse source. Defaults to the sibling.")]
         private CombatImpulse _impulse;
 
         [SerializeField]
-        [Tooltip("Camera-shake force when the player is hit.")]
+        [Tooltip("Camera-shake force when the player is hit. Only used while player hit reactions are enabled.")]
         private float _hitShake = 0.6f;
 
         [SerializeField]
-        [Tooltip("Camera-shake force when the player swings.")]
-        private float _attackShake = 0.18f;
+        [Tooltip("Milestone 2 RG5C decision: player hit reactions are intentionally OFF. When damaged the " +
+                 "player keeps moving uninterrupted — no flinch animation, no hit flash, no camera shake. " +
+                 "Health still changes normally and enemy attacks still work; this is presentation only. " +
+                 "Re-enable to restore the flinch once damage readability is designed.")]
+        private bool _playerHitReactions;
 
         private static readonly int MoveXParam = Animator.StringToHash("MoveX");
         private static readonly int MoveYParam = Animator.StringToHash("MoveY");
@@ -95,11 +94,6 @@ namespace ToyChest.Gameplay.Player
             if (_combat == null)
             {
                 _combat = GetComponent<PlayerCombat>();
-            }
-
-            if (_hitFlash == null)
-            {
-                _hitFlash = GetComponentInChildren<HitFlash>();
             }
 
             if (_impulse == null)
@@ -220,10 +214,9 @@ namespace ToyChest.Gameplay.Player
                 _animator.SetTrigger(AttackParam);
             }
 
-            if (_impulse != null)
-            {
-                _impulse.Shake(_attackShake);
-            }
+            // No camera shake here: starting a swing is not impact feedback. Every impact cue (impulse,
+            // VFX, hit-stop, sound) fires from PlayerCombat.Impacted — a confirmed hit — so swinging into
+            // empty air is silent and still. See PlayerAttackFeedback.
         }
 
         private void OnHealthChanged(float previous, float current, float maximum)
@@ -235,9 +228,14 @@ namespace ToyChest.Gameplay.Player
 
             if (current < previous && current > 0f && !_dead)
             {
-                _animator.SetTrigger(HitParam);
-                if (_hitFlash != null) _hitFlash.Flash();
-                if (_impulse != null) _impulse.Shake(_hitShake);
+                // Player hit reactions are intentionally disabled (Milestone 2 RG5C): being damaged must
+                // never interrupt the player's movement or read as their own attack connecting. Health
+                // still changes; only the presentation is suppressed.
+                if (_playerHitReactions)
+                {
+                    _animator.SetTrigger(HitParam);
+                    if (_impulse != null) _impulse.Shake(_hitShake);
+                }
             }
             else if (current > previous && _dead && current > 0f)
             {

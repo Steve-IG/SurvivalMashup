@@ -93,6 +93,7 @@ namespace ToyChest.Gameplay.Player
         private Vector2 _moveInput;
         private float _verticalVelocity;
         private Vector3 _planarVelocity;
+        private Vector3 _pendingRootMotion;
         private float _moveLockTimer;
         private float _moveLockScale = 1f;
         private bool _sprinting;
@@ -204,6 +205,22 @@ namespace ToyChest.Gameplay.Player
         /// <summary>Whether the character is on the ground this frame.</summary>
         public bool IsGrounded => _controller.isGrounded;
 
+        /// <summary>
+        /// The world-space planar direction the player is currently steering toward (their stick/keys
+        /// resolved against the camera), or <see cref="Vector3.zero"/> when there is no movement input.
+        /// Combat reads this so an attack can commit instantly to the direction the player is holding,
+        /// rather than to wherever the character happens to be facing.
+        /// </summary>
+        public Vector3 MoveIntentDirection
+        {
+            get
+            {
+                Vector3 cameraForward = _cameraTransform != null ? _cameraTransform.forward : Vector3.forward;
+                Vector3 intent = LocomotionMotor.PlanarVelocity(_moveInput, cameraForward, 1f);
+                return intent.sqrMagnitude > 1e-4f ? intent.normalized : Vector3.zero;
+            }
+        }
+
         /// <summary>Whether the character is mid-roll.</summary>
         public bool IsRolling => _rollTimer > 0f;
 
@@ -289,27 +306,41 @@ namespace ToyChest.Gameplay.Player
             }
         }
 
+        // The character's single CharacterController.Move for the frame. Everything that moves the
+        // character — velocity, gravity, and any pending animation root motion — is folded in here and
+        // applied once. This is deliberate: CharacterController.isGrounded is recomputed by *every* Move
+        // call and reflects only that call's collisions, so a second Move without a downward component
+        // would clear isGrounded and make the character read as airborne (see ApplyRootMotion).
         private void Move(Vector3 planarVelocity, float delta)
         {
             Vector3 motion = planarVelocity;
             motion.y = _verticalVelocity;
-            _controller.Move(motion * delta);
+
+            // Velocity is per-second (scaled by delta); root motion is already a per-frame displacement.
+            Vector3 displacement = motion * delta + _pendingRootMotion;
+            _pendingRootMotion = Vector3.zero;
+
+            _controller.Move(displacement);
         }
 
         /// <summary>
-        /// Applies a world-space root-motion translation from the animation to the character controller
-        /// (horizontal only — gravity stays owned here). The attack drives movement through this so the
-        /// animated step is real, committed motion the character keeps, instead of a visual that snaps
-        /// back to where the clip started. Locomotion itself remains velocity-driven; only the attack
-        /// feeds root motion in (gated by the model relay), so the two never fight.
+        /// Queues a world-space root-motion translation from the animation (horizontal only — gravity
+        /// stays owned here). The attack drives movement through this so the animated step is real,
+        /// committed motion the character keeps, instead of a visual that snaps back to where the clip
+        /// started. Locomotion itself remains velocity-driven; only the attack feeds root motion in
+        /// (gated by the model relay), so the two never fight.
+        ///
+        /// The delta is <em>accumulated</em> and consumed by the next <see cref="Move"/> rather than
+        /// applied immediately. Applying it here as its own <c>CharacterController.Move</c> would be a
+        /// second move with no downward component, and because <c>OnAnimatorMove</c> runs after
+        /// <c>Update</c> it would be the last move of the frame — clearing <c>isGrounded</c> and making a
+        /// root-motion attack falsely read as airborne, which drove the animator into Fall and then a
+        /// spurious Land when the swing ended. Folding it into the single gravity-carrying move keeps
+        /// grounding truthful for clips with strong forward root motion.
         /// </summary>
         public void ApplyRootMotion(Vector3 worldDelta)
         {
-            Vector3 horizontal = new Vector3(worldDelta.x, 0f, worldDelta.z);
-            if (horizontal.sqrMagnitude > 0f)
-            {
-                _controller.Move(horizontal);
-            }
+            _pendingRootMotion += new Vector3(worldDelta.x, 0f, worldDelta.z);
         }
 
         private Vector3 RollDirection()

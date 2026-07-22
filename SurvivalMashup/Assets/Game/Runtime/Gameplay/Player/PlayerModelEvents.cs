@@ -60,17 +60,9 @@ namespace ToyChest.Gameplay.Player
             }
         }
 
-        /// <summary>
-        /// Animation event hook. Author an event named <c>OnAttackContact</c> on the attack clip at the
-        /// exact frame the fist connects; it lands the blow in sync with the animation. Optional — the
-        /// wind-up timer lands the blow if the event is absent.
-        /// </summary>
-        public void OnAttackContact()
-        {
-            if (_combat != null)
-            {
-                _combat.NotifyAnimationContact();
-            }
-        }
+        // The OnAttackContact animation event is deliberately NOT handled here any more. It is received by
+        // the character-agnostic AttackContactRelay, so one authored event works on every rig (player,
+        // enemy, companion, boss) instead of only the player. Handling it here too would give the player
+        // model two receivers and dispatch the contact twice.
     }
 }

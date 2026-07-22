@@ -46,6 +46,7 @@ The Grunt is used only to evaluate the attack; enemy improvements are the next r
 **Feel iteration (post-review, same review group).** Hands-on playtesting surfaced four issues, all fixed as feel/presentation, no new systems:
 - **Swing retimed to the clip.** The attack clip is 1.2s but the swing was committing for only 0.32s and landing the blow at 0.1s — so the hit fired well before the fist connected and the player was free long before the animation ended. Wind-up is now 0.4s (≈ the contact frame) and recovery 0.35s, so the blow lands on contact and the player is committed for the punch.
 - **Attack root motion.** The attack animation carries a forward step (a root-motion clip). `applyRootMotion` is now on, and a thin `PlayerModelEvents` relay on the model forwards the attack's root motion to the `CharacterController` (`PlayerLocomotion.ApplyRootMotion`) — so the character keeps the step instead of the model snapping back to where the clip started. Root motion is consumed only during the attack; locomotion stays velocity-driven (the relay discards root motion off-attack), so the two never fight.
+  - **Invariant: exactly one `CharacterController.Move` per frame.** Root motion is *accumulated* by `ApplyRootMotion` and folded into locomotion's single gravity-carrying `Move`. It must never be applied as its own `Move`: `isGrounded` is recomputed by every `Move` call from that call's collisions alone, and because `OnAnimatorMove` runs after `Update` a second, vertical-less move would be the frame's last — clearing `isGrounded`, so a root-motion attack clip read as airborne and drove the animator `Grounded=false → Fall`, then a spurious **Land** when the swing ended. (Surfaced by the `Frank_RPG_Fighter_Combo03_1` attack clip, whose strong forward root motion triggered it nearly every swing.) Any future motion source — knockback, dashes, lunges, hazard shoves — must add into the same accumulated move rather than calling `Move` itself.
 - **No more gliding.** Movement is now fully committed during the swing (commit scale 0), so the character no longer slides with planted feet; its only movement during the attack is the animation's own root motion. The Attack animator state returns to locomotion the instant movement resumes after the commitment (a low-exit-time, `Speed`-gated transition) and settles to idle otherwise.
 - **Impact reads as connecting.** The hit VFX now spawns at a computed hit point on the target's near surface at chest height (not its feet), and lands on the contact frame. For frame-exact sync the swing exposes an `OnAttackContact` animation-event seam (`PlayerCombat.NotifyAnimationContact`, relayed by `PlayerModelEvents`) — author that event on the attack clip and it overrides the wind-up timer; absent it, the timer lands the blow.
 - **Enemies react.** The Grunt now plays a brief hit flinch on damage (a `Hit` state driven by `EnemyAnimatorDriver` off its existing `Damaged` event). It is animation only — the enemy's attack cadence is still driven by `EnemyCombatant`'s own timers, not the animator — so a flinch never stunlocks the encounter (see `ENEMY_SYSTEM.md`).
@@ -256,6 +257,101 @@ EditMode suite green at **393** (+8): socket-anchor origin & offset math, offset
 ## Framework confirmation
 
 No Framework or Core change. The pipeline is authoring data (preset assets, serialized anchors/emitters) and thin reusable adapters composed at the existing seam; it feeds the frozen `AbilityTargetMode.Provided` path. The Milestone 0 engine remains frozen.
+
+---
+
+# Combat Feel & Debug Tooling (Review Group 5C)
+
+RG5A defined *how* hits are found and RG5B *how* attacks are authored. This review group adds **no mechanics**: it makes the one punch feel responsive and readable, and builds the tooling needed to iterate on feel quickly. The engine remains frozen.
+
+## The three attack stages (and what may react to each)
+
+The single most important rule for impact readability. `PlayerCombat` reports three distinct stages, and presentation is wired to exactly one of them:
+
+```
+Attacked   — a swing started (every press, hit or miss)   → swing animation, whoosh
+Contacted  — the contact frame arrived (hit or miss)      → debug tooling ONLY
+Impacted   — a hit was CONFIRMED (ability committed)      → ALL impact feedback
+```
+
+**Impact feedback fires only on `Impacted`**: camera impulse, impact VFX, hit-stop, impact sound, and the target's own hit flash (which follows naturally from the damage it took). Swinging into empty air therefore produces no impact cue whatsoever. The swing-start camera shake that previously fired on every press was removed — starting a swing is not impact feedback. When wiring any new cue, ask which of the three stages it belongs to; if it represents *connecting*, it belongs on `Impacted`.
+
+## Responsiveness
+
+The punch was committed far too long after the blow landed. The fix separates two things that were wrongly fused:
+
+- **Swing recovery** (`_recoveryDuration`, 0.35s → **0.12s**) — the follow-through before another swing may begin.
+- **Post-impact commitment** (`_postImpactCommit`, **0.05s**, new) — how long the player stays planted *after* contact. The movement lock is now `windUp + postImpactCommit` (≈0.45s) instead of `windUp + recovery` (0.75s), so **movement returns almost immediately after the contact frame** if input continues.
+
+Input buffering (0.18s) and cadence (the authored ability cooldown) are unchanged; the animator already exits Attack early when moving (`Speed`-gated, exit time 0.1). No combos and no animation cancelling were added — only latency was removed. Note these are *authored* values on the Player prefab: changing the C# default does nothing to an existing prefab, which must be re-authored (this bit us once — the prefab kept 0.35 until updated).
+
+## Impact position accuracy
+
+Impact VFX used to spawn at an *approximation* — the target's pivot, nudged up to chest height and back toward the player by authored offsets — so it drifted relative to where the fist actually landed. `HitResult.ContactPoint` now carries the **real contact point**: `Collider.ClosestPoint` from the query origin, i.e. the point on the target's surface nearest the attacking hand (and since RG5B the origin *is* the hand bone). `PlayerCombat` passes that straight through to `Impacted`, and the `_hitHeight`/`_hitInset` approximation is deleted. Non-convex mesh colliders, which do not support `ClosestPoint`, fall back to the bounding box. The hit-detection architecture is unchanged — detection simply reports better contact information.
+
+## Player hit reactions — intentional milestone decision
+
+**Player hit reactions are OFF.** When the player is damaged there is no flinch animation, no hit flash, and no camera shake; movement continues uninterrupted. Health still changes normally, enemy attacks still function, and this is **presentation only** (`PlayerAnimatorDriver._playerHitReactions`, default false). The reason: a flinch both interrupted movement and produced a screen cue that read like *the player's own attack connecting*, which is exactly the signal this review group is trying to make unambiguous. Re-enable the flag once damage-taken readability is designed as its own thing.
+
+## Training Dummy
+
+An authored Gameplay Object (`object.training_dummy`, prefab `Assets/Game/Content/Prefabs/TrainingDummy.prefab`) that exists so feel can be judged over minutes of uninterrupted punching. It is **an ordinary enemy, not a special case**:
+
+- Same composition as the Grunt (attributes, health resource, `Actor.Enemy` tag), so it takes damage through the ordinary Ability → `DamageEffect` → Resource path and reacts exactly like an enemy: hit flash, hit animation, impact VFX, camera feedback, damage events.
+- **Never attacks or moves** because it is *authored* inert — zero aggro/attack range and no abilities on its definition — not because of code.
+- **Never dies** via the thin `TrainingDummy` adapter, which restores its health after each blow (plus a restore-on-depleted safety net). Its authored health pool is far larger than any single blow, so depletion cannot occur.
+- No `TrainingDummyManager`, no bespoke damage path, no special-case combat code.
+
+## Combat debugging workflow
+
+`CombatDebugOverlay` (dev-only `ToyChest.Debugging` assembly) lives on the **`CombatDebug`** object in `VerticalSlice` and is enabled on start; press **F2** to toggle (or tick it in the Inspector; the switch is the global `CombatDebugOverlay.Enabled`). *The component must exist in the scene* — a scene without it has nothing for F2 to toggle:
+
+- **HitVolume visualization** — the live cone arc (or sphere radius), its reach, and a facing ray, drawn from the volume's real anchored origin. Rendered in the **Scene view** (Gizmos) *and* the **Game view** (an immediate-mode GL pass, since Gizmos do not draw there).
+- **Confirmed hit markers** — the last N contact points, so you can see exactly where blows landed and for how long they persisted.
+- **HUD** — swing phase, contact frame, hit confirmed, targets hit, cooldown remaining, and the active hit volume's shape.
+
+It is **strictly debug-only and read-only**: gameplay has no dependency on it (asserted by a test that the gameplay assemblies never reference `ToyChest.Debugging`), it mutates nothing, and deleting it changes no behaviour.
+
+## The contact seam is character-agnostic (corrected)
+
+The `OnAttackContact` standard was **only half shared**, which broke the "author an attack once, any character uses it" promise at the animation layer. The ability, effects, and hit-detection vocabulary were genuinely shared — but the component that *received* the event, `PlayerModelEvents`, was player-only, so an authored clip raised `AnimationEvent 'OnAttackContact' ... has no receiver!` on every enemy, and enemy contact timing stayed stuck on an internal timer while the player's synced to animation.
+
+Corrected with one shared seam:
+
+```
+attack clip (one authored OnAttackContact event)
+        ↓  Unity dispatches on the Animator's GameObject
+AttackContactRelay            (on every character's model — player, enemy, dummy, future boss)
+        ↓  GetComponentInParent<IAttackContactReceiver>()
+PlayerCombat / EnemyCombatant (each resolves its own authored hit volume, now)
+```
+
+`IAttackContactReceiver.NotifyAnimationContact()` is implemented by `PlayerCombat` and `EnemyCombatant`; both ignore the call unless mid-swing, so a stray or duplicated event can never add a second blow, and with no event authored each falls back to its own wind-up timer. `PlayerModelEvents` no longer handles the event (it would have given the player model two receivers and dispatched twice) and keeps only its root-motion relay. **Add `AttackContactRelay` to the model of any new attacking character.**
+
+## Attack direction commits instantly
+
+Starting a swing now **snaps** the character to the direction the player is steering, with no turn-rate easing. Previously the swing eased toward its facing at `_turnSpeedDegrees`, so a swing begun while holding a new direction — especially a reversal, or a second swing fired the instant the first ended — rotated only a few degrees and struck the old way. The rule is: **the stick wins.** With movement input held, the swing commits to that direction at its start and is not re-aimed at a target on impact; with no input, the swing snaps to the target instead (aim assist for a standing attack); with neither, facing is unchanged. Verified live at a full 135° reversal landing exactly on the stick direction within a single frame.
+
+## Presentation fixes surfaced by playtesting
+
+- **Hit flash removed.** `HitFlash` tinted characters' renderers on damage. It never worked with the project's characters: it bound only materials exposing `_BaseColor` (URP Lit) while the stylized characters use the *Autodesk Interactive* shader (`_Color`), so it bound 0 renderers and was a silent no-op since RG2. Probing multiple colour properties made it bind, but it still did not read on these materials, so the component was **deleted** rather than kept as a cost with no benefit. Hit readability now comes from the impact cues that do work — impact VFX at the true contact point, camera impulse, hit-stop — plus the target's hit animation, and for damage *taken* the new health-bar flash. Do not reintroduce a character tint without first confirming it is visible on the actual shaders in use.
+- **Attacks never interrupt jumps or rolls.** A swing cannot start while the player is rolling or airborne; the press buffers instead and fires as soon as they land or the roll recovers, so movement keeps its commitment without losing input.
+- **Dead enemies are unhittable immediately.** Teardown is deliberately deferred so the death animation can play, but the corpse used to keep absorbing blows for that ~1.3s. `EnemyCombatant` now disables its colliders the moment health depletes — since hit detection resolves colliders, the corpse simply stops being found. Detection stays ignorant of health (no "is it alive?" test leaked into the query); the enemy withdraws itself from the world instead.
+- **Attack bone is authored, not hardcoded.** `EnemyCombatant` hardcoded `HumanBodyBones.RightHand`, which silently mismatched any non-punch attack animation. The bone and its local offset are now serialized fields (`_attackBone`, `_attackOffset`), so **changing the attack animation to a kick means pointing the bone at a foot in the Inspector** — no code change. The player already had this (`PlayerCombat._attackBone`). Rule of thumb: whenever an attack animation changes, check that its hit volume's bone still matches the limb that strikes.
+
+## Feel tuning methodology
+
+The loop this tooling is built for: **punch the dummy → watch one cue → change one authored number → punch again.** Concretely — press F2 and confirm the volume sits where the fist is and the hit markers land on the surface; judge *impact timing* by whether the marker appears on the frame the fist connects (if not, author the `OnAttackContact` event on the clip rather than re-tuning the wind-up timer); judge *responsiveness* by how soon you can move and re-punch after contact (tune `_postImpactCommit`, then `_recoveryDuration`); judge *spacing* by walking to the edge of the drawn arc. Tune one value at a time, and prefer authored data over code every time.
+
+> **Note for the current clip.** The Attack animator state plays at speed 2 and the attack clip was changed to `Frank_RPG_Fighter_Combo03_1`, so the authored 0.4s wind-up is no longer guaranteed to coincide with that clip's true contact frame. The robust fix is the RG5B standard — place one `OnAttackContact` event on the clip's contact frame, which overrides the timer — rather than guessing a new wind-up value.
+
+## Non-goals honored
+
+No combos, weapons, lock-on, blocking, parrying, stagger, stun, enemy AI changes, progression, skills, or new combat mechanics. No new gameplay system and no new combat framework.
+
+## Tests & manual verification
+
+EditMode suite green at **399** (+6): a press lands exactly one blow however short the recovery; the retimed swing returns control by 0.54s where the old timing was still committed; an animation contact event lands the blow only once and the timer cannot add a second; an unbegun swing never reports impact; the training dummy's keep-alive contract never depletes across 200 blows; and gameplay assemblies never reference the debug assembly. Live, from `Bootstrap.unity` (`Tools/CoplayScripts/VerifyCombatFeel.cs`) against the dummy: empty swing = 1 attacked / 1 contacted / **0 impacted** (no impact feedback on a whiff), a confirmed hit raises exactly one `Impacted`, sustained punching leaves the dummy alive and still registering blows.
 
 ---
 

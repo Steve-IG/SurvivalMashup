@@ -27,10 +27,6 @@ namespace ToyChest.Gameplay.Enemy
         [Tooltip("How quickly the locomotion blend value follows the real speed, in seconds.")]
         private float _speedDamp = 0.1f;
 
-        [SerializeField]
-        [Tooltip("Hit flash on the model. Defaults to the first one found in children.")]
-        private HitFlash _hitFlash;
-
         private static readonly int SpeedParam = Animator.StringToHash("Speed");
         private static readonly int AttackParam = Animator.StringToHash("Attack");
         private static readonly int HitParam = Animator.StringToHash("Hit");
@@ -49,11 +45,6 @@ namespace ToyChest.Gameplay.Enemy
             if (_combatant == null)
             {
                 _combatant = GetComponent<EnemyCombatant>();
-            }
-
-            if (_hitFlash == null)
-            {
-                _hitFlash = GetComponentInChildren<HitFlash>();
             }
 
             if (_animator != null)
@@ -86,11 +77,6 @@ namespace ToyChest.Gameplay.Enemy
 
         private void OnDamaged()
         {
-            if (_hitFlash != null)
-            {
-                _hitFlash.Flash();
-            }
-
             // A brief hit reaction so blows read as connecting. It is animation only — the enemy's
             // gameplay attack cadence is driven by EnemyCombatant's own timers, not the animator, so a
             // flinch never stunlocks the encounter; it just makes the strike feel like it lands.

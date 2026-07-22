@@ -1,7 +1,14 @@
 fileFormatVersion: 2
 guid: 927efecf808e43a41b806c382e990a4d
+AssetOrigin:
+  serializedVersion: 1
+  productId: 137306
+  packageName: Frank RPG Fighter
+  packageVersion: 1.1
+  assetPath: Assets/Frank_Fighter/Assets/Animations/FBX Animation/Root_Motion/Frank_RPG_Fighter_Combo03_1.FBX
+  uploadId: 837888
 ModelImporter:
-  serializedVersion: 22200
+  serializedVersion: 24200
   internalIDToNameTable:
   - first:
       1: 100000
@@ -939,20 +946,7 @@ ModelImporter:
     resampleCurves: 1
     optimizeGameObjects: 0
     removeConstantScaleCurves: 0
-    motionNodeName: root
-    rigImportErrors: 
-    rigImportWarnings: "Copied Avatar Rig Configuration mis-match. Bone length in
-      copied configuration does not match position in animation file:\n\t'thigh_l'
-      : position error = 2.786801 mm\n\t'calf_l' : position error = 1.101792 mm\n\t'thigh_r'
-      : position error = 1.191580 mm\n\t'calf_r' : position error = 1.229032 mm\n\t'hand_l'
-      : position error = 3.405700 mm\n\t'middle_02_l' : position error = 1.562885
-      mm\n\t'middle_03_l' : position error = 1.134582 mm\n\t'ring_02_l' : position
-      error = 1.745738 mm\n\t'ring_03_l' : position error = 1.155017 mm\n\t'pinky_02_l'
-      : position error = 1.066748 mm\n\t'lowerarm_r' : position error = 1.929116
-      mm\n\t'hand_r' : position error = 2.201423 mm\n\t'middle_02_r' : position error
-      = 1.561005 mm\n\t'middle_03_r' : position error = 1.132074 mm\n\t'ring_02_r'
-      : position error = 1.744268 mm\n\t'ring_03_r' : position error = 1.156481 mm\n\t'pinky_02_r'
-      : position error = 1.064674 mm\n"
+    motionNodeName: 
     animationImportErrors: 
     animationImportWarnings: "\nClip 'Take 001' has import animation warnings that
       might lower retargeting quality:\nNote: Activate translation DOF on avatar
@@ -995,17 +989,24 @@ ModelImporter:
       hasAdditiveReferencePose: 0
       loopTime: 0
       loopBlend: 0
-      loopBlendOrientation: 0
-      loopBlendPositionY: 0
+      loopBlendOrientation: 1
+      loopBlendPositionY: 1
       loopBlendPositionXZ: 0
-      keepOriginalOrientation: 0
-      keepOriginalPositionY: 1
+      keepOriginalOrientation: 1
+      keepOriginalPositionY: 0
       keepOriginalPositionXZ: 0
-      heightFromFeet: 0
+      heightFromFeet: 1
       mirror: 0
       bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
       curves: []
-      events: []
+      events:
+      - time: 0.18647343
+        functionName: OnAttackContact
+        data: 
+        objectReferenceParameter: {instanceID: 0}
+        floatParameter: 0
+        intParameter: 0
+        messageOptions: 0
       transformMask:
       - path: 
         weight: 1
@@ -1260,6 +1261,9 @@ ModelImporter:
     maxBonesPerVertex: 4
     minBoneWeight: 0.001
     optimizeBones: 1
+    generateMeshLods: 0
+    meshLodGenerationFlags: 0
+    maximumMeshLod: -1
     meshOptimizationFlags: -1
     indexFormat: 0
     secondaryUVAngleDistortion: 8
@@ -2273,8 +2277,7 @@ ModelImporter:
     hasTranslationDoF: 0
     hasExtraRoot: 1
     skeletonHasParents: 1
-  lastHumanDescriptionAvatarSource: {fileID: 9000000, guid: 9148d9f593983b548bd87157ea40845f,
-    type: 3}
+  lastHumanDescriptionAvatarSource: {fileID: 9000000, guid: 9148d9f593983b548bd87157ea40845f, type: 3}
   autoGenerateAvatarMappingIfUnspecified: 1
   animationType: 3
   humanoidOversampling: 1
@@ -2286,10 +2289,3 @@ ModelImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 137306
-  packageName: Frank RPG Fighter
-  packageVersion: 1.1
-  assetPath: Assets/Frank_Fighter/Assets/Animations/FBX Animation/Root_Motion/Frank_RPG_Fighter_Combo03_1.FBX
-  uploadId: 837888

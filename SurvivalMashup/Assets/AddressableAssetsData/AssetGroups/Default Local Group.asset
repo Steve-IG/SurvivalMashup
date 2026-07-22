@@ -459,6 +459,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - definitions
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ff2c45af52bf15e4cadacf4355b91276
+    m_Address: Assets/Game/Content/Definitions/Obj_TrainingDummy.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 8eab1a6a1626e214b9dbc347de1d8bd4, type: 2}
   m_SchemaSet:

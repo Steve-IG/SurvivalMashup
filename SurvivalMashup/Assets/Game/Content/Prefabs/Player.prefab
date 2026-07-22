@@ -150,6 +150,7 @@ GameObject:
   - component: {fileID: 4136477284709693721}
   - component: {fileID: 2381177636788359021}
   - component: {fileID: 6690063030529903403}
+  - component: {fileID: 7090502564320689023}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -341,16 +342,20 @@ MonoBehaviour:
   _behaviour: {fileID: 0}
   _attackAbilityId: ability.player_strike
   _attackRange: 2.5
+  _attackConeHalfAngle: 70
   _enemyTag: Enemy
   _targetLayers:
     serializedVersion: 2
     m_Bits: 4294967295
   _maxCandidates: 16
+  _attackVolumePreset: {fileID: 0}
+  _attackBone: 18
+  _attackOffset: {x: 0, y: 0, z: 0.1}
+  _extraContactVolumes: []
   _turnSpeedDegrees: 720
   _windUpDuration: 0.4
-  _recoveryDuration: 0.35
-  _hitHeight: 1.1
-  _hitInset: 0.45
+  _recoveryDuration: 0.12
+  _postImpactCommit: 0.05
   _locomotion: {fileID: 0}
   _bufferWindow: 0.18
   _commitMoveScale: 0
@@ -372,10 +377,9 @@ MonoBehaviour:
   _combat: {fileID: 0}
   _healthResourceId: resource.health
   _speedDamp: 0.1
-  _hitFlash: {fileID: 0}
   _impulse: {fileID: 0}
   _hitShake: 0.6
-  _attackShake: 0.18
+  _playerHitReactions: 0
 --- !u!114 &4136477284709693721
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -465,6 +469,26 @@ MonoBehaviour:
   _impactSound: {fileID: 0}
   _hitStopDuration: 0.05
   _hitStopScale: 0.06
+--- !u!114 &7090502564320689023
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 428409306736505765}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5a620c571fe3af64ca089436fe80a3d2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ToyChest.Gameplay.Player::ToyChest.Gameplay.Player.PlayerHealthBar
+  _behaviour: {fileID: 0}
+  _healthResourceId: resource.health
+  _size: {x: 260, y: 22}
+  _margin: {x: 24, y: 24}
+  _fillColor: {r: 0.16, g: 0.78, b: 0.32, a: 1}
+  _backgroundColor: {r: 0, g: 0, b: 0, a: 0.55}
+  _damageFlashColor: {r: 1, g: 0.25, b: 0.2, a: 1}
+  _flashDuration: 0.35
 --- !u!1 &443057010201223419
 GameObject:
   m_ObjectHideFlags: 0
@@ -3133,8 +3157,8 @@ GameObject:
   m_Component:
   - component: {fileID: 2052016214820421597}
   - component: {fileID: 8362924294267007778}
-  - component: {fileID: 6340412838644141877}
   - component: {fileID: 3530962281792308895}
+  - component: {fileID: 4018893655374856679}
   m_Layer: 0
   m_Name: Model
   m_TagString: Untagged
@@ -3190,21 +3214,6 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
---- !u!114 &6340412838644141877
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6075306237990660889}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f527d5210f659814e93fce344419d97f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: ToyChest.Gameplay.Presentation::ToyChest.Gameplay.Presentation.HitFlash
-  _flashColor: {r: 1, g: 0.25, b: 0.2, a: 1}
-  _duration: 0.14
-  _strength: 0.8
 --- !u!114 &3530962281792308895
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3220,6 +3229,19 @@ MonoBehaviour:
   _animator: {fileID: 0}
   _locomotion: {fileID: 0}
   _combat: {fileID: 0}
+--- !u!114 &4018893655374856679
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6075306237990660889}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1206070709a077948918c62994dcf33e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ToyChest.Gameplay::ToyChest.Gameplay.HitDetection.AttackContactRelay
+  _receiverBehaviour: {fileID: 0}
 --- !u!1 &6334907504171882306
 GameObject:
   m_ObjectHideFlags: 0

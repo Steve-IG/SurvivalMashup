@@ -31,7 +31,7 @@ namespace ToyChest.Gameplay.Player
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(GameplayObjectBehaviour))]
-    public sealed class PlayerCombat : MonoBehaviour
+    public sealed class PlayerCombat : MonoBehaviour, IAttackContactReceiver
     {
         [SerializeField]
         [Tooltip("The behaviour whose composed object is the attacker. Defaults to the sibling.")]
@@ -91,18 +91,14 @@ namespace ToyChest.Gameplay.Player
         private float _windUpDuration = 0.4f;
 
         [SerializeField]
-        [Tooltip("Follow-through after the blow before control returns to locomotion, in seconds. " +
-                 "Wind-up + recovery is how long the player is committed to the swing.")]
-        private float _recoveryDuration = 0.35f;
-
-        [Header("Impact point (where the hit VFX spawns)")]
-        [SerializeField]
-        [Tooltip("Height above the target's base at which the blow reads, in world units (≈ chest).")]
-        private float _hitHeight = 1.1f;
+        [Tooltip("Follow-through after the blow before another swing may start, in seconds. Kept short so " +
+                 "repeat punches feel immediate; this no longer roots the player (see post-impact commit).")]
+        private float _recoveryDuration = 0.12f;
 
         [SerializeField]
-        [Tooltip("How far back toward the player from the target's centre the hit point sits (the near surface).")]
-        private float _hitInset = 0.45f;
+        [Tooltip("Seconds the player stays committed AFTER the contact frame before movement returns. " +
+                 "This is the knob that makes a punch feel snappy rather than floaty — keep it small.")]
+        private float _postImpactCommit = 0.05f;
 
         [Header("Feel")]
         [SerializeField]
@@ -123,17 +119,65 @@ namespace ToyChest.Gameplay.Player
         private HitDetector _detector;
         private HitVolumeEmitter _primaryAttack;
         private float _bufferTimer;
+        private int _lastTargetsHit;
+        private Vector3 _lastContactPoint;
+        private bool _hasContactPoint;
         private readonly MeleeSwing _swing = new MeleeSwing();
 
-        /// <summary>Raised when a swing starts — presentation reads this to play the swing animation.</summary>
+        /// <summary>
+        /// Stage 1 — raised when a swing starts. Presentation reads this for the swing animation and a
+        /// whoosh. It is <b>not</b> impact feedback: it fires on every press, hit or miss.
+        /// </summary>
         public event Action Attacked;
 
-        /// <summary>Raised at the contact frame when a swing lands a hit, with the world-space hit point —
-        /// impact presentation (VFX, camera impulse, hit pause) hangs off this.</summary>
+        /// <summary>
+        /// Stage 2 — raised when the swing reaches its contact frame, whether or not anything was hit.
+        /// For debug tooling and readability only; never wire impact juice to this.
+        /// </summary>
+        public event Action Contacted;
+
+        /// <summary>
+        /// Stage 3 — raised only when a hit is <b>confirmed</b> (the ability committed and damage landed),
+        /// carrying the real world-space contact point on the target's surface. All impact presentation —
+        /// camera impulse, impact VFX, hit-stop, impact sound — hangs off this and this alone, so a swing
+        /// into empty air produces no impact feedback.
+        /// </summary>
         public event Action<Vector3> Impacted;
 
         /// <summary>Whether a swing is currently in progress.</summary>
         public bool IsAttacking => _swing.IsActive;
+
+        /// <summary>The swing's current phase (Idle / WindUp / Recovery). Debug tooling reads this.</summary>
+        public MeleePhase Phase => _swing.Phase;
+
+        /// <summary>Targets confirmed hit by the most recent contact frame (0 on a whiff). Debug only.</summary>
+        public int LastTargetsHit => _lastTargetsHit;
+
+        /// <summary>The most recent confirmed contact point, and whether one has been recorded. Debug only.</summary>
+        public bool TryGetLastContactPoint(out Vector3 point)
+        {
+            point = _lastContactPoint;
+            return _hasContactPoint;
+        }
+
+        /// <summary>The primary swing's authored hit region, for debug visualization. Never gameplay.</summary>
+        public HitVolumeEmitter PrimaryAttackVolume => _primaryAttack;
+
+        /// <summary>Remaining cooldown on the attack ability, or 0 when ready. Debug read-only.</summary>
+        public float AttackCooldownRemaining
+        {
+            get
+            {
+                GameplayObject attacker = _behaviour != null ? _behaviour.Object : null;
+                if (attacker == null || !attacker.IsActive || !attacker.TryGet(out AbilitySet abilities))
+                {
+                    return 0f;
+                }
+
+                AbilityInstance instance = abilities.GetAbility(_attackAbility);
+                return instance != null ? instance.CooldownRemaining : 0f;
+            }
+        }
 
         private void Awake()
         {
@@ -241,6 +285,14 @@ namespace ToyChest.Gameplay.Player
                 return false;
             }
 
+            // A jump or a roll owns the character until it finishes: an attack must never cut one short.
+            // The press is not thrown away — TryAttack buffers it, so it fires as soon as the player lands
+            // or the roll recovers, which keeps mashing responsive without stealing control from movement.
+            if (_locomotion != null && (_locomotion.IsRolling || !_locomotion.IsGrounded))
+            {
+                return false;
+            }
+
             GameplayObject attacker = _behaviour != null ? _behaviour.Object : null;
             if (attacker == null || !attacker.IsActive || !attacker.TryGet(out AbilitySet abilities))
             {
@@ -255,25 +307,48 @@ namespace ToyChest.Gameplay.Player
                 {
                     return false;
                 }
+            }
 
-                FaceToward(hit.ContactPoint);
+            // Commit the swing's direction *instantly*. The player's stick wins: attacking while holding a
+            // direction must strike that way immediately — including a new swing that starts the moment the
+            // previous one ends, even a full reversal. Easing this at the turn rate is what made the
+            // character barely rotate before swinging. With no movement input we snap to the target
+            // instead (aim assist for a standing attack), and with neither we keep the current facing.
+            Vector3 intent = _locomotion != null ? _locomotion.MoveIntentDirection : Vector3.zero;
+            if (intent.sqrMagnitude > 1e-4f)
+            {
+                SnapFacing(intent);
+            }
+            else if (hit.Object != null)
+            {
+                SnapFacing(hit.ContactPoint - transform.position);
             }
 
             _swing.Begin(_windUpDuration, _recoveryDuration);
-            _locomotion?.ApplyMovementLock(_windUpDuration + _recoveryDuration, _commitMoveScale);
+
+            // Commit only through the wind-up plus a brief beat past contact — not the whole recovery.
+            // The blow still needs the player planted while it lands, but holding them rooted through the
+            // follow-through is what made the punch feel floaty; movement now returns right after contact.
+            _locomotion?.ApplyMovementLock(_windUpDuration + _postImpactCommit, _commitMoveScale);
             Attacked?.Invoke();
             return true;
         }
 
         /// <summary>
-        /// Lands the blow at the swing's contact frame: re-acquires the nearest enemy (it may have moved
-        /// or died during the wind-up), and activates the attack ability against it — the ability applies
-        /// its authored damage and starts its cooldown. On a landed hit, raises <see cref="Impacted"/> with
-        /// the hit point for presentation. If nothing is in range now, the swing simply whiffs (no damage,
-        /// no cooldown), which is fine.
+        /// The swing's contact frame — the middle of the three stages this adapter reports:
+        /// <c>Attacked</c> (swing started) → <c>Contacted</c> (the contact frame arrived) →
+        /// <c>Impacted</c> (a hit was confirmed). It re-acquires the nearest enemy (it may have moved or
+        /// died during the wind-up) and activates the attack ability against it — the ability applies its
+        /// authored damage and starts its cooldown. <see cref="Impacted"/> is raised <b>only</b> when the
+        /// activation actually committed, and carries the real surface contact point, so impact
+        /// presentation (camera impulse, VFX, hit-stop, sound) can never fire on a whiff. A swing into
+        /// empty air reaches <see cref="Contacted"/> and stops there: no damage, no cooldown, no juice.
         /// </summary>
         private void ResolveImpact()
         {
+            _lastTargetsHit = 0;
+            Contacted?.Invoke();
+
             GameplayObject attacker = _behaviour != null ? _behaviour.Object : null;
             if (attacker == null || !attacker.IsActive || !attacker.TryGet(out AbilitySet abilities))
             {
@@ -285,10 +360,19 @@ namespace ToyChest.Gameplay.Player
                 return;
             }
 
-            FaceToward(hit.ContactPoint);
+            // Only re-aim at the target if the player is not steering: while a direction is held, the
+            // swing stays committed to the player's intent rather than being pulled toward an enemy.
+            if (_locomotion == null || _locomotion.MoveIntentDirection.sqrMagnitude <= 1e-4f)
+            {
+                FaceToward(hit.ContactPoint);
+            }
+
             if (abilities.TryActivate(_attackAbility, EffectTarget.From(hit.Object)) == AbilityActivationResult.Activated)
             {
-                Impacted?.Invoke(HitPoint(hit.ContactPoint));
+                _lastTargetsHit = 1;
+                _lastContactPoint = hit.ContactPoint;
+                _hasContactPoint = true;
+                Impacted?.Invoke(hit.ContactPoint);
             }
         }
 
@@ -338,14 +422,19 @@ namespace ToyChest.Gameplay.Player
             return found;
         }
 
-        // The world point where the blow reads: chest height on the near surface of the target, toward
-        // the player — so the impact VFX lands on the enemy's body where the punch connects, not at its feet.
-        private Vector3 HitPoint(Vector3 targetBase)
+        /// <summary>
+        /// Turns to a world direction immediately, with no turn-rate easing — used when a swing commits so
+        /// the attack always goes exactly where the player aimed it.
+        /// </summary>
+        private void SnapFacing(Vector3 direction)
         {
-            Vector3 toTarget = targetBase - transform.position;
-            toTarget.y = 0f;
-            Vector3 dir = toTarget.sqrMagnitude > 1e-4f ? toTarget.normalized : transform.forward;
-            return targetBase + Vector3.up * _hitHeight - dir * _hitInset;
+            Vector3 planar = new Vector3(direction.x, 0f, direction.z);
+            if (planar.sqrMagnitude < 1e-4f)
+            {
+                return;
+            }
+
+            transform.rotation = Quaternion.LookRotation(planar.normalized, Vector3.up);
         }
 
         private void FaceToward(Vector3 worldPosition)

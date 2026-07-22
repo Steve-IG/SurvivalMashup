@@ -11,6 +11,7 @@
         "ToyChest.Systems.Inventory",
         "ToyChest.Systems.Interactions",
         "ToyChest.Gameplay",
+        "ToyChest.Gameplay.Player",
         "ToyChest.Boot",
         "Unity.InputSystem"
     ],

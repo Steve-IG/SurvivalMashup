@@ -16,7 +16,11 @@ namespace ToyChest.Gameplay.HitDetection
         /// <summary>The live GameplayObject inside the volume — the participant an ability will affect.</summary>
         public readonly GameplayObject Object;
 
-        /// <summary>World-space point where the hit reads, for impact presentation (VFX, decals, camera).</summary>
+        /// <summary>
+        /// World-space point where the blow actually connected: the point on the target's surface nearest
+        /// the query origin (the attacking hand / weapon), not the target's pivot. Impact presentation
+        /// (VFX, decals, camera) reads this so the effect appears where the fist met the body.
+        /// </summary>
         public readonly Vector3 ContactPoint;
 
         /// <summary>Squared distance from the query origin to the target, for nearest-first ordering.</summary>

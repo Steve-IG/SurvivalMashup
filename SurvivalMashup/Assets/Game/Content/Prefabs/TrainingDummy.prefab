@@ -1024,7 +1024,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8804551817864822920}
   - component: {fileID: 1655861799067604007}
-  - component: {fileID: 3261129137284154356}
+  - component: {fileID: 6155333113490414387}
   m_Layer: 0
   m_Name: Model
   m_TagString: Untagged
@@ -1077,7 +1077,7 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
---- !u!114 &3261129137284154356
+--- !u!114 &6155333113490414387
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -2227,8 +2227,9 @@ GameObject:
   - component: {fileID: 6673208784906970110}
   - component: {fileID: 2491384183638289061}
   - component: {fileID: 1529115699336886208}
+  - component: {fileID: 5227553864073975036}
   m_Layer: 0
-  m_Name: Grunt
+  m_Name: TrainingDummy
   m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2299,7 +2300,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 138a9ef116906cd44ac2556cd4e637ba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: ToyChest.Gameplay::ToyChest.Gameplay.Objects.GameplayObjectSpawner
-  _definition: {fileID: 11400000, guid: 8414d27e074c49b2a76a70f3845d1bc9, type: 2}
+  _definition: {fileID: 11400000, guid: ff2c45af52bf15e4cadacf4355b91276, type: 2}
   _behaviour: {fileID: 6704733851995826938}
 --- !u!114 &2491384183638289061
 MonoBehaviour:
@@ -2317,8 +2318,8 @@ MonoBehaviour:
   _playerTag: Player
   _speedAttributeId: attribute.enemy_speed
   _fallbackSpeed: 3.5
-  _aggroRange: 12
-  _attackRange: 1.8
+  _aggroRange: 0
+  _attackRange: 0
   _attackConeHalfAngle: 75
   _targetLayers:
     serializedVersion: 2
@@ -2330,7 +2331,7 @@ MonoBehaviour:
   _recoverSeconds: 0.65
   _gravity: 20
   _turnSpeedDegrees: 540
-  _lootPrefab: {fileID: 432323143689201973, guid: 38ba67cf7400b3c48898a2687fba45df, type: 3}
+  _lootPrefab: {fileID: 0}
   _deathDelay: 1.3
 --- !u!114 &1529115699336886208
 MonoBehaviour:
@@ -2347,6 +2348,20 @@ MonoBehaviour:
   _animator: {fileID: 1655861799067604007}
   _combatant: {fileID: 0}
   _speedDamp: 0.1
+--- !u!114 &5227553864073975036
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5237817762383703381}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 235e95c1cc259634a87676c54e1405ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ToyChest.Gameplay.Enemy::ToyChest.Gameplay.Enemy.TrainingDummy
+  _behaviour: {fileID: 0}
+  _healthResourceId: resource.health
 --- !u!1 &5344426294948251586
 GameObject:
   m_ObjectHideFlags: 0
