@@ -42,5 +42,33 @@ namespace ToyChest.Gameplay.HitDetection
         {
             _receiver?.NotifyAnimationContact();
         }
+
+        /// <summary>
+        /// The second canonical attack event. Author an event named <c>OnAttackEnd</c> on the frame the
+        /// attack's committed motion finishes (after the strike's follow-through, before the return-to-idle
+        /// tail); Unity dispatches it here and the owning attacker releases its movement commitment, so the
+        /// player can flow into the next action the instant they input one. Optional — without it, the
+        /// attacker's timer ends the attack instead.
+        /// </summary>
+        public void OnAttackEnd()
+        {
+            _receiver?.NotifyAttackEnd();
+        }
+
+        /// <summary>
+        /// Opens an attack's contact window. Author <c>OnAttackContactStart</c> where the damaging motion begins
+        /// and <c>OnAttackContactEnd</c> where it stops; in between the hit volume strikes anything entering it,
+        /// once per target. Use instead of a single <c>OnAttackContact</c> when the blow spans many frames.
+        /// </summary>
+        public void OnAttackContactStart()
+        {
+            _receiver?.NotifyContactWindowStart();
+        }
+
+        /// <summary>Closes the contact window opened by <c>OnAttackContactStart</c>.</summary>
+        public void OnAttackContactEnd()
+        {
+            _receiver?.NotifyContactWindowEnd();
+        }
     }
 }

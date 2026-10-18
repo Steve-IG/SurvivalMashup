@@ -45,7 +45,7 @@ The implemented Milestone 0 subset (`ToyChest.Systems.Abilities`):
 - **Deterministic activation pipeline**, first failing check reported: granted → target validity → owner tag gates (required, then blocking; hierarchical match) → cooldown → costs. `CanActivate` runs the same validation without committing anything, for UI and AI.
 - **Costs:** generic resource id + amount pairs, all-or-nothing; validation never throws for a missing resource — an actor lacking the resource simply cannot afford the ability.
 - **Cooldowns:** fixed seconds, owned by the Ability System, advanced through the object's `Tick` with injected time. Charge-based, recharge, conditional, and shared-group cooldowns are future extensions.
-- **Targeting contract:** the ability declares its target mode (`Self` or `Provided`); the activator (input, AI, interaction) selects and supplies the concrete target. Spatial modes (ground, area, projectile) arrive with the world systems able to answer them. **The canonical world system that answers "which objects are in range/arc/blast?" is the Hit Detection vocabulary** (`ToyChest.Gameplay.HitDetection`; see `COMBAT.md`): a `HitDetector` resolves an authored `HitVolume` into Hit Results, and the activator feeds each result to this `Provided` path. Target *selection* stays a caller concern — detection never activates abilities or applies effects — so the ability/effect separation is preserved. An attack is authored, not coded (RG5B): an animation event (`OnAttackContact`) + a shared `HitVolumeAsset` preset + a socket/bone anchor + this ability. The **Multiple Targets** targeting mode remains the documented future extension for applying one activation's effects to every hit at once (true AoE); until then a multi-hit ability authors its cadence so each hit is its own activation.
+- **Targeting contract:** the ability declares its target mode (`Self` or `Provided`); the activator (input, AI, interaction) selects and supplies the concrete target. Spatial modes (ground, area, projectile) arrive with the world systems able to answer them. **The canonical world system that answers "which objects are in range/arc/blast?" is the Hit Detection vocabulary** (`ToyChest.Gameplay.HitDetection`; see `COMBAT.md`): a `HitDetector` resolves an authored `HitVolume` into Hit Results, and the activator feeds each result to this `Provided` path. Target *selection* stays a caller concern — detection never activates abilities or applies effects — so the ability/effect separation is preserved. An attack is authored, not coded (RG5B): an animation event (`OnAttackContact`) + a shared `HitVolumeAsset` preset + a socket/bone anchor + this ability. **Multiple Targets is now implemented (RG5D):** a `TryActivate(DefinitionId, IReadOnlyList<EffectTarget>)` overload applies one activation's effects to every valid hit at once — see *Milestone 2 Implementation (Review Group 5D)* below.
 - **AbilityActivated** is published when the activation is committed (validation passed, costs paid, cooldown started), before effect dispatch, so the event trace reads causally: activation → effect consequences.
 - **AbilityCategory value type:** the organizational category is exposed as a lightweight string-backed `AbilityCategory` struct with ordinal equality (`AbilityCategory.None` for uncategorized abilities). Data-driven — a new category is an authored string, not code. Deliberately not an enum (categories are content) and not a Gameplay Tag (categories are organizational and never queried by gameplay logic). Category remains purely organizational and never affects behavior.
 
@@ -59,6 +59,24 @@ The Milestone 0 activation model is Instant: validation and commit happen in one
 - **Multi-stage activation** — activations that progress through authored stages (charge → aim → release), each stage with its own gates and effects.
 
 Evolution trees, unlock requirements, loadouts, AI usage metadata, and the remaining activation models are future work and remain specified below.
+
+---
+
+# Milestone 2 Implementation (Review Group 5D — Multiple Targets)
+
+The one reviewed, accepted extension to the frozen Milestone 0 engine. Before RG5D the activation model applied a single activation's effects to exactly **one** target: `Activate` committed cost + cooldown once and ran the effect sequence against one `EffectTarget`. Applying one attack to several hits (true AoE / cleave) could not be expressed — per-target re-activation would double-charge costs and collide on cooldown. The Milestone 0 review gate was followed: the missing contract was reported, the smallest possible change identified, and it was accepted by the Technical Creative Director (2026-08-08).
+
+**The change** — a new overload alongside the existing single-target one:
+
+```
+AbilityActivationResult TryActivate(DefinitionId ability, IReadOnlyList<EffectTarget> targets)
+```
+
+- **Commit exactly once.** It validates once (Provided mode, tag gates, cooldown, costs), then commits once — one cost payment, one cooldown, one `AbilityActivated` event — through a shared private `Commit(instance)` the single-target path now also uses, so one activation always means one cost and one cooldown regardless of how many targets its effects resolve against.
+- **Apply effects per target.** After committing, it runs the definition's authored effect sequence once per **non-empty** target (`EffectContext` with the shared owner source and that target). Empty entries are skipped; a null/empty/all-empty set is `InvalidTarget`. Self-mode rejects a target set, exactly as the single-target overload rejects an explicit target for a Self ability.
+- **Separation preserved.** Targeting stays a caller concern: the caller (Hit Detection via `PlayerCombat`) supplies the targets it found; the ability answers *what happens* to each. No DamageManager/AoEManager/HitApplicationManager was introduced. This realizes the **Multiple Targets** mode the targeting contract reserved.
+
+Validation order for the multi-target path mirrors the single-target path (granted → Self rejects set → at least one valid target → tag gates → cooldown → costs), so the first-failing-check contract is unchanged. See `COMBAT.md` (RG5D) for how player melee uses it to hit several enemies with one punch.
 
 ---
 

@@ -94,6 +94,17 @@ namespace ToyChest.Gameplay.Enemy
         [Tooltip("Recovery: seconds the enemy is committed (rooted, vulnerable) after a strike before it can act again.")]
         private float _recoverSeconds = 0.65f;
 
+        [Header("Interruptibility (authored per attack phase)")]
+        [SerializeField]
+        [Tooltip("Whether a hit during the wind-up cancels this attack. When true (the readable default), " +
+                 "striking the enemy while it telegraphs cuts the attack short so the pending blow never lands.")]
+        private bool _windUpInterruptible = true;
+
+        [SerializeField]
+        [Tooltip("Whether a hit during the recovery cancels the follow-through. Off by default: once the blow " +
+                 "has landed the enemy commits to its recovery and a hit does not arbitrarily cancel it.")]
+        private bool _recoverInterruptible;
+
         [Header("Movement")]
         [SerializeField]
         [Tooltip("Downward acceleration applied while ungrounded, in units per second squared.")]
@@ -124,8 +135,7 @@ namespace ToyChest.Gameplay.Enemy
         private bool _subscribed;
         private bool _dead;
         private float _verticalVelocity;
-        private AttackPhase _attackPhase;
-        private float _attackTimer;
+        private EnemyAttackCycle _attackCycle;
         private float _deathTimer;
         private float _lastPlanarSpeed;
 
@@ -147,24 +157,12 @@ namespace ToyChest.Gameplay.Enemy
         /// <summary>The enemy's top pursuit speed right now (the authored attribute value).</summary>
         public float MaxSpeed => CurrentSpeed();
 
-        /// <summary>The self-paced attack cycle that makes the strike readable and fair.</summary>
-        private enum AttackPhase
-        {
-            /// <summary>Not attacking; free to pursue.</summary>
-            Ready,
-
-            /// <summary>Anticipating: rooted and telegraphing before the blow lands.</summary>
-            WindUp,
-
-            /// <summary>Committed: rooted and vulnerable just after the blow.</summary>
-            Recover,
-        }
-
         private void Awake()
         {
             _controller = GetComponent<CharacterController>();
             _motor = new PursuitMotor();
             _detector = new HitDetector();
+            _attackCycle = new EnemyAttackCycle(_windUpSeconds, _recoverSeconds, _windUpInterruptible, _recoverInterruptible);
 
             // The strike uses the identical authoring the player's punch does — a cone anchored to an
             // authored humanoid bone — proving one attack authoring is reused across different characters
@@ -222,53 +220,45 @@ namespace ToyChest.Gameplay.Enemy
                 bool inRange = step.Phase == PursuitPhase.Attack && hasPlayer;
 
                 // Telegraphed attack cycle so the strike is readable and fair: the enemy roots and
-                // anticipates (WindUp), the blow lands, then it is briefly committed (Recover).
-                // Cadence lives here, in the enemy's behaviour, not in the ability cooldown.
-                switch (_attackPhase)
+                // anticipates (WindUp), the blow lands, then it is briefly committed (Recover). Cadence and
+                // the authored interrupt windows live in the pure EnemyAttackCycle, not the ability cooldown
+                // or the animator. A hit during an interruptible window cancels the cycle (see OnHealthChanged),
+                // so this state machine simply resumes from Ready.
+                switch (_attackCycle.Phase)
                 {
-                    case AttackPhase.Ready:
+                    case EnemyAttackPhase.Ready:
                         if (inRange)
                         {
-                            _attackPhase = AttackPhase.WindUp;
-                            _attackTimer = _windUpSeconds;
+                            _attackCycle.BeginWindUp();
                             WindUpStarted?.Invoke();
                         }
 
                         break;
 
-                    case AttackPhase.WindUp:
+                    case EnemyAttackPhase.WindUp:
                         planarVelocity = Vector3.zero;
-                        _attackTimer -= delta;
                         if (!inRange)
                         {
-                            _attackPhase = AttackPhase.Ready; // player left the telegraph — a fair dodge
+                            _attackCycle.Reset(); // player left the telegraph — a fair dodge
                         }
-                        else if (_attackTimer <= 0f)
+                        else if (_attackCycle.Advance(delta).Struck)
                         {
                             if (TryAttack())
                             {
                                 Struck?.Invoke();
                             }
-
-                            _attackPhase = AttackPhase.Recover;
-                            _attackTimer = _recoverSeconds;
                         }
 
                         break;
 
-                    case AttackPhase.Recover:
+                    case EnemyAttackPhase.Recover:
                         planarVelocity = Vector3.zero;
-                        _attackTimer -= delta;
-                        if (_attackTimer <= 0f)
-                        {
-                            _attackPhase = AttackPhase.Ready;
-                        }
-
+                        _attackCycle.Advance(delta);
                         break;
                 }
 
                 // Face the player through the whole attack cycle; otherwise face the movement direction.
-                if (_attackPhase != AttackPhase.Ready && hasPlayer)
+                if (_attackCycle.IsAttacking && hasPlayer)
                 {
                     FaceTarget(_player.position - position, delta);
                 }
@@ -317,6 +307,13 @@ namespace ToyChest.Gameplay.Enemy
         {
             if (current < previous && current > 0f)
             {
+                // Gameplay interruption: a confirmed hit cancels the attack if it landed during an authored
+                // interrupt window. Cancelling the cycle here means a pending strike (mid wind-up) never
+                // resolves and the enemy resumes normal behaviour next frame; a hit outside the window leaves
+                // the attack running. This is state only — safe to run inside the resource-change callback,
+                // unlike death (which defers teardown). The hit reaction itself is the Damaged event's job,
+                // so interruption stays gameplay-only and presentation stays in the animator.
+                _attackCycle.TryInterrupt();
                 Damaged?.Invoke();
             }
         }
@@ -344,18 +341,42 @@ namespace ToyChest.Gameplay.Enemy
         /// </summary>
         public void NotifyAnimationContact()
         {
-            if (_dead || _attackPhase != AttackPhase.WindUp)
+            if (_dead)
             {
                 return;
             }
 
-            if (TryAttack())
+            // Lands the blow only if still winding up; if the attack was interrupted this frame the cycle is
+            // already Ready, so CompleteWindUp returns false and the pending strike never fires.
+            if (_attackCycle.CompleteWindUp() && TryAttack())
             {
                 Struck?.Invoke();
             }
+        }
 
-            _attackPhase = AttackPhase.Recover;
-            _attackTimer = _recoverSeconds;
+        /// <summary>
+        /// Part of the shared attack-animation contract, but intentionally a no-op for enemies: an enemy's
+        /// recovery is a deliberate, timer-based vulnerability window (a fairness telegraph the player reads
+        /// and punishes), not something the animation should cut short. The <c>OnAttackEnd</c> event exists
+        /// for the player's snappy exit; ending the enemy's recovery early would shorten the very window the
+        /// telegraph is meant to expose.
+        /// </summary>
+        public void NotifyAttackEnd()
+        {
+        }
+
+        /// <summary>
+        /// A windowed clip on an enemy lands its strike once, at the window's start — enemy strikes are single
+        /// telegraphed blows, so the window's opening is simply the contact frame.
+        /// </summary>
+        public void NotifyContactWindowStart()
+        {
+            NotifyAnimationContact();
+        }
+
+        /// <summary>Nothing to close for an enemy: its strike already resolved when the window opened.</summary>
+        public void NotifyContactWindowEnd()
+        {
         }
 
         private bool TryAttack()

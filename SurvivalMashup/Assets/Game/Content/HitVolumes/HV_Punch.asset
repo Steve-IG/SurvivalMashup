@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: ToyChest.Gameplay::ToyChest.Gameplay.HitDetection.HitVolumeAsset
   _volume:
     _shape: 1
-    _radius: 2.2
+    _radius: 1.8
     _coneHalfAngleDegrees: 60
-    _multiTarget: 0
-    _maxTargets: 1
+    _multiTarget: 1
+    _maxTargets: 10

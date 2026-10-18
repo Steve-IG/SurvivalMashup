@@ -168,6 +168,48 @@ namespace ToyChest.Systems.Abilities
         }
 
         /// <summary>
+        /// Activates a Provided-mode ability against <em>every</em> target the activator selected —
+        /// the Multiple Targets extension of the targeting contract. One activation, so it commits
+        /// exactly once (one cost payment, one cooldown, one <see cref="AbilityActivated"/>), then
+        /// runs the definition's effect sequence once per non-empty target. This is how one attack
+        /// applies its authored effects to several objects a single contact frame legitimately hit,
+        /// without a bespoke multi-target damage path: the caller (Hit Detection) supplies the
+        /// targets, the ability answers what happens to each. Empty entries are skipped; the
+        /// activation is <see cref="AbilityActivationResult.InvalidTarget"/> unless at least one
+        /// target is non-empty. Self-mode abilities reject an explicit target set, exactly as the
+        /// single-target overload rejects an explicit target.
+        /// </summary>
+        public AbilityActivationResult TryActivate(DefinitionId ability, IReadOnlyList<EffectTarget> targets)
+        {
+            bool hasValidTarget = CountValidTargets(targets) > 0;
+            AbilityActivationResult result = ValidateMultiTarget(ability, hasValidTarget, out AbilityInstance instance);
+            if (result != AbilityActivationResult.Activated)
+            {
+                _eventBus?.Publish(new AbilityActivationFailed(_owner, ability, result));
+                return result;
+            }
+
+            Commit(instance);
+
+            // Apply the authored effect sequence to each legitimately hit target. The commit above
+            // already charged the one cost and started the one cooldown, so a two-target punch is
+            // still one activation — it just resolves against two receivers.
+            AbilityDefinition definition = instance.Definition;
+            for (int i = 0; i < targets.Count; i++)
+            {
+                EffectTarget target = targets[i];
+                if (IsEmpty(in target))
+                {
+                    continue;
+                }
+
+                _runner.Execute(definition.Effects, new EffectContext(_ownerTarget, target, _tagTable));
+            }
+
+            return AbilityActivationResult.Activated;
+        }
+
+        /// <summary>
         /// Advances every cooldown in grant order, publishing <see cref="AbilityCooldownEnded"/>
         /// exactly once per ready transition. Deterministic for a given sequence of deltas.
         /// </summary>
@@ -197,9 +239,24 @@ namespace ToyChest.Systems.Abilities
                 return result;
             }
 
+            Commit(instance);
+
+            AbilityDefinition definition = instance.Definition;
+            EffectTarget target = definition.TargetMode == AbilityTargetMode.Self ? _ownerTarget : explicitTarget;
+            _runner.Execute(definition.Effects, new EffectContext(_ownerTarget, target, _tagTable));
+            return AbilityActivationResult.Activated;
+        }
+
+        /// <summary>
+        /// Commits one validated activation in the documented order — costs, cooldown, activation
+        /// fact — shared by the single- and multi-target paths so one activation always means one
+        /// cost payment and one cooldown regardless of how many targets its effects then resolve
+        /// against. Effect dispatch is the caller's, because it differs by target count.
+        /// </summary>
+        private void Commit(AbilityInstance instance)
+        {
             AbilityDefinition definition = instance.Definition;
 
-            // Commit, in the documented order: costs, cooldown, activation fact, effects.
             IReadOnlyList<ResourceCostConfig> costs = definition.Costs;
             for (int i = 0; i < costs.Count; i++)
             {
@@ -209,14 +266,10 @@ namespace ToyChest.Systems.Abilities
             if (definition.CooldownSeconds > 0f)
             {
                 instance.StartCooldown();
-                _eventBus?.Publish(new AbilityCooldownStarted(_owner, ability, definition.CooldownSeconds));
+                _eventBus?.Publish(new AbilityCooldownStarted(_owner, definition.Id, definition.CooldownSeconds));
             }
 
-            _eventBus?.Publish(new AbilityActivated(_owner, ability));
-
-            EffectTarget target = definition.TargetMode == AbilityTargetMode.Self ? _ownerTarget : explicitTarget;
-            _runner.Execute(definition.Effects, new EffectContext(_ownerTarget, target, _tagTable));
-            return AbilityActivationResult.Activated;
+            _eventBus?.Publish(new AbilityActivated(_owner, definition.Id));
         }
 
         private AbilityActivationResult Validate(
@@ -251,6 +304,65 @@ namespace ToyChest.Systems.Abilities
             }
 
             return ValidateCosts(definition);
+        }
+
+        /// <summary>
+        /// Validates a multi-target Provided activation without committing. Mirrors the single-target
+        /// order (mode → target presence → tags → cooldown → costs) so the same first-failing-check
+        /// contract holds; the only difference is that target presence is "at least one non-empty
+        /// target" rather than a single explicit one. Self-mode rejects a target set outright.
+        /// </summary>
+        private AbilityActivationResult ValidateMultiTarget(DefinitionId ability, bool hasValidTarget, out AbilityInstance instance)
+        {
+            if (!_byId.TryGetValue(ability, out instance))
+            {
+                return AbilityActivationResult.NotGranted;
+            }
+
+            AbilityDefinition definition = instance.Definition;
+
+            if (definition.TargetMode == AbilityTargetMode.Self)
+            {
+                return AbilityActivationResult.InvalidTarget;
+            }
+
+            if (!hasValidTarget)
+            {
+                return AbilityActivationResult.InvalidTarget;
+            }
+
+            AbilityActivationResult tagGate = ValidateOwnerTags(definition);
+            if (tagGate != AbilityActivationResult.Activated)
+            {
+                return tagGate;
+            }
+
+            if (instance.IsOnCooldown)
+            {
+                return AbilityActivationResult.OnCooldown;
+            }
+
+            return ValidateCosts(definition);
+        }
+
+        private static int CountValidTargets(IReadOnlyList<EffectTarget> targets)
+        {
+            if (targets == null)
+            {
+                return 0;
+            }
+
+            int valid = 0;
+            for (int i = 0; i < targets.Count; i++)
+            {
+                EffectTarget target = targets[i];
+                if (!IsEmpty(in target))
+                {
+                    valid++;
+                }
+            }
+
+            return valid;
         }
 
         private AbilityActivationResult ValidateOwnerTags(AbilityDefinition definition)

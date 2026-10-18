@@ -110,6 +110,63 @@ namespace ToyChest.Gameplay.HitDetection
             return _sorted;
         }
 
+        /// <summary>
+        /// Resolves a <em>swept limb</em> — a capsule of <paramref name="radius"/> along segment A→B that moved
+        /// from (<paramref name="prevA"/>,<paramref name="prevB"/>) last frame to (<paramref name="curA"/>,
+        /// <paramref name="curB"/>) now — into the GameplayObjects it touched anywhere along that motion,
+        /// nearest first. The sweep is sub-sampled (<see cref="LimbSweep"/>) so a fast kick cannot tunnel past
+        /// a target between frames. Same filtering, dedup, ordering and surface contact points as
+        /// <see cref="Detect"/>; <paramref name="self"/> is never returned. Reuses this detector's buffers —
+        /// consume the list before the next query.
+        /// </summary>
+        public IReadOnlyList<HitResult> DetectLimbSweep(
+            Vector3 prevA, Vector3 prevB, Vector3 curA, Vector3 curB, float radius,
+            in HitFilter filter, GameplayObject self)
+        {
+            _results.Clear();
+            _sorted.Clear();
+
+            bool filterByTag = !string.IsNullOrEmpty(filter.TargetTag);
+            int samples = LimbSweep.SampleCount(prevA, prevB, curA, curB, radius);
+            for (int s = 1; s <= samples; s++)
+            {
+                LimbSweep.Sample(prevA, prevB, curA, curB, s, samples, out Vector3 a, out Vector3 b);
+                int count = Physics.OverlapCapsuleNonAlloc(
+                    a, b, radius, _overlap, filter.Layers, QueryTriggerInteraction.Collide);
+
+                for (int i = 0; i < count; i++)
+                {
+                    Collider collider = _overlap[i];
+                    if (collider == null || (filterByTag && !collider.CompareTag(filter.TargetTag)))
+                    {
+                        continue;
+                    }
+
+                    var behaviour = collider.GetComponentInParent<GameplayObjectBehaviour>();
+                    GameplayObject candidate = behaviour != null ? behaviour.Object : null;
+                    if (candidate == null || candidate == self || !candidate.IsActive || AlreadyFound(candidate))
+                    {
+                        continue;
+                    }
+
+                    // The contact reads where the limb actually met the body: the target's surface point nearest
+                    // the limb segment.
+                    Vector3 onLimb = LimbSweep.ClosestPointOnSegment(collider.bounds.center, a, b);
+                    Vector3 contactPoint = ClosestSurfacePoint(collider, onLimb);
+                    float sqrDistance = (collider.transform.position - curB).sqrMagnitude;
+                    _results.Add(new HitResult(candidate, contactPoint, sqrDistance));
+                }
+            }
+
+            _results.Sort(Order);
+            for (int i = 0; i < _results.Count; i++)
+            {
+                _sorted.Add(_results[i]);
+            }
+
+            return _sorted;
+        }
+
         // The point on the collider's surface nearest the query origin. Collider.ClosestPoint is exact for
         // primitives and CharacterControllers (what characters use); a non-convex MeshCollider does not
         // support it, so those fall back to the bounding box, which is still far closer than the object's

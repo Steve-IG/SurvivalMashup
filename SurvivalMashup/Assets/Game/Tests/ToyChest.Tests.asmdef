@@ -21,7 +21,8 @@
         "ToyChest.Gameplay.Player",
         "ToyChest.Gameplay.Npc",
         "ToyChest.Gameplay.Enemy",
-        "ToyChest.Boot"
+        "ToyChest.Boot",
+        "ToyChest.Editor"
     ],
     "includePlatforms": [
         "Editor"

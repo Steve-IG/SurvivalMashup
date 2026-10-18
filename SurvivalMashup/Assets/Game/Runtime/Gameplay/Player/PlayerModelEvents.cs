@@ -54,7 +54,9 @@ namespace ToyChest.Gameplay.Player
                 return;
             }
 
-            if (_combat.IsAttacking)
+            // Only while the attack owns movement (wind-up → OnAttackEnd). In the combo's Release grace the
+            // player may already be running, so forwarding root motion there would double their movement.
+            if (_combat.IsMovementCommitted)
             {
                 _locomotion.ApplyRootMotion(_animator.deltaPosition);
             }

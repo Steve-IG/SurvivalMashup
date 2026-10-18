@@ -1,7 +1,14 @@
 fileFormatVersion: 2
 guid: d1db132e1b8222b438ea5999fe33f2e6
+AssetOrigin:
+  serializedVersion: 1
+  productId: 137306
+  packageName: Frank RPG Fighter
+  packageVersion: 1.1
+  assetPath: Assets/Frank_Fighter/Assets/Animations/FBX Animation/Root_Motion/Frank_RPG_Fighter_Combo03_2.FBX
+  uploadId: 837888
 ModelImporter:
-  serializedVersion: 22200
+  serializedVersion: 24200
   internalIDToNameTable:
   - first:
       1: 100000
@@ -939,22 +946,7 @@ ModelImporter:
     resampleCurves: 1
     optimizeGameObjects: 0
     removeConstantScaleCurves: 0
-    motionNodeName: root
-    rigImportErrors: 
-    rigImportWarnings: "Copied Avatar Rig Configuration mis-match. Bone length in
-      copied configuration does not match position in animation file:\n\t'thigh_l'
-      : position error = 6.351149 mm\n\t'calf_l' : position error = 2.421102 mm\n\t'thigh_r'
-      : position error = 1.817741 mm\n\t'calf_r' : position error = 1.360765 mm\n\t'ball_r'
-      : position error = 1.070619 mm\n\t'upperarm_l' : position error = 1.143407
-      mm\n\t'lowerarm_l' : position error = 2.227297 mm\n\t'hand_l' : position error
-      = 2.189948 mm\n\t'middle_02_l' : position error = 1.562915 mm\n\t'middle_03_l'
-      : position error = 1.134424 mm\n\t'ring_02_l' : position error = 1.745727 mm\n\t'ring_03_l'
-      : position error = 1.155077 mm\n\t'pinky_02_l' : position error = 1.066925
-      mm\n\t'upperarm_r' : position error = 1.357394 mm\n\t'lowerarm_r' : position
-      error = 1.593919 mm\n\t'hand_r' : position error = 2.201410 mm\n\t'middle_02_r'
-      : position error = 1.561002 mm\n\t'middle_03_r' : position error = 1.131977
-      mm\n\t'ring_02_r' : position error = 1.744288 mm\n\t'ring_03_r' : position
-      error = 1.156526 mm\n\t'pinky_02_r' : position error = 1.064625 mm\n"
+    motionNodeName: 
     animationImportErrors: 
     animationImportWarnings: "\nClip 'Take 001' has import animation warnings that
       might lower retargeting quality:\nNote: Activate translation DOF on avatar
@@ -982,7 +974,43 @@ ModelImporter:
     animationWrapMode: 0
     extraExposedTransformPaths: []
     extraUserProperties: []
-    clipAnimations: []
+    clipAnimations:
+    - serializedVersion: 16
+      name: Take 001
+      takeName: Take 001
+      internalID: 7400000
+      firstFrame: 0
+      lastFrame: 58
+      wrapMode: 0
+      orientationOffsetY: 0
+      level: 0
+      cycleOffset: 0
+      loop: 0
+      hasAdditiveReferencePose: 0
+      loopTime: 0
+      loopBlend: 0
+      loopBlendOrientation: 1
+      loopBlendPositionY: 1
+      loopBlendPositionXZ: 0
+      keepOriginalOrientation: 1
+      keepOriginalPositionY: 0
+      keepOriginalPositionXZ: 0
+      heightFromFeet: 1
+      mirror: 0
+      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
+      curves: []
+      events:
+      - time: 0.2135623
+        functionName: OnAttackContact
+        data: 
+        objectReferenceParameter: {instanceID: 0}
+        floatParameter: 0
+        intParameter: 0
+        messageOptions: 0
+      transformMask: []
+      maskType: 3
+      maskSource: {instanceID: 0}
+      additiveReferencePoseFrame: 0
     isReadable: 1
   meshes:
     lODScreenPercentages: []
@@ -1009,6 +1037,9 @@ ModelImporter:
     maxBonesPerVertex: 4
     minBoneWeight: 0.001
     optimizeBones: 1
+    generateMeshLods: 0
+    meshLodGenerationFlags: 0
+    maximumMeshLod: -1
     meshOptimizationFlags: -1
     indexFormat: 0
     secondaryUVAngleDistortion: 8
@@ -2022,8 +2053,7 @@ ModelImporter:
     hasTranslationDoF: 0
     hasExtraRoot: 1
     skeletonHasParents: 1
-  lastHumanDescriptionAvatarSource: {fileID: 9000000, guid: 9148d9f593983b548bd87157ea40845f,
-    type: 3}
+  lastHumanDescriptionAvatarSource: {fileID: 9000000, guid: 9148d9f593983b548bd87157ea40845f, type: 3}
   autoGenerateAvatarMappingIfUnspecified: 1
   animationType: 3
   humanoidOversampling: 1
@@ -2035,10 +2065,3 @@ ModelImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 137306
-  packageName: Frank RPG Fighter
-  packageVersion: 1.1
-  assetPath: Assets/Frank_Fighter/Assets/Animations/FBX Animation/Root_Motion/Frank_RPG_Fighter_Combo03_2.FBX
-  uploadId: 837888

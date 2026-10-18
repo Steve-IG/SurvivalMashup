@@ -20,6 +20,6 @@ MonoBehaviour:
   _requiredOwnerTags: []
   _blockedByOwnerTags: []
   _costs: []
-  _cooldownSeconds: 0.4
+  _cooldownSeconds: 0
   _effects:
   - {fileID: 11400000, guid: 0490f37d3d5148e1a8924f2db3b51c2e, type: 2}

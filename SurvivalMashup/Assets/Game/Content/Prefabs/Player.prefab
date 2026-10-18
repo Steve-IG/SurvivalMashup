@@ -151,6 +151,7 @@ GameObject:
   - component: {fileID: 2381177636788359021}
   - component: {fileID: 6690063030529903403}
   - component: {fileID: 7090502564320689023}
+  - component: {fileID: 8503631265468922502}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -340,6 +341,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: ToyChest.Gameplay.Player::ToyChest.Gameplay.Player.PlayerCombat
   _behaviour: {fileID: 0}
+  _combo: {fileID: 11400000, guid: 99132d733a1b7844791b01b79b0288a4, type: 2}
   _attackAbilityId: ability.player_strike
   _attackRange: 2.5
   _attackConeHalfAngle: 70
@@ -489,6 +491,29 @@ MonoBehaviour:
   _backgroundColor: {r: 0, g: 0, b: 0, a: 0.55}
   _damageFlashColor: {r: 1, g: 0.25, b: 0.2, a: 1}
   _flashDuration: 0.35
+--- !u!114 &8503631265468922502
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 428409306736505765}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9e31244e8dea01448a18b33b5cab8431, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ToyChest.Gameplay::ToyChest.Gameplay.HitDetection.CharacterStrikeProfile
+  _shapes:
+  - _limb: 5
+    _source: 1
+    _startBone: 0
+    _endBone: 0
+    _startSocket: {fileID: 5934038591809063535}
+    _endSocket: {fileID: 930876006084980555}
+    _endExtension: 0
+    _radius: 0.08
+  _animator: {fileID: 0}
+  _reachPadding: 0.1
 --- !u!1 &443057010201223419
 GameObject:
   m_ObjectHideFlags: 0
@@ -800,6 +825,37 @@ Transform:
   m_Children:
   - {fileID: 1957726363237697636}
   m_Father: {fileID: 4074551560773501401}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1321656888628759782
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 930876006084980555}
+  m_Layer: 0
+  m_Name: WeaponProxy_Tip
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &930876006084980555
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1321656888628759782}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.011621878, y: 0.8299044, z: -0.004870542}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6394600926581114749}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1436361212466710768
 GameObject:
@@ -2610,6 +2666,8 @@ Transform:
   - {fileID: 736649882949467033}
   - {fileID: 8670054376260990587}
   - {fileID: 2164718035774560580}
+  - {fileID: 5934038591809063535}
+  - {fileID: 930876006084980555}
   m_Father: {fileID: 3753939452352276813}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &3400189801932206411
@@ -3813,6 +3871,37 @@ Transform:
   m_Children:
   - {fileID: 4986137844610330612}
   m_Father: {fileID: 1959666424114132263}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &7977581694360620811
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5934038591809063535}
+  m_Layer: 0
+  m_Name: WeaponProxy_Hilt
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5934038591809063535
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7977581694360620811}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.0011202488, y: 0.079990886, z: -0.00046922936}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6394600926581114749}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &8064910358529225194
 GameObject:

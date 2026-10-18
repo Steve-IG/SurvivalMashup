@@ -21,5 +21,29 @@ namespace ToyChest.Gameplay.HitDetection
         /// duplicated event can never produce a second hit.
         /// </summary>
         void NotifyAnimationContact();
+
+        /// <summary>
+        /// Called when the attack animation's <em>committed motion</em> has ended (the authored
+        /// <c>OnAttackEnd</c> event), i.e. the follow-through with meaningful root motion is complete and
+        /// the remaining clip is an interruptible tail. The implementer may release the attack's movement
+        /// commitment here so the player can immediately flow into the next action (locomotion, another
+        /// attack, jump, roll) if they are inputting one. Per-clip and animator-authored, so no attack needs
+        /// a hand-tuned recovery time; a timer fallback still ends the attack for clips without the event.
+        /// Must be safe to call at any time and more than once: ignored unless the attack is past its
+        /// contact frame.
+        /// </summary>
+        void NotifyAttackEnd();
+
+        /// <summary>
+        /// Opens a <em>contact window</em> (the authored <c>OnAttackContactStart</c> event): from now until
+        /// <see cref="NotifyContactWindowEnd"/> the attack's hit volume stays live and strikes anything that
+        /// enters it — each target at most once per window. For attacks whose damage spans a stretch of the
+        /// clip (a flip kick that lands in a slam) rather than one frame. Opening the window also counts as the
+        /// attack's contact. Plain <see cref="NotifyAnimationContact"/> remains the instantaneous form.
+        /// </summary>
+        void NotifyContactWindowStart();
+
+        /// <summary>Closes the contact window opened by <see cref="NotifyContactWindowStart"/> (<c>OnAttackContactEnd</c>).</summary>
+        void NotifyContactWindowEnd();
     }
 }

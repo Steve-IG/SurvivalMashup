@@ -96,6 +96,8 @@ namespace ToyChest.Gameplay.Player
         private Vector3 _pendingRootMotion;
         private float _moveLockTimer;
         private float _moveLockScale = 1f;
+        private bool _committed;
+        private float _committedScale;
         private bool _sprinting;
         private float _rollTimer;
         private Vector3 _rollDirection;
@@ -171,6 +173,34 @@ namespace ToyChest.Gameplay.Player
             _moveLockTimer = Mathf.Max(_moveLockTimer, Mathf.Max(0f, duration));
             _moveLockScale = Mathf.Clamp01(scale);
         }
+
+        /// <summary>Ends any timed movement lock immediately.</summary>
+        public void ReleaseMovementLock()
+        {
+            _moveLockTimer = 0f;
+        }
+
+        /// <summary>
+        /// Holds (or releases) an attack's movement commitment. Unlike the timed lock this is a <em>state</em>
+        /// the attacker asserts every frame it owns the character, so it can never outlive the attack — no
+        /// leftover lock after a roll, a jump, or a cancelled combo. While held, input-driven velocity is
+        /// scaled by <paramref name="scale"/> (0 = rooted, so only the attack's root motion moves the
+        /// character) and facing is left to the attack. Becoming committed plants the character at once —
+        /// the running momentum is dropped rather than decelerated — so an attack never starts with a slide.
+        /// </summary>
+        public void SetMovementCommitted(bool committed, float scale)
+        {
+            if (committed && !_committed)
+            {
+                _planarVelocity *= Mathf.Clamp01(scale);
+            }
+
+            _committed = committed;
+            _committedScale = Mathf.Clamp01(scale);
+        }
+
+        /// <summary>Whether an attack is currently holding the movement commitment.</summary>
+        public bool IsMovementCommitted => _committed;
 
         /// <summary>The character's top movement speed right now (authored attribute × sprint).</summary>
         public float MaxSpeed => CurrentSpeed();
@@ -251,12 +281,19 @@ namespace ToyChest.Gameplay.Player
             Vector3 cameraForward = _cameraTransform != null ? _cameraTransform.forward : Vector3.forward;
 
             float speedScale = 1f;
-            bool locked = _moveLockTimer > 0f;
-            if (locked)
+            bool timedLock = _moveLockTimer > 0f;
+            if (timedLock)
             {
                 _moveLockTimer -= delta;
                 speedScale = _moveLockScale;
             }
+
+            if (_committed)
+            {
+                speedScale = Mathf.Min(speedScale, _committedScale);
+            }
+
+            bool locked = timedLock || _committed;
 
             Vector3 desired = LocomotionMotor.PlanarVelocity(_moveInput, cameraForward, CurrentSpeed() * speedScale);
             float accelScale = grounded ? 1f : _airControl;

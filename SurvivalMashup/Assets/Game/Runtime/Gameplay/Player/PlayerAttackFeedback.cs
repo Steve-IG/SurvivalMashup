@@ -113,7 +113,7 @@ namespace ToyChest.Gameplay.Player
             }
         }
 
-        private void OnSwing()
+        private void OnSwing(string animatorTrigger)
         {
             if (_swingSound != null && _audioSource != null)
             {

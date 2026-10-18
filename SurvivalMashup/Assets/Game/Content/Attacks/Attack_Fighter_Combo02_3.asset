@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 68ff734ae7828bd439fcf2bfccabd03a, type: 3}
+  m_Name: Attack_Fighter_Combo02_3
+  m_EditorClassIdentifier: ToyChest.Gameplay::ToyChest.Gameplay.Combat.AttackDefinition
+  _clip: {fileID: 7400000, guid: b099443175035d141b9ea97b2727a3f4, type: 3}
+  _abilityId: 
+  _commitEnd: 0.95
+  _cancelFrom: 0.4853932
+  _windows:
+  - _id: Hammer slam
+    _start: 0.35730332
+    _end: 0.43146062
+    _limbs: 1
+    _area: {fileID: 11400000, guid: 63d325ec5ea768b419466254f3c5cca2, type: 2}
+    _areaBone: 18
+    _abilityId: 
+    _rehitInterval: 0
+    _verified: 1
+  _strikeHint: -1

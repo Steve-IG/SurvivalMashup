@@ -215,6 +215,113 @@ namespace ToyChest.Tests.Abilities
             Assert.AreEqual(AbilityActivationResult.InvalidTarget, _set.TryActivate(bolt.Id, default));
         }
 
+        // ---------------------------------------------------------------- Multiple targets
+
+        private AbilityDefinition CreateProvidedDamageAbility(
+            float manaCost = 0f, float cooldownSeconds = 0f, float damage = 15f)
+        {
+            return _abilities.CreateAbility(
+                "ability.cleave",
+                targetMode: AbilityTargetMode.Provided,
+                costs: manaCost > 0f ? new[] { new ResourceCostConfig("resource.mana", manaCost) } : null,
+                cooldownSeconds: cooldownSeconds,
+                effects: new GameplayEffectDefinition[]
+                {
+                    _effects.CreateDamage("fx.cleave-hit", "resource.health", damage),
+                });
+        }
+
+        [Test]
+        public void TryActivate_MultipleTargets_ExecutesEffectsAgainstEach()
+        {
+            AbilityDefinition cleave = CreateProvidedDamageAbility(damage: 15f);
+            _set.Grant(cleave);
+            EffectTarget a = CreateEnemyTarget(out ResourceSet enemyA);
+            EffectTarget b = CreateEnemyTarget(out ResourceSet enemyB);
+            EffectTarget c = CreateEnemyTarget(out ResourceSet enemyC);
+
+            AbilityActivationResult result = _set.TryActivate(cleave.Id, new List<EffectTarget> { a, b, c });
+
+            Assert.AreEqual(AbilityActivationResult.Activated, result);
+            Assert.AreEqual(35f, enemyA.GetResource(HealthId).Current, Tolerance);
+            Assert.AreEqual(35f, enemyB.GetResource(HealthId).Current, Tolerance);
+            Assert.AreEqual(35f, enemyC.GetResource(HealthId).Current, Tolerance);
+            Assert.AreEqual(100f, Health.Current, Tolerance, "The owner is the source, never a target.");
+        }
+
+        [Test]
+        public void TryActivate_MultipleTargets_IsOneActivation_CostAndCooldownAndEventOnce()
+        {
+            var activated = new List<AbilityActivated>();
+            using IDisposable token = _bus.Subscribe<AbilityActivated>(activated.Add);
+            AbilityDefinition cleave = CreateProvidedDamageAbility(manaCost: 20f, cooldownSeconds: 3f, damage: 15f);
+            _set.Grant(cleave);
+            EffectTarget a = CreateEnemyTarget(out _);
+            EffectTarget b = CreateEnemyTarget(out _);
+
+            AbilityActivationResult result = _set.TryActivate(cleave.Id, new List<EffectTarget> { a, b });
+
+            Assert.AreEqual(AbilityActivationResult.Activated, result);
+            Assert.AreEqual(80f, Mana.Current, Tolerance, "One activation pays the cost exactly once, not once per target.");
+            Assert.AreEqual(3f, _set.GetAbility(cleave.Id).CooldownRemaining, Tolerance, "One activation starts one cooldown.");
+            Assert.AreEqual(1, activated.Count, "One activation publishes AbilityActivated exactly once.");
+        }
+
+        [Test]
+        public void TryActivate_MultipleTargets_SkipsEmptyEntries_ButAppliesToTheRest()
+        {
+            AbilityDefinition cleave = CreateProvidedDamageAbility(damage: 15f);
+            _set.Grant(cleave);
+            EffectTarget a = CreateEnemyTarget(out ResourceSet enemyA);
+
+            AbilityActivationResult result = _set.TryActivate(cleave.Id, new List<EffectTarget> { default, a, default });
+
+            Assert.AreEqual(AbilityActivationResult.Activated, result);
+            Assert.AreEqual(35f, enemyA.GetResource(HealthId).Current, Tolerance);
+        }
+
+        [Test]
+        public void TryActivate_MultipleTargets_NoneValid_IsInvalidTarget_AndCommitsNothing()
+        {
+            AbilityDefinition cleave = CreateProvidedDamageAbility(manaCost: 20f, cooldownSeconds: 3f);
+            _set.Grant(cleave);
+
+            Assert.AreEqual(AbilityActivationResult.InvalidTarget, _set.TryActivate(cleave.Id, new List<EffectTarget>()));
+            Assert.AreEqual(AbilityActivationResult.InvalidTarget, _set.TryActivate(cleave.Id, null));
+            Assert.AreEqual(
+                AbilityActivationResult.InvalidTarget,
+                _set.TryActivate(cleave.Id, new List<EffectTarget> { default, default }));
+            Assert.AreEqual(100f, Mana.Current, Tolerance, "A rejected multi-target activation commits nothing.");
+            Assert.IsFalse(_set.GetAbility(cleave.Id).IsOnCooldown);
+        }
+
+        [Test]
+        public void TryActivate_MultipleTargets_SelfAbility_IsInvalidTarget()
+        {
+            _set.Grant(CreateSelfDamageAbility(manaCost: 0f));
+            EffectTarget a = CreateEnemyTarget(out _);
+
+            Assert.AreEqual(
+                AbilityActivationResult.InvalidTarget,
+                _set.TryActivate(FireballId, new List<EffectTarget> { a }),
+                "Multi-target is a Provided extension; a Self ability rejects a target set as it rejects any explicit target.");
+        }
+
+        [Test]
+        public void TryActivate_MultipleTargets_OnCooldown_IsOnCooldown_AndAppliesNothing()
+        {
+            AbilityDefinition cleave = CreateProvidedDamageAbility(cooldownSeconds: 3f, damage: 15f);
+            _set.Grant(cleave);
+            EffectTarget a = CreateEnemyTarget(out ResourceSet enemyA);
+            _set.TryActivate(cleave.Id, new List<EffectTarget> { a });
+
+            EffectTarget b = CreateEnemyTarget(out ResourceSet enemyB);
+            Assert.AreEqual(
+                AbilityActivationResult.OnCooldown,
+                _set.TryActivate(cleave.Id, new List<EffectTarget> { b }));
+            Assert.AreEqual(50f, enemyB.GetResource(HealthId).Current, Tolerance, "A rejected activation runs no effects.");
+        }
+
         // ---------------------------------------------------------------- Costs
 
         [Test]

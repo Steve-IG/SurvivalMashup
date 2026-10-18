@@ -64,9 +64,9 @@ namespace ToyChest.Gameplay.Player
         private static readonly int GroundedParam = Animator.StringToHash("Grounded");
         private static readonly int JumpParam = Animator.StringToHash("Jump");
         private static readonly int RollParam = Animator.StringToHash("Roll");
-        private static readonly int AttackParam = Animator.StringToHash("Attack");
         private static readonly int HitParam = Animator.StringToHash("Hit");
         private static readonly int DeadParam = Animator.StringToHash("Dead");
+        private static readonly int AttackCommittedParam = Animator.StringToHash("AttackCommitted");
 
         private DefinitionId _healthResource;
         private ResourceValue _health;
@@ -166,6 +166,11 @@ namespace ToyChest.Gameplay.Player
             // Undamped planar speed so Land/Roll can yield to locomotion the instant movement continues.
             _animator.SetFloat(SpeedParam, _locomotion.NormalizedSpeed);
             _animator.SetBool(GroundedParam, _locomotion.IsGrounded);
+
+            // Gameplay decides when the attack stops owning the character; the attack states read this to
+            // hand off to locomotion the instant the commitment ends and the player is moving, instead of
+            // playing the clip's tail while the character walks away from it.
+            _animator.SetBool(AttackCommittedParam, _combat != null && _combat.IsMovementCommitted);
         }
 
         private void OnJumped()
@@ -202,7 +207,7 @@ namespace ToyChest.Gameplay.Player
             }
         }
 
-        private void OnAttacked()
+        private void OnAttacked(string animatorTrigger)
         {
             if (_dead)
             {
@@ -211,7 +216,14 @@ namespace ToyChest.Gameplay.Player
 
             if (_animator != null)
             {
-                _animator.SetTrigger(AttackParam);
+                // Each combo step names its own animator trigger, so distinct steps select distinct attack
+                // clips (Attack, Combo2, Combo3, …). Presentation stays downstream: gameplay decides which
+                // step is active; the animator just plays the clip it was told to.
+                _animator.SetTrigger(string.IsNullOrEmpty(animatorTrigger) ? "Attack" : animatorTrigger);
+
+                // A step that starts mid-frame must enter its state already committed, or the gameplay-owned
+                // exit (AttackCommitted == false) could bounce it straight back out before Update catches up.
+                _animator.SetBool(AttackCommittedParam, true);
             }
 
             // No camera shake here: starting a swing is not impact feedback. Every impact cue (impulse,

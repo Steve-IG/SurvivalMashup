@@ -355,6 +355,218 @@ EditMode suite green at **399** (+6): a press lands exactly one blow however sho
 
 ---
 
+# Combat Arena, Combos & Multi-Target Combat (Review Group 5D)
+
+RG5A–5C built one polished punch: how hits are found, how attacks are authored, and how the punch feels. RG5D turns the test area into a **combat dojo**, chains the punch into a **data-driven combo**, lets one attack hit **several targets**, and makes enemy attacks **interruptible** — all by composition on the existing HitDetection + Ability pipeline, with a single, reviewed extension to the Ability System (below). No new manager, no combat/combo/target/damage/encounter framework.
+
+## Combat arena (the dojo)
+
+The canonical `Assets/Game/Scenes/VerticalSlice.unity` is now a combat laboratory. Under an `Arena` root:
+
+- **Permanent Training Dummies in formations** — the lone dummy ahead (single target), a close pair (two-target punch), a shallow arc (several adjacent targets), and staggered distances. They are ordinary enemies authored inert (zero aggro/attack range, no abilities) that never move, attack, or die (the `TrainingDummy` adapter restores health after each blow), so combo timing, reach, facing, and multi-target hits can be tested for minutes without a reset. Same composition as the Grunt — no bespoke dummy system.
+- **Pursuing Grunts** — several ordinary Grunts within pursuit range so the player can fight a crowd, plus the existing far ones.
+- **A visible spawn pad** — a bright floor trigger (`EnemySpawnTrigger`) the player steps onto to spawn a wave of Grunts at authored spawn points, re-arming when the player leaves. It reuses the canonical composition path (`GameplayObjectSpawner.Compose` with the injected `GameplaySceneContext`) rather than inventing a spawner — a thin trigger like `LootPickup`/`HazardVolume`, **not** an encounter/spawn manager.
+
+## Combo architecture (data, not code)
+
+A combo is **authored data describing an ordered sequence of existing attacks** — never a hardcoded `Punch1→Punch2→Punch3`. Three small pieces, all in `ToyChest.Gameplay.Combat`:
+
+- **`ComboStep`** — one attack as data: its ability id, its `HitVolume`(s) + bone anchor, its animator trigger, and its timing (wind-up, recovery, continuation window). A step carries **no attack-specific behaviour** — punch, kick, or AoE ground slam is purely a function of which ability and which hit volume it references, so any of them occupies a slot identically.
+- **`ComboDefinition`** — a `ScriptableObject` holding the ordered steps (Assets ▸ Create ▸ ToyChest ▸ Combat ▸ Combo). The player's `Combo_PlayerMelee` is three punch steps.
+- **`ComboSequencer`** — pure, deterministic, scene-free ordering + continuation timing. It knows only *which step is active and when*; it applies no damage and has no attack-specific branches. A press starts step 0; a press during a step's wind-up (press-ahead) or its continuation window buffers the next step; at the contact frame a buffered continuation **chains immediately, skipping recovery** (no dead time); with none buffered the step recovers and the combo terminates. This is the RG5C responsiveness philosophy — buffer input, no frame-perfect press, no unnecessary recovery — generalized to a sequence.
+
+`PlayerCombat` is the thin driver: it builds a per-step runtime (ability + bound emitters + animator trigger) and routes the sequencer's events — a step start snaps facing and raises `Attacked(animatorTrigger)`; a step's contact resolves *that step's* hit and activates *that step's* ability. With no `ComboDefinition` assigned it falls back to a single synthetic step from its inline fields, so pre-combo content is unchanged.
+
+**Step lifecycle: committed, then a Release grace.** Each step runs `WindUp → (contact) → Recovery → (attack end) → Release`:
+
+```
+[ wind-up ] --OnAttackContact--> [ committed follow-through ] --OnAttackEnd--> [ Release grace ] --> combo ends
+  committed       hit lands            committed                 free to move; a press still continues
+```
+
+- **Committed** (wind-up + recovery, `ComboSequencer.IsCommitted`): the attack owns the character. The player is rooted — input velocity is zero, momentum is dropped at the moment of commit, and only the clip's root motion translates the character (`PlayerModelEvents` forwards root motion only while committed). Any attack press buffers and chains on the first tick after contact.
+- **`OnAttackEnd`** ends the commitment, and with the shipped default (`ContinuationWindow` = 0) it **also closes the combo**: the continuation window is exactly the committed attack — any press during it queues the next hit, and a press after `OnAttackEnd` starts over at hit 1. A positive `ContinuationWindow` is still supported as an optional per-step grace (the player is free to move while a press can still continue), but nothing uses it.
+- **Contact windows.** A blow that spans part of a clip (the leaping finisher: flip kick → slam) uses `OnAttackContactStart` / `OnAttackContactEnd` instead of a single `OnAttackContact`. Opening the window counts as the step's contact; while it is open the step's hit volume is swept every frame and **each target is struck at most once per window**; it closes on `OnAttackContactEnd`, a chain, the commitment ending, or a cancel. Plain `OnAttackContact` is unchanged (an instant contact). `Tools/CoplayScripts/AuthorAttackContactWindows.cs` measures leaps from the clip's root height (`RootT.y`): takeoff → touchdown plus a 0.05s slam beat (the shipped finisher: 0.25s → 0.95s). An aerial window needs a body-anchored volume: the finisher uses `HV_LeapSlam` (cone 3.0m ±75°, multi-target) on the **Hips**, since the forearm-anchored punch volume rose out of its own reach mid-flip and caught the slam for only ~2 frames.
+- **Commitment is a held state, never a timer.** `PlayerCombat` mirrors `IsCommitted` into `PlayerLocomotion.SetMovementCommitted` whenever it changes, so rooting can never outlive the attack (the old timed lock survived rolls and long fallbacks and stranded the player after the finisher). A roll or jump cancels the combo outright.
+- **The Animator follows the same state.** `PlayerAnimatorDriver` sets an `AttackCommitted` bool; each attack state has a *single* exit to Locomotion on `AttackCommitted == false`, with no exit time. Exit-time transitions were the source of the post-attack slide: Unity tests an exit-time condition only at that normalized time, when the player was still rooted, so the "moving" exit never fired and the clip's tail played while the character walked. A fixed 80% "settle" exit also left the clip before late `OnAttackEnd` events could fire.
+
+**Two animation events, not timing numbers — the scalable model.** The clip carries its own timing, so no attack needs hand-tuned numbers. `OnAttackContact` lands the blow; `OnAttackEnd` marks where the committed motion is done. Both flow through the shared `AttackContactRelay` / `IAttackContactReceiver` seam; enemies implement `NotifyAttackEnd` as a no-op, since their recovery is a deliberate timer-based vulnerability window.
+
+Authoring tools (re-run after importing, trimming, or swapping a combo clip):
+- `Tools/CoplayScripts/AuthorAttackEndEvents.cs` **measures** each clip's humanoid root motion (`RootT` curves) and places `OnAttackEnd` just after the root stops moving (never before contact). For example, the shipped leap clip moves until 1.88s, so it releases at 1.87s rather than after a stationary tail. Note that `ModelImporter` clip events use *normalized* time (0–1), unlike `AnimationClip` events (seconds), and pending import changes (e.g. a new trim) only take effect after reimport.
+- `Tools/CoplayScripts/SyncComboTimingToClips.cs` sets each step's **fallback** timers so a timer never runs ahead of the event it backs up: wind-up just past an authored `OnAttackContact`, recovery just past the clip's end. Fallbacks only matter for clips with no events.
+
+Adding hundreds of attacks therefore costs two events per clip (placeable automatically) and zero timing numbers. (RG5C had shortened the commitment to `wind-up + postImpactCommit` for single-punch snappiness, the original source of the slide; the `_postImpactCommit` fields are unused, kept only to avoid prefab/asset churn.)
+
+> The animation-event path above still works for any combo step without an attack asset, but it is superseded by **limb hit windows** (next section), which the shipped combo now uses.
+
+## Limb hit windows — the canonical melee model
+
+Every melee attack is an **attack asset** whose damage comes from **hit windows** on the **character's own limbs**. This replaces "one hit area per attack + a single contact moment": attacks become accurate to the animation (a kick hits with the foot, a slam with the fists), one attack can hit a target several times (once per kick, once for the slam), and authoring stays data-only and largely automatic.
+
+**The pieces (all in the existing `ToyChest.Gameplay` assembly; no engine change):**
+
+- **`CharacterStrikeProfile`** (per character, `HitDetection`) — one strike capsule per limb role (`StrikeLimb`: right/left hand, right/left foot, head, weapon 1/2). With nothing authored it **generates the limbs from the humanoid avatar** (forearm→fist, shin→toe, neck→head), so any humanoid works with zero setup; authored shapes or weapon sockets override per limb. `_reachPadding` (default 0.1m) is the feel knob: limb hitboxes slightly larger than the visual limb so grazing contacts count, as in most action games. `PlayerCombat` adds one automatically if a character lacks it. It records each limb's pose once per frame, keeping the previous frame's.
+- **Swept limbs** — `HitDetector.DetectLimbSweep` tests the capsule along its motion from last frame to this one (sub-sampled by the pure `LimbSweep`), so a fast kick cannot pass through a target between frames.
+- **`AttackDefinition`** (asset, `Combat`; Assets ▸ Create ▸ ToyChest ▸ Combat ▸ Attack) — the clip, a default ability, the **commitment end**, and a list of **`HitWindow`s**. Each window: id, start/end (normalized clip time), which limbs (`StrikeLimbMask`), an optional authored area (a shockwave or spin radius, on a bone), its own ability, and a **re-hit interval**. Times are read live from the Animator state's normalized time, so they are immune to the FBX-event pitfalls (normalized-vs-seconds, trims that apply only on reimport) and do not depend on clip events at all.
+- **Hit instances, not ticks** — each window keeps its own record of who it has struck (`HitWindowLedger`): a target is hit **once per window**, so three windows can hit the same enemy three times while a limb lingering inside a target never multi-hits. A window's `RehitInterval` (> 0) opts into repeated hits for genuinely continuous attacks (spins, grinders, flurries).
+- **`AttackTimeline`** (pure) — turns each frame's normalized time into the open windows (span-based, so a short window is never skipped by a long frame), the step's **contact = its last window closing** (the moment a queued continuation may chain, so pressing ahead never cuts a blow off mid-strike), and the commitment end.
+- **Cancel point (`AttackDefinition._cancelFrom`)** — from this normalized time to the commit end the recovery tail (getting up after a slam, resetting a stance) is optional: **moving** ends the combo and the animator blends into locomotion (the 0.12s `!AttackCommitted` exit), and **attacking** on the last step starts a fresh combo. It never applies before the last window closes (`AttackTimeline.IsCancelable`), so it can't cut a strike. A press on the last step before the cancel point is buffered (`_bufferWindow`) and fires the moment it opens. 0 = not cancellable. The proposer sets it 0.08s after the last window when the remaining tail is ≥ 0.6s (so only long recoveries; the punches stay fully committed); the authoring window shows it as a green "cancellable" bar. Shipped: Combo3 cancellable from 1.03s (was committed to 1.87s) — verified live by `VerifyFinisherCancel.cs`: stick held → running at 1.08s; attack mashed → new combo at 1.04s; all three finisher hits still land.
+- **Re-entering the same state** — a fresh combo pressed right after one releases starts while the previous instance of the same Animator state is still blending out. `PlayerCombat` records that instance's normalized time at step start (`StepRuntime.StaleTime`) and ignores readings from it until the new instance begins; otherwise the new attack inherited a finished clip's time and ended on its first frame (a dead press).
+- **`ComboStep._attack`** — a step with an attack asset is driven entirely by it (`PlayerCombat.TickAttackAsset`, in `LateUpdate` after animation poses the limbs): windows sweep their limbs/areas, each new target receives the window's ability through the multi-target activation, `Impacted` fires per target at its real contact point, and the new `WindowStruck(id)` event names the window. The step's legacy hit region and any clip `OnAttack*` events are ignored. Steps without an asset keep the previous behaviour.
+
+**Authoring a new attack — Tools ▸ ToyChest ▸ Attack Authoring:** New attack from clip → pick a preview character (or *Use Player*) → **Propose windows** → scrub the timeline (the character is posed at that moment in the Scene view, active limbs drawn as red capsules) → adjust → assign the asset to a combo step. `AttackWindowProposer` analyses the clip on the character:
+- **Strike frame (`AttackDefinition._strikeHint`, authoring only)** — the moment the blow lands. When set (scrub to the impact, press **Set strike frame**; drawn as a red "strike" marker), or when the clip still carries an `OnAttackContact`, the proposer picks **the limb that is mid-drive at that frame** (a second hand only if it too is mid-drive there, for genuine two-handed blows) and reports the other drives as "not the strike". This is the authoritative path: motion alone cannot always tell a sweep, parry or feint from the blow. `MigrateComboToAttackAssets` carries a clip's contact event into the strike frame before it strips the events.
+- *Ground strikes without a strike frame* are scored by **snap** — how far a limb drives out in front of the hips plus how far it retracts right after. The best hand is the punch; the other hand counts only if it snaps nearly as well (merged if simultaneous, its own window if a deliberate one-two). When the other hand drives just as far but snaps less, the report flags **⚠ AMBIGUOUS** instead of guessing silently — set the strike frame. A strike's window ends at most 0.08s after full extension (a fist that lands and is then held out in guard is a strike only at impact). Feet count only if they leave the ground (a kick lifts the foot, a step doesn't).
+  *Why the strike frame exists:* Combo 1 (`Attack`) is a left straight — the right hand first sweeps 0.6m across the body (0.03–0.23s), then the left drives 0.57m to centre and holds (0.25–0.30s). Snap scoring rewards the sweep (it retracts) and penalises the held straight, so the unhinted proposal was "Right punch" — wrong. The original authored `OnAttackContact` (0.276s) pointed at the left hand; the migration had discarded it. With the strike frame restored the proposal is "Left punch 0.25–0.40s".
+- *Leaps* (root height rises ≥ 0.5m) — mid-flip every limb whips around the hips, so feet strike by speed while airborne and the hands at the landing slam.
+- *Commitment end* — where the root stops travelling.
+Every decision is written to a report in the window. Proposals are a starting point; designers adjust in the tool.
+
+**Shipped combo** (`Assets/Game/Content/Attacks/`, migrated by `Tools/CoplayScripts/MigrateComboToAttackAssets.cs`, fallback timers by `SyncComboTimingToClips.cs`): `Attack_Player_Attack` — left straight (strike frame 0.276s); `Attack_Player_Combo2` — right uppercut; `Attack_Player_Combo3` — right kick + left kick (airborne) + slam (both fists at landing). Verified live (`VerifyAttackWindows.cs`): the finisher hits one dummy three times (right kick, left kick, slam 0.6s later) and no window ever hits twice.
+
+**Accuracy is now real** (`VerifyLimbReach.cs` measures each limb's closest approach per attack). The old frontal cone reached 2.2m regardless of the animation; limb hits land only where the animation actually goes — e.g. the uppercut reaches a dummy at 0.9m but misses one at 1.3m by ~5cm, and a target closer than ~1m is leapt over by the finisher. Tune feel with `_reachPadding`, the windows, or the clips; a lunge/magnetism toward the target is the usual complement if engagement range should grow.
+
+Because the sequencer operates on an abstract step, the architecture already represents `Punch → Punch → Kick → Ground Slam`: a later step simply references a kick clip + foot anchor, or an AoE ability + `HV_Explosion` volume. No projectile/AoE gameplay was built here — only the architecture that can express it.
+
+**Cadence moved into the combo.** Because the attack ability's cooldown would otherwise block a chained hit from landing, combo-step abilities are **zero-cooldown** and cadence is owned by the sequencer's step timing. `ability.player_strike` is now 0-cooldown (reused as step 1) and `ability.player_combo2/3` were added (Provided, 0-cooldown). Each step keeps its own ability.
+
+## Animation architecture (presentation only)
+
+The Animator presents state; it never sequences combos. Each step names its own animator trigger (`Attack`, `Combo2`, `Combo3`), driven from `Gameplay → PlayerAnimatorDriver → Animator`. The `Combo2`/`Combo3` states mirror `Attack` (AnyState trigger in, `Speed`-gated exit to Locomotion) and currently reuse the Attack punch motion; a designer can point them at distinct clips (e.g. `Frank_RPG_Fighter_Combo01_2/_3`) in the Inspector for variety. Each step's contact still flows through the shared `OnAttackContact` / `AttackContactRelay` / `IAttackContactReceiver` seam; the sequencer knows which step is live, so the parameterless relay is unchanged.
+
+## Multi-target hit application (the one reviewed engine extension)
+
+Detection has always returned the full set of objects in a volume; the prototype activators only applied the ability to the nearest (RG5B tech debt). RG5D closes that:
+
+```
+HitVolume → HitDetector → HitResults [A, B, C] → apply the attack's ability to EACH valid target
+```
+
+`PlayerCombat` at a step's contact collects **all** hits across the step's emitters, **deduped cross-emitter** (one target is hit once per contact event even inside two overlapping volumes) and deterministically ordered (`HitResult.Compare`), and activates the ability against all of them. `HV_Punch` is authored `multiTarget` (cap 3), so one punch can legitimately clip two or three adjacent enemies.
+
+**HitDetector still applies no damage** — it owns only detection, filtering, dedup, contact points, and ordering. What changed is the *targeting/activation contract*: the frozen Ability System could express only single-target activation (`AbilitySet.Activate` commits cost + cooldown once and runs the effect sequence against one `EffectTarget`), and per-target activation would have collided on the strike's cooldown. Per the Milestone 0 architectural review gate, the **smallest possible extension** was reviewed and accepted (Technical Creative Director, 2026-08-08): a new overload
+
+```
+AbilitySet.TryActivate(DefinitionId ability, IReadOnlyList<EffectTarget> targets)
+```
+
+that **validates and commits exactly once** (one cost payment, one cooldown, one `AbilityActivated` event) and then runs the definition's authored effect sequence **once per non-empty target**. This is the "Multiple Targets" extension the `AbilityTargetMode` comment already foreshadowed; it preserves the detection→effect separation and adds **no** DamageManager/AoEManager/HitApplicationManager. Self-mode rejects a target set; an empty/all-empty set is `InvalidTarget`. See `ABILITY_SYSTEM.md`.
+
+## Per-target impact feedback
+
+`PlayerCombat.Impacted` (still `Action<Vector3>`) is now raised **once per confirmed target**, each carrying that target's own surface contact point — so impact VFX and juice appear on every struck body, at the right place. Existing consumers (`PlayerAttackFeedback`, `CombatDebugOverlay`) needed no change, since they already spawn per point and record per call. The canonical relationship is unchanged: `Attacked` = a step began, `Contacted` = the contact frame arrived, `Impacted` = a real target was hit (now emitted per hit). No attack-start feedback was reintroduced.
+
+## Non-goals honored
+
+No CombatManager, ComboManager, WeaponManager, TargetingManager, DamageManager, EncounterManager, StunManager, poise/stagger system, lock-on, weapon inventory, progression, RPG stats, or new animation framework. The combo is authored data over existing abilities; multi-target is a single activation-contract extension; the arena reuses the existing spawner; enemy interruption (see `ENEMY_SYSTEM.md`) is authored attack data.
+
+## Tests & manual verification
+
+EditMode suite green at **429** (+30): the multi-target activation (per-target application, commit-once cost/cooldown/event, empty-skip, none-valid `InvalidTarget`, Self rejects a set, on-cooldown applies nothing); the pure `ComboSequencer` (first attack starts, continuation inside the window chains with no dead time, a press outside the window does not, deterministic 0→1→2 progression, termination after the final step, arbitrary content-agnostic step counts, the animation-contact seam); the pure `EnemyAttackCycle` (interrupt windows — see `ENEMY_SYSTEM.md`); and end-to-end content (one strike damages two Grunts in a single activation; the strike is now cooldown-free; the combo abilities are granted and zero-cooldown). Manual: play `Bootstrap.unity` into the dojo — punch a single dummy, punch a pair/arc for a two-or-three-target hit with separate contact feedback, chain Punch→Punch→Punch with early/ideal/late/no-continuation timing, fight several Grunts, step on the pad to spawn a wave, and interrupt a winding-up Grunt.
+
+## Technical debt & remaining risks
+
+- **Combo animation variety.** `Combo2`/`Combo3` reuse the Attack punch clip; distinct clips (and per-clip `OnAttackContact` events tuned to each contact frame) are an Inspector/content pass, deferred for visual review.
+- **Contact-event authoring** on every clip remains outstanding (wind-up timer fallback active) — the standing debt since RG5A.
+- **Combo cadence lives on the adapter/steps**, not yet a shared "attack cadence" asset; fine for one combo, revisit if many combos need shared pacing.
+- **Enemy combos.** Only the player has a `ComboDefinition`; the model is character-agnostic, so an enemy combo is authoring, not code — not built here.
+
+## Framework confirmation
+
+One reviewed, minimal extension to the Ability System (the multi-target activation overload) was accepted into the otherwise-frozen Milestone 0 engine. Everything else — the combo model, the arena, the spawn trigger, enemy interruption, per-target feedback — is authoring data and thin adapters composed at the existing seams. Core and Framework are untouched.
+
+---
+
+# Attack Library & Authoring Validation (Review Group 5E)
+
+RG5E asked one question: **can we keep adding varied melee attacks by authoring clips, hit windows and combo data, without gameplay code per attack?** To find out, we built a small library of distinct attacks from real Frank RPG Fighter clips through the RG5D pipeline (attack asset → combo step → Animator state). The tool was improved only where this exercise exposed a concrete gap. **Answer: yes for unarmed melee.** Nine attacks across four combos needed **zero gameplay code**. The one runtime addition is `PlayerCombat.SetCombo`, a loadout swap that is not per-attack logic. Every attack needed designer review: the proposer was right outright on 3 of 9 and partly right on 2 more (see the table).
+
+## The library (test content, selectable in the dojo)
+
+| Combo (`Assets/Game/Content/Definitions/`) | Steps → clip (`Frank_RPG_Fighter_*`) | Exercises |
+|---|---|---|
+| `Combo_PlayerMelee` (shipped, unchanged) | Combo05_1 → 05_2 → 05_3 | regression baseline |
+| `Combo_Test_QuickStrikes` | Combo04_1 (R-L jabs) → Combo04_2 (L-R jabs) → Combo03_1 (right straight) | **A.** short windows, hand reach, tight arcs |
+| `Combo_Test_Sweeping` | Combo02_1 (wide left hook) → Combo06_1 (inverted helicopter leg sweep, 2.7m travel) | **B.** limb travel through space, swept capsules, near/far edges |
+| `Combo_Test_AerialHeavy` | AirCombo_Launcher (rising back-flip kick) → Combo02_2 (overhead smash) → Combo02_3 (diving hammer-fist + **ground shockwave**) | **C.** pose height, landing contact, group hit |
+| `Combo_Test_WeaponProxy` | Combo02_2 via the **Weapon1 socket** | **D.** socket anchoring (proxy — see gaps) |
+
+Attack assets: `Assets/Game/Content/Attacks/Attack_Fighter_*.asset`. Each step uses an existing zero-cooldown ability (`player_strike` / `combo2` / `combo3`). No stamina or resource cost. New preset: `HV_GroundShockwave` (sphere, r 2.2m, multi-target, max 8), anchored to the right hand in the slam window.
+
+**Selecting a combo:** walk onto one of the five coloured **loadout pads** behind the spawn, at z = −4: Shipped Melee, QuickStrikes, Sweeping, AerialHeavy, WeaponProxy. `ComboLoadoutPad` (`ToyChest.Gameplay.Player`) is the loadout counterpart of `EnemySpawnTrigger`: a thin trigger that calls `PlayerCombat.SetCombo`. It is not a selection system. The F2 overlay now shows the active combo and step (read-only). Every combo then runs the normal path: input → combo → Animator state → limb/area windows → `HitDetector` → `AbilitySet.TryActivate(id, targets)` → `Impacted` per target.
+
+## Authoring workflow & what the exercise found
+
+Each attack was made the tool's way: `CreateAttackAsset` → strike frame → **Propose** → `ApplyProposal` (all windows land *unverified*). Then the designer reviewed the frames and applied corrections, and the windows were played against dummies. The batch scripts call the same code paths as the window's buttons (`Tools/CoplayScripts/AuthorAttackLibrary.cs`, `AuthorAttackLibraryContent.cs`). `RenderClipContactSheet.cs` renders a clip on the Player rig as top and side frame strips, with limb-tip markers and window highlights, for reviewing proposals by eye.
+
+| Attack | Tool result | Designer correction | Key adjustment |
+|---|---|---|---|
+| Combo04_1 / 04_2 | correct (two blows each) | none | — |
+| Combo03_1 | correct (strike frame from the clip's own contact event) | none | — |
+| Combo02_1 hook | right hand, 0.05s "punch" | widened to the full fast arc 0.18–0.32s | make the sweep's edges live |
+| Combo02_2 smash | right hand 0.22–0.32s (after fix) | renamed | — |
+| Combo06_1 sweep | both feet, sweep path (after fix) | ends extended 0.62 → 0.78/0.80s | legs keep kicking speed past half-peak |
+| AirCombo_Launcher | air kicks **+ a hand slam** | slam removed; feet merged into one window | the clip lands in a crouch, no slam |
+| Combo02_3 | air kicks + slam | kicks removed; slam = right hand + shockwave | trailing feet are not kicks |
+| Weapon proxy | right hand | limb → Weapon1, ±0.02s | the baton tip travels further than the fist |
+
+**Tool deficiencies found and fixed** (focused changes to the existing tool; no new tool):
+1. **Suggested vs verified.** `HitWindow._verified` is authoring-only and never read at runtime. Proposals always land unverified. The timeline draws suggestions as outlines labelled "? suggested" and verified windows as solid bars labelled "✓". Validation counts unverified windows. Library windows were marked verified only after passing both a contact-sheet check and a live hit. The weapon proxy stays *suggested*, because the virtual baton has no mesh to check against.
+2. **Validation + timing panel** (`AttackValidation`, shared by the window and the content tests).
+   - It flags:
+     - windows that never open, or that name no limb and no area;
+     - limbs the character's strike profile lacks;
+     - a commitment that ends mid-strike;
+     - cancel points that do nothing;
+     - unverified windows.
+   - For each combo step using the attack, it also checks the Animator:
+     - the state exists and plays this clip;
+     - it is entered by its trigger;
+     - it exits on `!AttackCommitted`;
+     - consecutive steps do not share a state.
+   - The **timing summary** shows startup, each contact window, the chain point, the combo-input span, the cancel point, recovery, commitment end and clip end separately.
+3. **One-two jabs were merged into one blow.** "Simultaneous hands" tolerance went from 0.15s to 0.08s. The jabs here are about 0.13s apart.
+4. **Hooks and spins were invisible to forward-drive scoring.** A *sweep* path was added: a limb peaking at 15 m/s or more while travelling an arc of 120° or more around the hips at real reach, with feet required to lift. With a strike frame set, a sweep counts only if its limb is the **fastest limb at that frame**. Without one, the proposer reports **⚠ SWEEP NOT PROPOSED** instead of guessing. Lesson: an off arm swinging for balance can sweep wide too, so speed at the strike frame decides which limb is the blow.
+5. **Leap landing needed an exact return to start height.** Touchdown now means within 0.12m of the start height, or the bottom of the fall. Combo06_2 used to report its landing at the clip end.
+6. `AvailableLimbs` missed components on prefab assets (`GetComponentInParent(true)`). The content test caught this.
+
+**Setup the tool could not see:** the eight library clips used Unity's default root settings, which send root **rotation and height** into root motion. `PlayerLocomotion` applies root motion as planar XZ only, so in play a spin's turn and a leap's height would be silently discarded while the tool's preview, which samples the full motion, still showed them. `ConfigureAttackClipImport.cs` gives them the shipped clips' settings: bake rotation (Original) and Y (Feet) into the pose, and keep XZ as root motion. A content test enforces this. Consequence: **leaps are pose-only.** The character controller stays grounded, so jump, roll and grounded state are unaffected, and limb hit detection follows the posed (airborne) limbs.
+
+## Verified behaviour (play mode, `VerifyAttackLibrary.cs`)
+
+Every combo was equipped via `SetCombo` and driven through `TryAttack`. Placements: dummies ahead at 0.9 / 1.4 / 2.0 / 3.0m, behind, on the right flank, in a three-dummy arc, plus a roll at first contact.
+- **No window ever struck the same target twice**, in any combo or placement.
+- **Nothing hits from behind**, in any combo.
+- A roll at first contact cancels with no later hits.
+- The arc shows the archetypes apart:
+  - jabs and the smash hit 2 of 3;
+  - the hook and both sweep kicks hit 3 of 3;
+  - the shockwave slam hits 3 of 3.
+- Reach is honest: the hook misses at 3.0m; the sweep kick reaches 3.0m only by carrying the player there (root travel), which also covers targets *entering* the path mid-window.
+- Real Grunts: three died in two Aerial/Heavy combos, with no errors.
+- Measured flow (press-ahead), each step starting as the previous step's last window closes:
+
+| Combo | Step 2 starts | Step 3 starts | Free |
+|---|---|---|---|
+| QuickStrikes | 0.47s | 1.23s | 2.09s |
+| Sweeping | 0.33s | — | 1.46s |
+| AerialHeavy | 0.41s | 0.73s | 2.15s |
+| Shipped melee (unchanged) | 0.27s | 0.48s | 2.36s |
+
+Shipped-combo regressions all pass: `VerifyAttackWindows`, `VerifyComboFixes`, `VerifyComboWindow`, `VerifyComboRooting`, `VerifyFinisherCancel`, `VerifyRoll`, `VerifyDeadEnemyUnhittable`. `VerifyAttackEnd` fails as before this group: it drives the clip-event `NotifyAttackEnd()`, which attack-asset steps intentionally ignore since the limb-window migration. It is obsolete, not a regression.
+
+## Remaining gaps
+
+- **True weapon test outstanding.** The Frank Fighter set has no weapon swings and the Player holds no weapon. The proxy proves the socket path: a `Sockets` strike shape (`WeaponProxy_Hilt` → `WeaponProxy_Tip`, 0.75m) under the right-hand bone, which follows the animation and extends reach (2.0m to 3.0m). It cannot prove a real blade's orientation or trajectory. Next: a weapon mesh with authored hilt/tip sockets and a weapon clip.
+- **The dojo Player is not a `Player.prefab` instance.** It is an unpacked scene object with its own `CharacterStrikeProfile` (`_reachPadding` 0.3 versus the prefab's default 0.1). The Attack Authoring "Use Player" preview and the content tests use the prefab, so reach in preview can differ from play. Both now carry the Weapon1 socket. Re-linking or syncing them is a decision for review.
+- **The proposer does not propose areas** (shockwaves) and does not analyse Weapon limbs. Both are authored by hand in the window.
+- **One trigger and one state per clip.** Fine for tens of attacks; for hundreds, `PlayerAnimatorDriver` could `CrossFade` to the step's state by name instead of a trigger per clip. That is the smallest next scaling change, not built.
+- Too close (0.9m), the overhead smash can land past the target (one of two runs). This is the clip's reach, not a detection fault.
+- The probe scenarios use static dummies. Moving targets crossing a sweep were covered only by root travel, not by moving the targets.
+
+---
+
 # Purpose
 
 Combat is the primary gameplay activity through which players reclaim dangerous regions.

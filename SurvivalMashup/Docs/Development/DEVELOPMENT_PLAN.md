@@ -42,6 +42,7 @@ Review Group 5	Player Combat Foundation	✅ Complete (awaiting review)
 Review Group 5A	Hit Detection Architecture	✅ Complete (awaiting review)
 Review Group 5B	Asset-Driven Hit Detection & Authoring Workflow	✅ Complete (awaiting review)
 Review Group 5C	Combat Feel Iteration & Debug Tooling	✅ Complete (awaiting review)
+Review Group 5D	Combat Arena, Combos & Multi-Target Combat	✅ Complete (awaiting review)
 
 Architecture changes are only acceptable when a genuine architectural defect is discovered.
 
@@ -206,6 +207,47 @@ Duplicate `VerticalSlice` scene removed (drift resolved)
 No new engine architecture. No speculative systems. No new framework concepts.
 
 Current AI Task
+Milestone 2, Review Group 5E (Attack Authoring Validation & Combo Library) — complete, paused for review.
+
+Validated the attack-authoring workflow by building a test library of **nine attacks in four data-authored combos** from real Frank RPG Fighter clips, with **no per-attack gameplay code**:
+- **Quick Strikes**: Combo04_1 → 04_2 → 03_1.
+- **Sweeping**: Combo02_1 → 06_1.
+- **Aerial/Heavy**: AirCombo_Launcher → 02_2 → 02_3, ending in a shockwave group hit.
+- **Weapon Proxy**: a Weapon1 socket strike shape.
+
+They're selectable in the dojo through five **loadout pads**. `ComboLoadoutPad` is a thin trigger calling the one new runtime seam, `PlayerCombat.SetCombo`.
+
+Attack Authoring tool fixes, each driven by a concrete failure in this exercise:
+- **suggested vs verified** windows;
+- a shared **validation + timing panel** (`AttackValidation`), also enforced by content tests;
+- one-two jabs no longer merged into one blow;
+- hooks and spins proposed through a new **sweep** path (fastest limb at the strike frame), or flagged when unhinted;
+- leap touchdown found for clips that land above their start height;
+- a prefab-asset limb lookup bug.
+
+Library clips got the shipped clips' import settings (rotation and height baked into the pose; XZ stays root motion), because planar-only root motion otherwise silently drops spins and leap height in play.
+
+Results:
+- **470/470 EditMode tests** pass (+17).
+- The live `VerifyAttackLibrary` probe found:
+  - no window hit a target twice;
+  - nothing hit from behind;
+  - a roll cancels cleanly;
+  - the sweeps and shockwave hit 3/3 of an arc;
+  - Grunts die normally.
+- Shipped-combo regression probes pass.
+
+Outstanding:
+- a true weapon test (no weapon clip or mesh exists);
+- the dojo Player is an unpacked scene object, not a `Player.prefab` instance (`_reachPadding` 0.3 vs 0.1), so the authoring preview can differ from play;
+- one Animator trigger/state per clip will need a CrossFade-by-name path at hundreds of attacks.
+
+See `COMBAT.md` (RG5E). Awaiting review.
+
+Milestone 2, Review Group 5D (Combat Arena, Combos & Multi-Target Combat) — complete, paused for review.
+
+Four goals, all composed on the existing HitDetection + Ability pipeline with **one reviewed engine extension**. (1) **Combat dojo:** `VerticalSlice.unity` now holds permanent Training Dummies in formations (single / close pair / arc / staggered distances), several pursuing Grunts, and a visible `EnemySpawnTrigger` floor pad that spawns Grunt waves by reusing the canonical `GameplayObjectSpawner.Compose` path — no encounter/spawn manager. (2) **Data-driven combo:** a `ComboDefinition`/`ComboStep` + pure `ComboSequencer` (`ToyChest.Gameplay.Combat`) express an ordered sequence of existing attacks; a press starts hit 1 and a buffered continuation chains at the contact frame with no dead time; `PlayerCombat` drives it (single-swing fallback preserved). No hardcoded `Punch1/2/3` — the sequencer has no attack-specific branches, so `Punch → Punch → Kick → Ground Slam` is authoring, not code. Shipped `Combo_PlayerMelee` = 3 punches; cadence moved into the sequencer (combo-step abilities zero-cooldown). (3) **Multi-target:** the **one reviewed, accepted** engine extension — `AbilitySet.TryActivate(id, IReadOnlyList<EffectTarget>)` commits once (one cost/cooldown/event) and applies effects per target; `PlayerCombat` now applies a step's ability to every enemy in the volume, `Impacted` raised per confirmed target. HitDetector still applies no damage. (4) **Enemy interruption:** pure `EnemyAttackCycle` with **authored per-phase interrupt windows** (data, not `if elapsed<`); a hit during an interruptible phase cancels the pending strike → existing hit reaction → resume, all gameplay-side (Animator only presents). Suite green at **429** EditMode (+30: multi-target activation, combo sequencer, enemy attack cycle, and end-to-end content). Docs: `COMBAT.md` (arena, combo, multi-target, per-target feedback), `ABILITY_SYSTEM.md` (the accepted Multiple Targets extension), `ENEMY_SYSTEM.md` (interruption), `PLAYER.md` updated. **Known follow-up:** `Combo2`/`Combo3` animator states reuse the Attack punch clip — point them at distinct clips + author per-clip `OnAttackContact` events for variety (Inspector/content pass). Awaiting review.
+
 Milestone 2, Review Group 5C (Combat Feel Iteration & Debug Tooling) — complete, paused for review.
 
 No new mechanics: this group made the one punch snappy and its impact unambiguous, and built the tooling to iterate on feel. **Three attack stages** (`Attacked` → `Contacted` → `Impacted`) now separate "swung" from "contact frame" from "hit confirmed", and **all** impact feedback is wired to `Impacted` alone — an empty swing produces no camera impulse, VFX, hit-stop, or sound (the old swing-start camera shake was removed). **Latency removed:** post-impact commitment became its own knob (0.05s) separate from swing recovery (0.35s → 0.12s), so movement returns right after contact — measured commitment 0.75s → **0.53s**; buffering and cadence unchanged, no combos, no animation cancelling. **Impact position** now uses the real `HitResult.ContactPoint` (`Collider.ClosestPoint` from the attacking hand bone) instead of a chest-height/inset approximation. **Player hit reactions disabled** as an intentional milestone decision (presentation only; health/enemy attacks unaffected). **Training Dummy** authored (`object.training_dummy` + prefab, placed in VerticalSlice): an ordinary enemy composition, authored inert (no abilities, zero ranges) with a thin keep-alive adapter so it never dies — no manager, no bespoke damage path. **Debug tooling:** `CombatDebugOverlay` (F2, dev-only assembly) draws the live HitVolume arc/radius, facing, and confirmed-hit markers in **both** Scene and Game view, plus a HUD (phase, contact, hit confirmed, targets hit, cooldown, volume shape) — strictly read-only, with a test asserting gameplay never references the debug assembly. Suite green at **399** EditMode (+6). Live verification against the dummy: empty swing = 1/1/**0** (no impact feedback), confirmed hit fires exactly one `Impacted`, sustained punching leaves the dummy alive. Docs: `COMBAT.md` (stages, feel methodology, debugging workflow, dummy), `PLAYER.md` updated. **Known follow-up:** the Attack state plays at speed 2 and the clip changed to `Frank_RPG_Fighter_Combo03_1`, so the 0.4s wind-up may no longer match the clip's true contact frame — author the `OnAttackContact` event on the clip (the RG5B standard) rather than re-guessing the timer. Awaiting review.

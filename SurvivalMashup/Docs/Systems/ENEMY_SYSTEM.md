@@ -128,6 +128,37 @@ This confirms the hit-detection vocabulary is universal across attacker types (E
 
 ---
 
+# Milestone 2 Implementation (Review Group 5D — Interruptible Attacks & Arena)
+
+An enemy's telegraphed attack can now be **interrupted by being struck during an authored interrupt window** — hit a Grunt while it winds up and the pending blow is cancelled, it flinches, and it resumes its normal behaviour. This is deliberately *not* a stun/poise/status system; it is only what makes the existing telegraph readable and fair.
+
+## The attack cycle is now a pure, authored state machine
+
+The enemy's `Ready → Wind-up → (strike) → Recover` timing moved out of inline timers in `EnemyCombatant` into a pure, scene-free `EnemyAttackCycle` (the enemy counterpart to the player's `MeleeSwing`), unit-tested with injected time. Crucially, **interruptibility is data, not a hardcoded threshold**: the cycle carries a per-phase interruptible flag (authored on the adapter as `_windUpInterruptible`, default true, and `_recoverInterruptible`, default false), so different enemy attacks can eventually make different portions cancelable with no code change — the architecture simply avoids preventing it. There is no `if (elapsed < 0.37f)` anywhere.
+
+- `IsInterruptible` reports the authored flag for the current phase (Ready is never interruptible).
+- `TryInterrupt()` cancels the attack **only** when the current phase is interruptible: a hit during the wind-up returns the cycle to Ready so the pending strike **never resolves**; a hit in a non-interruptible phase leaves the attack running (a blow outside the window does not arbitrarily cancel it).
+
+## Gameplay cancels; the Animator only presents
+
+The rule lives in gameplay, never the Animator. On a confirmed hit, `EnemyCombatant.OnHealthChanged` calls `_attackCycle.TryInterrupt()` (state only — safe inside the resource-change callback, unlike death which defers teardown) and then raises the existing `Damaged` event. The Grunt's **hit reaction stays presentation-only**: `EnemyAnimatorDriver` plays the `Hit` state off `Damaged` exactly as before. So:
+
+```
+Damage confirmed → attack cancelled if currently interruptible → existing Damaged hit reaction → resume normal behaviour
+```
+
+Because interruption just returns the cycle to Ready, the enemy resumes pursuing/attacking on the next frame — interruption never permanently disables future attacks. The animation-contact seam (`OnAttackContact` → `NotifyAnimationContact` → `EnemyAttackCycle.CompleteWindUp`) also respects it: a contact event that arrives after an interrupt finds the cycle already Ready and lands nothing.
+
+## Arena
+
+`EnemyCombatant`, `EnemyAnimatorDriver`, and the Grunt prefab are unchanged in composition; several Grunts populate the combat dojo in `VerticalSlice.unity`, and a thin `EnemySpawnTrigger` (a visible floor pad, the enemy counterpart to `LootPickup`) spawns a wave of Grunts by reusing the canonical `GameplayObjectSpawner.Compose` path — **no encounter or spawn manager**. See `COMBAT.md` (RG5D) for the arena layout.
+
+## Non-goals honored
+
+No stun/poise/status system, no AI manager, no encounter manager, no enemy combo (the combo model is player-only for now, though character-agnostic). Cadence, telegraph, damage, death, and loot are otherwise unchanged; interruptibility is authored attack data.
+
+---
+
 # Enemy Identity
 
 Every enemy should have a clear gameplay identity.

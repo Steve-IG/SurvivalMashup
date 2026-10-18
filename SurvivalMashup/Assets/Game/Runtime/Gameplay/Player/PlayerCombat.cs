@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using ToyChest.Framework.Data;
 using ToyChest.Framework.Objects;
+using ToyChest.Gameplay.Combat;
 using ToyChest.Gameplay.HitDetection;
 using ToyChest.Systems.Abilities;
 using ToyChest.Systems.GameplayEffects;
@@ -10,24 +11,26 @@ using UnityEngine;
 namespace ToyChest.Gameplay.Player
 {
     /// <summary>
-    /// The thin Unity adapter for the player's melee attack. A press starts a phased swing —
-    /// <c>wind-up → impact → recovery</c> (the pure <see cref="MeleeSwing"/>) — so the blow lands on the
-    /// swing's contact frame instead of the input frame, which is what makes the hit feel connected. The
-    /// swing is gated at its start by the ability's own validation (<see cref="AbilitySet.CanActivate"/>),
-    /// so cadence stays the authored cooldown; the damage itself is applied at impact by activating the
-    /// player's authored attack ability (its <c>DamageEffect</c>).
+    /// The thin Unity adapter for the player's melee attacks. A press drives an ordered combo (the pure
+    /// <see cref="ComboSequencer"/>): each step is a phased attack — <c>wind-up → contact → recovery</c> —
+    /// so the blow lands on the animation's contact frame, and a continuation press chains to the next step
+    /// with no dead time. When no <see cref="ComboDefinition"/> is authored the adapter degrades to a single
+    /// swing built from its inline fields, so existing content keeps working unchanged.
     ///
-    /// <para>Which GameplayObject the blow lands on is decided by the canonical hit-detection vocabulary,
-    /// not by bespoke code here: a <see cref="HitVolume"/> (a frontal <see cref="HitShape.Cone"/> sized to
-    /// the attack's reach) resolved by the shared <see cref="HitDetector"/> at the contact frame. Because
-    /// the cone is directional, a swing cannot connect with something behind the player — the hit is
-    /// physically tied to facing and to the animation. Hit detection answers <em>what was hit</em>; the
-    /// ability's Gameplay Effects answer <em>what happens</em>; the two never mix.</para>
+    /// <para>Every step is <b>authored data</b>, never attack-specific code: which ability it activates,
+    /// which reusable <see cref="HitVolume"/>(s) it sweeps, which bone they anchor to, and which animation
+    /// trigger it plays all come from the <see cref="ComboStep"/>. Because a step is just data, a punch, a
+    /// kick, or an area-of-effect slam occupy combo slots identically — this adapter never branches on
+    /// attack type. Which GameplayObjects a step hits is decided by the canonical hit-detection vocabulary
+    /// (a <see cref="HitVolumeEmitter"/> resolved by the shared <see cref="HitDetector"/> at the contact
+    /// frame); a single step can hit several targets and applies its ability to all of them through the
+    /// Ability System's Multiple Targets path. Hit detection answers <em>what was hit</em>; the ability's
+    /// Gameplay Effects answer <em>what happens</em>; the two never mix.</para>
     ///
-    /// It owns no gameplay rules: damage and cooldown are the ability's, and whether the swing lands is
-    /// the Ability System's decision. The input adapter calls <see cref="TryAttack"/>; this component
-    /// never reads the input device. Presentation (animation, VFX, camera) hangs off the
-    /// <see cref="Attacked"/> and <see cref="Impacted"/> events.
+    /// It owns no gameplay rules: damage and effects are the abilities', combo cadence is the sequencer's
+    /// step timing, and whether a step lands is the Ability System's decision. The input adapter calls
+    /// <see cref="TryAttack"/>; this component never reads the input device. Presentation (animation, VFX,
+    /// camera) hangs off the <see cref="Attacked"/> and <see cref="Impacted"/> events.
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(GameplayObjectBehaviour))]
@@ -37,6 +40,13 @@ namespace ToyChest.Gameplay.Player
         [Tooltip("The behaviour whose composed object is the attacker. Defaults to the sibling.")]
         private GameplayObjectBehaviour _behaviour;
 
+        [Header("Combo")]
+        [SerializeField]
+        [Tooltip("Authored attack combo. When set, a press drives this ordered sequence; when empty, the " +
+                 "adapter falls back to a single swing built from the fields below.")]
+        private ComboDefinition _combo;
+
+        [Header("Single-swing fallback (used only when no Combo is assigned)")]
         [SerializeField]
         [Tooltip("Definition id of the attack ability activated against the target.")]
         private string _attackAbilityId = "ability.player_strike";
@@ -84,7 +94,7 @@ namespace ToyChest.Gameplay.Player
         [Tooltip("How quickly the player snaps to face the struck target, in degrees per second.")]
         private float _turnSpeedDegrees = 1080f;
 
-        [Header("Swing phases (authored feel; tuned to the attack clip's contact frame)")]
+        [Header("Swing phases (fallback feel; tuned to the attack clip's contact frame)")]
         [SerializeField]
         [Tooltip("Anticipation before the blow lands, in seconds — the time from the press to the punch's " +
                  "contact frame. A fallback: an 'OnAttackContact' animation event lands it exactly if authored.")]
@@ -117,38 +127,76 @@ namespace ToyChest.Gameplay.Player
 
         private DefinitionId _attackAbility;
         private HitDetector _detector;
-        private HitVolumeEmitter _primaryAttack;
+        private StepRuntime[] _steps;
+        private ComboSequencer _sequencer;
+        private int _activeStep = -1;
         private float _bufferTimer;
         private int _lastTargetsHit;
         private Vector3 _lastContactPoint;
         private bool _hasContactPoint;
-        private readonly MeleeSwing _swing = new MeleeSwing();
+
+        // Reused across steps so repeated hit resolution stays allocation-free (the emitters' detector is
+        // pooled; these hold the deduped, ordered target set and its capability views for one contact frame).
+        private readonly List<HitResult> _resolvedHits = new List<HitResult>();
+        private readonly List<EffectTarget> _targetBuffer = new List<EffectTarget>();
+
+        // Targets already struck by the current contact — an instant OnAttackContact, or a whole
+        // OnAttackContactStart..End window — so a sweeping attack hits each target once, not once per frame.
+        private readonly HashSet<GameplayObject> _struckThisContact = new HashSet<GameplayObject>();
+        private bool _windowOpen;
+        private int _windowStep = -1;
+
+        // Attack-asset steps: the character's limb strike shapes, the animator their windows are timed against,
+        // the per-window hit-instance record, and a scratch list of this frame's open windows.
+        private CharacterStrikeProfile _strikeProfile;
+        private Animator _animator;
+        private readonly HitWindowLedger _ledger = new HitWindowLedger();
+        private readonly List<int> _openWindows = new List<int>();
 
         /// <summary>
-        /// Stage 1 — raised when a swing starts. Presentation reads this for the swing animation and a
-        /// whoosh. It is <b>not</b> impact feedback: it fires on every press, hit or miss.
+        /// Stage 1 — raised when a step starts, carrying that step's animator trigger so presentation plays
+        /// the right attack clip. It is <b>not</b> impact feedback: it fires on every step start, hit or miss.
         /// </summary>
-        public event Action Attacked;
+        public event Action<string> Attacked;
 
         /// <summary>
-        /// Stage 2 — raised when the swing reaches its contact frame, whether or not anything was hit.
+        /// Stage 2 — raised when the active step reaches its contact frame, whether or not anything was hit.
         /// For debug tooling and readability only; never wire impact juice to this.
         /// </summary>
         public event Action Contacted;
 
         /// <summary>
-        /// Stage 3 — raised only when a hit is <b>confirmed</b> (the ability committed and damage landed),
-        /// carrying the real world-space contact point on the target's surface. All impact presentation —
-        /// camera impulse, impact VFX, hit-stop, impact sound — hangs off this and this alone, so a swing
-        /// into empty air produces no impact feedback.
+        /// Stage 3 — raised <b>once per confirmed target</b> (the ability committed and damage landed),
+        /// carrying that target's real world-space contact point. All impact presentation — camera impulse,
+        /// impact VFX, hit-stop, impact sound — hangs off this and this alone, so a swing into empty air
+        /// produces no impact feedback and a two-target blow produces feedback on both bodies.
         /// </summary>
         public event Action<Vector3> Impacted;
 
-        /// <summary>Whether a swing is currently in progress.</summary>
-        public bool IsAttacking => _swing.IsActive;
+        /// <summary>
+        /// Raised alongside <see cref="Impacted"/> when an attack-asset hit window strikes a target, carrying the
+        /// window's id ("Left kick", "Slam"). For debug tooling and verification — which window landed the hit.
+        /// </summary>
+        public event Action<string> WindowStruck;
 
-        /// <summary>The swing's current phase (Idle / WindUp / Recovery). Debug tooling reads this.</summary>
-        public MeleePhase Phase => _swing.Phase;
+        /// <summary>The authored combo the attack input drives (null = the single-swing fallback).</summary>
+        public ComboDefinition Combo => _combo;
+
+        /// <summary>Whether a combo/swing is currently in progress.</summary>
+        public bool IsAttacking => _sequencer != null && _sequencer.IsActive;
+
+        /// <summary>
+        /// Whether the active attack currently owns the character's movement (wind-up through its
+        /// <c>OnAttackEnd</c>). Root motion is consumed and the Animator holds the attack clip only while this
+        /// is true; in the Release grace the player is free even though the combo can still continue.
+        /// </summary>
+        public bool IsMovementCommitted => _sequencer != null && _sequencer.IsCommitted;
+
+        /// <summary>The active step's phase (Idle / WindUp / Recovery). Debug tooling reads this.</summary>
+        public ComboPhase Phase => _sequencer != null ? _sequencer.Phase : ComboPhase.Idle;
+
+        /// <summary>The active combo step index, or -1 when idle. Debug only.</summary>
+        public int ComboStepIndex => _activeStep;
 
         /// <summary>Targets confirmed hit by the most recent contact frame (0 on a whiff). Debug only.</summary>
         public int LastTargetsHit => _lastTargetsHit;
@@ -160,10 +208,22 @@ namespace ToyChest.Gameplay.Player
             return _hasContactPoint;
         }
 
-        /// <summary>The primary swing's authored hit region, for debug visualization. Never gameplay.</summary>
-        public HitVolumeEmitter PrimaryAttackVolume => _primaryAttack;
+        /// <summary>The active step's primary hit region (step 0's when idle), for debug visualization. Never gameplay.</summary>
+        public HitVolumeEmitter PrimaryAttackVolume
+        {
+            get
+            {
+                if (_steps == null || _steps.Length == 0)
+                {
+                    return null;
+                }
 
-        /// <summary>Remaining cooldown on the attack ability, or 0 when ready. Debug read-only.</summary>
+                int index = _activeStep >= 0 && _activeStep < _steps.Length ? _activeStep : 0;
+                return _steps[index].Primary;
+            }
+        }
+
+        /// <summary>Remaining cooldown on the fallback attack ability, or 0 when ready. Debug read-only.</summary>
         public float AttackCooldownRemaining
         {
             get
@@ -194,17 +254,84 @@ namespace ToyChest.Gameplay.Player
             _attackAbility = new DefinitionId(_attackAbilityId);
             _detector = new HitDetector(_maxCandidates);
 
-            // The primary swing: a shared preset if authored, else a cone from the inline reach/arc,
-            // anchored to the hand bone so the punch originates where the fist is (falls back to the body
-            // for an unrigged object). This is the whole authoring workflow in code form.
+            Animator animator = GetComponentInChildren<Animator>();
+            _animator = animator;
+
+            // Limb strike shapes for attack-asset windows. A character without a profile gets one generated from
+            // its humanoid avatar, so any humanoid can use limb-based attacks with zero setup.
+            _strikeProfile = GetComponent<CharacterStrikeProfile>();
+            if (_strikeProfile == null)
+            {
+                _strikeProfile = gameObject.AddComponent<CharacterStrikeProfile>();
+            }
+
+            BuildSteps(animator);
+            _sequencer = new ComboSequencer(BuildTimings());
+        }
+
+        // Attack-asset windows are swept after animation has posed the limbs this frame.
+        private void LateUpdate()
+        {
+            if (_sequencer != null && _sequencer.IsActive)
+            {
+                TickAttackAsset();
+            }
+        }
+
+        private void OnEnable()
+        {
+            if (_locomotion != null)
+            {
+                _locomotion.Jumped += OnMovementAction;
+                _locomotion.Rolled += OnMovementAction;
+            }
+        }
+
+        private void OnDisable()
+        {
+            if (_locomotion != null)
+            {
+                _locomotion.Jumped -= OnMovementAction;
+                _locomotion.Rolled -= OnMovementAction;
+                _locomotion.SetMovementCommitted(false, 1f);
+            }
+        }
+
+        /// <summary>
+        /// Builds the per-step runtime — either from the authored combo (each step's ability, hit volume(s),
+        /// anchor, and animation trigger) or, with no combo assigned, a single synthetic step from the
+        /// inline fallback fields. This is the whole authoring workflow resolved to runtime form: the
+        /// adapter holds no attack-specific data of its own beyond the fallback.
+        /// </summary>
+        private void BuildSteps(Animator animator)
+        {
+            if (_combo != null && _combo.StepCount > 0)
+            {
+                IReadOnlyList<ComboStep> authored = _combo.Steps;
+                _steps = new StepRuntime[authored.Count];
+                for (int i = 0; i < authored.Count; i++)
+                {
+                    ComboStep step = authored[i];
+                    HitVolumeEmitter primary = step.BuildPrimaryEmitter(_enemyTag, _targetLayers);
+                    primary.Bind(transform, animator);
+                    HitVolumeEmitter[] extras = BindExtras(step.ExtraVolumes, animator);
+                    _steps[i] = new StepRuntime(
+                        new DefinitionId(step.AttackAbilityId), primary, extras,
+                        step.AnimatorTrigger, step.WindUpDuration, step.Timing.Recovery);
+                    BindAttack(_steps[i], step, animator);
+                }
+
+                return;
+            }
+
+            // Fallback: a single swing authored inline, anchored to the hand bone (falls back to the body
+            // for an unrigged object), preserving the pre-combo behaviour so existing prefabs are unchanged.
             HitVolume volume = _attackVolumePreset != null
                 ? _attackVolumePreset.Volume
                 : new HitVolume(HitShape.Cone, _attackRange, _attackConeHalfAngle, multiTarget: false, maxTargets: 1);
             var anchor = new HitVolumeAnchor(HitAnchorSpace.HumanoidBone, _attackBone, _attackOffset, HitFacing.Owner);
-            _primaryAttack = new HitVolumeEmitter(volume, anchor, _enemyTag, _targetLayers);
-
-            Animator animator = GetComponentInChildren<Animator>();
-            _primaryAttack.Bind(transform, animator);
+            var fallbackPrimary = new HitVolumeEmitter(volume, anchor, _enemyTag, _targetLayers);
+            fallbackPrimary.Bind(transform, animator);
             if (_extraContactVolumes != null)
             {
                 for (int i = 0; i < _extraContactVolumes.Length; i++)
@@ -212,28 +339,121 @@ namespace ToyChest.Gameplay.Player
                     _extraContactVolumes[i]?.Bind(transform, animator);
                 }
             }
+
+            _steps = new[]
+            {
+                new StepRuntime(_attackAbility, fallbackPrimary, _extraContactVolumes, "Attack", _windUpDuration, _recoveryDuration),
+            };
+        }
+
+        // Resolve a step's authored attack asset (if any) to runtime form: the animator state its time is read
+        // from, the ability each window applies, and a bound emitter for any window that carries an area.
+        private void BindAttack(StepRuntime runtime, ComboStep step, Animator animator)
+        {
+            AttackDefinition attack = step.Attack;
+            if (attack == null)
+            {
+                return;
+            }
+
+            runtime.Attack = attack;
+            runtime.Timeline = new AttackTimeline(attack);
+            runtime.StateHash = Animator.StringToHash(step.AnimatorState);
+            if (animator != null && animator.runtimeAnimatorController != null && !animator.HasState(0, runtime.StateHash))
+            {
+                Debug.LogWarning(
+                    $"[PlayerCombat] Attack '{attack.name}' reads time from animator state '{step.AnimatorState}', " +
+                    "which the controller does not have — its hit windows will not fire.", this);
+            }
+
+            IReadOnlyList<HitWindow> windows = attack.Windows;
+            runtime.WindowAbilities = new DefinitionId[windows.Count];
+            runtime.WindowAreas = new HitVolumeEmitter[windows.Count];
+            for (int w = 0; w < windows.Count; w++)
+            {
+                HitWindow window = windows[w];
+                string abilityId = !string.IsNullOrEmpty(window.AbilityId) ? window.AbilityId
+                    : !string.IsNullOrEmpty(attack.AbilityId) ? attack.AbilityId
+                    : step.AttackAbilityId;
+                runtime.WindowAbilities[w] = new DefinitionId(abilityId);
+
+                if (window.Area != null)
+                {
+                    var anchor = new HitVolumeAnchor(HitAnchorSpace.HumanoidBone, window.AreaBone, Vector3.zero, HitFacing.Owner);
+                    var area = new HitVolumeEmitter(window.Area.Volume, anchor, _enemyTag, _targetLayers);
+                    area.Bind(transform, animator);
+                    runtime.WindowAreas[w] = area;
+                }
+            }
+        }
+
+        private HitVolumeEmitter[] BindExtras(IReadOnlyList<HitVolumeEmitter> extras, Animator animator)
+        {
+            if (extras == null || extras.Count == 0)
+            {
+                return Array.Empty<HitVolumeEmitter>();
+            }
+
+            var bound = new HitVolumeEmitter[extras.Count];
+            for (int i = 0; i < extras.Count; i++)
+            {
+                bound[i] = extras[i];
+                bound[i]?.Bind(transform, animator);
+            }
+
+            return bound;
+        }
+
+        private List<ComboStepTiming> BuildTimings()
+        {
+            if (_combo != null && _combo.StepCount > 0)
+            {
+                return _combo.BuildTimings();
+            }
+
+            // The fallback single swing has no continuation window — it is one step that recovers and ends.
+            return new List<ComboStepTiming> { new ComboStepTiming(_windUpDuration, _recoveryDuration, 0f) };
         }
 
         private void Update()
         {
             float delta = Time.deltaTime;
 
-            if (_swing.IsActive)
+            if (_sequencer.IsActive)
             {
-                // A swing owns the frame: advance its phases and land the blow on the contact frame.
-                MeleeSwingTick tick = _swing.Advance(delta);
-                if (tick.Impacted)
+                // A combo owns the frame: advance its timing and act on the one event this tick produced, then
+                // sweep any open contact window (closed automatically if that tick changed or ended the step).
+                Handle(_sequencer.Advance(delta));
+                TickContactWindow();
+
+                // Past the attack's cancel point the recovery tail is optional: steering away ends it and the
+                // animator blends straight into locomotion.
+                if (InCancelableRecovery() && _locomotion != null && _locomotion.MoveIntentDirection.sqrMagnitude > 1e-4f)
                 {
-                    ResolveImpact();
+                    CancelCombo();
+                }
+
+                // A press the live combo could not take yet (the finisher, before its cancel point) fires as
+                // soon as it can.
+                if (_bufferTimer > 0f)
+                {
+                    _bufferTimer -= delta;
+                    if (TryPress())
+                    {
+                        _bufferTimer = 0f;
+                    }
                 }
 
                 return;
             }
 
+            _windowOpen = false;
+            SyncCommitment();
+
             if (_bufferTimer > 0f)
             {
                 _bufferTimer -= delta;
-                if (TryStartSwing())
+                if (TryPress())
                 {
                     _bufferTimer = 0f;
                 }
@@ -241,189 +461,613 @@ namespace ToyChest.Gameplay.Player
         }
 
         /// <summary>
-        /// The attack input entrypoint. Starts a swing immediately if able; otherwise remembers the press
-        /// for a short buffer window (<see cref="_bufferWindow"/>) so a press landing a hair before the
-        /// swing is ready (mid-recovery, or just before the cooldown ends) still connects, which is what
-        /// makes attacking feel responsive under mashing.
+        /// Swaps the authored combo the attack input drives (a loadout change — e.g. the dojo's test-combo
+        /// selector). Any combo in progress is cancelled first; the new combo's steps are bound exactly as at
+        /// startup, so it plays through the same pipeline. Null restores the single-swing fallback.
+        /// </summary>
+        public void SetCombo(ComboDefinition combo)
+        {
+            if (_sequencer != null && _sequencer.IsActive)
+            {
+                CancelCombo();
+            }
+
+            _combo = combo;
+            _bufferTimer = 0f;
+            BuildSteps(_animator);
+            _sequencer = new ComboSequencer(BuildTimings());
+        }
+
+        /// <summary>
+        /// The attack input entrypoint. Starts (or continues) the combo immediately if able; otherwise
+        /// remembers the press for a short buffer window (<see cref="_bufferWindow"/>) so a press landing a
+        /// hair before the combo can begin (mid-recovery of a previous combo, or just before a cooldown
+        /// ends) still connects — the same responsiveness the continuation window gives mid-combo.
         /// </summary>
         public void TryAttack()
         {
-            if (!TryStartSwing())
+            if (!TryPress())
             {
                 _bufferTimer = _bufferWindow;
             }
         }
 
         /// <summary>
-        /// Called by the attack animation's contact-frame event (an authored <c>OnAttackContact</c> event
-        /// on the swing clip, relayed by <see cref="PlayerModelEvents"/>) to land the blow exactly when the
-        /// punch connects rather than on the wind-up timer. Safe to leave unwired — if no event is authored,
-        /// the wind-up timer lands the blow instead.
+        /// Called by the attack animation's contact-frame event (an authored <c>OnAttackContact</c> event,
+        /// relayed by <see cref="AttackContactRelay"/>) to land the active step's blow exactly when it
+        /// connects rather than on the wind-up timer. Safe to leave unwired — the wind-up timer lands the
+        /// blow instead.
         /// </summary>
         public void NotifyAnimationContact()
         {
-            if (_swing.CompleteWindUp())
+            // An attack-asset step owns its own timing; a stray clip event must not double it.
+            if (_sequencer != null && !ActiveStepUsesAttack())
             {
-                ResolveImpact();
+                Handle(_sequencer.NotifyContact());
             }
         }
 
         /// <summary>
-        /// Starts one swing if able. A swing must not already be in progress. The attack always responds
-        /// to input: with no enemy in range the player still swings (a whiff), so pressing attack in the
-        /// open never feels dead. When an enemy <em>is</em> in range, the swing is gated on the ability's
-        /// own validation (cooldown, gates) against that target — validated without committing — so we do
-        /// not play a swing at a live enemy off-cadence; that press buffers instead and fires when ready.
-        /// Faces the target (if any), begins the phased swing, commits the player (damps movement for the
-        /// swing), and raises <see cref="Attacked"/> for the animation. Damage is not applied here — it
-        /// lands at impact. Returns whether a swing began.
+        /// Called by the attack animation's authored <c>OnAttackEnd</c> event (relayed by
+        /// <see cref="AttackContactRelay"/>) when the committed motion is done. It ends the current step at
+        /// the animation's own pace — chaining if the player buffered a continuation, otherwise finishing
+        /// the combo and releasing the movement commitment now — so the exit into the next action is as
+        /// snappy as the clip allows. Safe to leave unwired: without the event the recovery timer ends the
+        /// step instead (the conservative fallback).
         /// </summary>
-        private bool TryStartSwing()
+        public void NotifyAttackEnd()
         {
-            if (_swing.IsActive)
+            if (_sequencer != null && !ActiveStepUsesAttack())
+            {
+                Handle(_sequencer.NotifyAttackEnd());
+            }
+        }
+
+        /// <summary>
+        /// Presses the combo. When active, the press feeds the sequencer (buffering a continuation if within
+        /// a window) and is always consumed — a live combo never buffers a fresh one. When idle, the first
+        /// step is gated exactly as before: never mid-roll or airborne, and — when a live target sits in the
+        /// arc — only if the step's ability could actually land, so a fighting player's cadence stays honest
+        /// (an off-cadence press buffers instead). A whiff with no target in range always starts, so
+        /// attacking in the open never feels dead. Returns whether the press was consumed.
+        /// </summary>
+        private bool TryPress()
+        {
+            if (_sequencer.IsActive)
+            {
+                bool hasNext = _sequencer.StepIndex + 1 < _sequencer.StepCount;
+                if (hasNext)
+                {
+                    // Mid-combo: buffers a continuation while committed, or continues straight to the next step
+                    // during the Release grace.
+                    Handle(_sequencer.Press());
+                    return true;
+                }
+
+                // The last step has nothing to continue to. Past its cancel point a press cuts the recovery
+                // short and starts the combo over; before it the press is held (TryAttack buffers it).
+                if (!InCancelableRecovery())
+                {
+                    return false;
+                }
+
+                CancelCombo();
+            }
+
+            if (!CanStartCombo(out GameplayObject attacker, out AbilitySet abilities))
             {
                 return false;
             }
 
-            // A jump or a roll owns the character until it finishes: an attack must never cut one short.
-            // The press is not thrown away — TryAttack buffers it, so it fires as soon as the player lands
-            // or the roll recovers, which keeps mashing responsive without stealing control from movement.
+            StepRuntime first = _steps[0];
+            if (CollectHits(first, attacker) &&
+                abilities.CanActivate(first.Ability, EffectTarget.From(_resolvedHits[0].Object)) != AbilityActivationResult.Activated)
+            {
+                return false;
+            }
+
+            Handle(_sequencer.Press());
+            return true;
+        }
+
+        private bool CanStartCombo(out GameplayObject attacker, out AbilitySet abilities)
+        {
+            attacker = null;
+            abilities = null;
+
+            // A jump or a roll owns the character until it finishes: an attack must never cut one short. The
+            // press is not thrown away — TryAttack buffers it, so it fires as soon as the player lands or the
+            // roll recovers, which keeps mashing responsive without stealing control from movement.
             if (_locomotion != null && (_locomotion.IsRolling || !_locomotion.IsGrounded))
             {
                 return false;
             }
 
-            GameplayObject attacker = _behaviour != null ? _behaviour.Object : null;
-            if (attacker == null || !attacker.IsActive || !attacker.TryGet(out AbilitySet abilities))
+            attacker = _behaviour != null ? _behaviour.Object : null;
+            return attacker != null && attacker.IsActive && attacker.TryGet(out abilities);
+        }
+
+        // Route one sequencer event to the matching side effect. Exactly one of these fires per tick.
+        private void Handle(ComboTick tick)
+        {
+            if (tick.StepStarted)
+            {
+                OnStepStarted(tick.StepIndex);
+            }
+            else if (tick.Impacted)
+            {
+                OnStepImpact(tick.StepIndex);
+            }
+            else if (tick.Finished)
+            {
+                _activeStep = -1;
+            }
+
+            SyncCommitment();
+        }
+
+        // The attack's movement commitment is a held state mirrored from the sequencer every time it changes
+        // and every frame: rooted while the step is committed (wind-up → OnAttackEnd), free in the Release
+        // grace and when idle. Because it is never a timer it cannot outlive the attack — no leftover rooting
+        // after the leap, a roll, a jump, or a cancelled combo.
+        private void SyncCommitment()
+        {
+            _locomotion?.SetMovementCommitted(_sequencer != null && _sequencer.IsCommitted, _commitMoveScale);
+        }
+
+        // A roll or jump is a different action: it ends the combo outright (so a later press cannot resume
+        // the string mid-air or mid-roll) and drops the commitment so the move owns the character cleanly.
+        private void OnMovementAction()
+        {
+            if (_sequencer == null || !_sequencer.IsActive)
+            {
+                return;
+            }
+
+            CancelCombo();
+        }
+
+        private void CancelCombo()
+        {
+            _sequencer.Cancel();
+            _activeStep = -1;
+            _windowOpen = false;
+            SyncCommitment();
+        }
+
+        // Whether the active attack-asset step is in its recovery tail past the attack's cancel point.
+        private bool InCancelableRecovery()
+        {
+            if (_sequencer == null || _sequencer.Phase != ComboPhase.Recovery)
             {
                 return false;
             }
 
-            if (TryDetectTarget(attacker, out HitResult hit))
+            int index = _sequencer.StepIndex;
+            StepRuntime step = index >= 0 && index < _steps.Length ? _steps[index] : null;
+            return step?.Attack != null && step.Timeline.IsCancelable;
+        }
+
+        /// <summary>
+        /// A step became active: commit its facing, root the player for its wind-up plus a brief beat past
+        /// contact, and raise <see cref="Attacked"/> with the step's animator trigger so presentation plays
+        /// the matching clip. Damage is not applied here — it lands at the step's contact frame.
+        /// </summary>
+        private void OnStepStarted(int index)
+        {
+            _activeStep = index;
+            StepRuntime step = _steps[index];
+
+            // An attack-asset step starts its clip timeline from zero with a fresh hit-instance record.
+            if (step.Attack != null)
             {
-                // A live target in the swing arc: only swing if the ability could actually land, so a
-                // fighting player's cadence stays the authored cooldown (an off-cadence press buffers).
-                if (abilities.CanActivate(_attackAbility, EffectTarget.From(hit.Object)) != AbilityActivationResult.Activated)
+                step.Timeline.Restart();
+                _ledger.Clear();
+                _lastTargetsHit = 0;
+                step.StaleTime = -1f;
+                if (_animator != null && _animator.isActiveAndEnabled)
                 {
-                    return false;
+                    AnimatorStateInfo current = _animator.GetCurrentAnimatorStateInfo(0);
+                    if (current.shortNameHash == step.StateHash)
+                    {
+                        step.StaleTime = current.normalizedTime;
+                    }
                 }
             }
 
-            // Commit the swing's direction *instantly*. The player's stick wins: attacking while holding a
-            // direction must strike that way immediately — including a new swing that starts the moment the
-            // previous one ends, even a full reversal. Easing this at the turn rate is what made the
-            // character barely rotate before swinging. With no movement input we snap to the target
-            // instead (aim assist for a standing attack), and with neither we keep the current facing.
+            // Commit the step's direction instantly. The player's stick wins: attacking while holding a
+            // direction strikes that way immediately (including a reversal), which is what keeps chained
+            // steps from barely rotating. With no movement input we snap to the nearest target (aim assist
+            // for a standing attack); with neither we keep the current facing.
             Vector3 intent = _locomotion != null ? _locomotion.MoveIntentDirection : Vector3.zero;
             if (intent.sqrMagnitude > 1e-4f)
             {
                 SnapFacing(intent);
             }
-            else if (hit.Object != null)
+            else
             {
-                SnapFacing(hit.ContactPoint - transform.position);
+                GameplayObject attacker = _behaviour != null ? _behaviour.Object : null;
+                if (attacker != null && attacker.IsActive && CollectHits(step, attacker))
+                {
+                    SnapFacing(_resolvedHits[0].ContactPoint - transform.position);
+                }
             }
 
-            _swing.Begin(_windUpDuration, _recoveryDuration);
-
-            // Commit only through the wind-up plus a brief beat past contact — not the whole recovery.
-            // The blow still needs the player planted while it lands, but holding them rooted through the
-            // follow-through is what made the punch feel floaty; movement now returns right after contact.
-            _locomotion?.ApplyMovementLock(_windUpDuration + _postImpactCommit, _commitMoveScale);
-            Attacked?.Invoke();
-            return true;
+            // Rooting is not set here: it is a held state synced from the sequencer (see SyncCommitment), so
+            // the character moves only by the attack's root motion for exactly as long as the step is
+            // committed, and never a frame longer.
+            Attacked?.Invoke(step.AnimatorTrigger);
         }
 
         /// <summary>
-        /// The swing's contact frame — the middle of the three stages this adapter reports:
-        /// <c>Attacked</c> (swing started) → <c>Contacted</c> (the contact frame arrived) →
-        /// <c>Impacted</c> (a hit was confirmed). It re-acquires the nearest enemy (it may have moved or
-        /// died during the wind-up) and activates the attack ability against it — the ability applies its
-        /// authored damage and starts its cooldown. <see cref="Impacted"/> is raised <b>only</b> when the
-        /// activation actually committed, and carries the real surface contact point, so impact
-        /// presentation (camera impulse, VFX, hit-stop, sound) can never fire on a whiff. A swing into
-        /// empty air reaches <see cref="Contacted"/> and stops there: no damage, no cooldown, no juice.
+        /// The active step's contact frame — the middle of the three stages: <c>Attacked</c> (step started)
+        /// → <c>Contacted</c> (contact frame arrived) → <c>Impacted</c> (a hit was confirmed). It re-resolves
+        /// every valid target in the step's contact volume(s) and activates the step's ability against
+        /// <em>all</em> of them in one activation (the Ability System's Multiple Targets path), so one blow
+        /// applies its authored damage to every enemy legitimately inside the arc while paying one cost and
+        /// one cooldown. <see cref="Impacted"/> is raised once per confirmed target, each with its own
+        /// surface contact point; a swing into empty air reaches <see cref="Contacted"/> and stops there.
         /// </summary>
-        private void ResolveImpact()
+        private void OnStepImpact(int index)
         {
-            _lastTargetsHit = 0;
+            _activeStep = index;
+            _struckThisContact.Clear();
+            if (_steps[index].Attack == null)
+            {
+                // (An attack-asset step reaches "contact" when its windows close; its hits already counted.)
+                _lastTargetsHit = 0;
+            }
+
             Contacted?.Invoke();
 
+            // An attack-asset step deals its damage through its hit windows (see TickAttackAsset), not through
+            // the step's single hit region.
+            if (_steps[index].Attack != null)
+            {
+                return;
+            }
+
+            Strike(index, reaimAtTarget: true);
+        }
+
+        // Resolve the step's hit volume(s) now and apply its ability to every target found that has not
+        // already been struck during this contact (an instant contact, or the whole of a contact window).
+        // Instant contacts strike once; a window calls this every frame, so the "once per target" rule is what
+        // turns a sweeping flip kick into one hit per enemy rather than a hit per frame.
+        private void Strike(int index, bool reaimAtTarget)
+        {
             GameplayObject attacker = _behaviour != null ? _behaviour.Object : null;
             if (attacker == null || !attacker.IsActive || !attacker.TryGet(out AbilitySet abilities))
             {
                 return;
             }
 
-            if (!TryDetectTarget(attacker, out HitResult hit))
+            StepRuntime step = _steps[index];
+            if (!CollectHits(step, attacker))
             {
                 return;
             }
 
-            // Only re-aim at the target if the player is not steering: while a direction is held, the
-            // swing stays committed to the player's intent rather than being pulled toward an enemy.
-            if (_locomotion == null || _locomotion.MoveIntentDirection.sqrMagnitude <= 1e-4f)
+            // Keep only targets this contact has not struck yet (order preserved: nearest first).
+            for (int i = _resolvedHits.Count - 1; i >= 0; i--)
             {
-                FaceToward(hit.ContactPoint);
-            }
-
-            if (abilities.TryActivate(_attackAbility, EffectTarget.From(hit.Object)) == AbilityActivationResult.Activated)
-            {
-                _lastTargetsHit = 1;
-                _lastContactPoint = hit.ContactPoint;
-                _hasContactPoint = true;
-                Impacted?.Invoke(hit.ContactPoint);
-            }
-        }
-
-        // The canonical hit query: resolve every authored contact region (the primary swing plus any
-        // multi-volume extras), each anchored to its socket/bone, and return the nearest live enemy across
-        // all of them. The same vocabulary the enemy strike and hazards use — no bespoke overlap loop lives
-        // here anymore, and adding a second hit region is authoring an extra emitter, not writing code.
-        private bool TryDetectTarget(GameplayObject attacker, out HitResult hit)
-        {
-            hit = default;
-            float bestSqr = float.MaxValue;
-            bool found = ConsiderNearest(_primaryAttack, attacker, ref hit, ref bestSqr);
-
-            if (_extraContactVolumes != null)
-            {
-                for (int i = 0; i < _extraContactVolumes.Length; i++)
+                if (_struckThisContact.Contains(_resolvedHits[i].Object))
                 {
-                    found |= ConsiderNearest(_extraContactVolumes[i], attacker, ref hit, ref bestSqr);
+                    _resolvedHits.RemoveAt(i);
                 }
             }
 
-            return found;
+            if (_resolvedHits.Count == 0)
+            {
+                return;
+            }
+
+            // Only re-aim (toward the nearest struck target) if the player is not steering: while a direction
+            // is held, the blow stays committed to the player's intent rather than being pulled to an enemy.
+            if (reaimAtTarget && (_locomotion == null || _locomotion.MoveIntentDirection.sqrMagnitude <= 1e-4f))
+            {
+                FaceToward(_resolvedHits[0].ContactPoint);
+            }
+
+            _targetBuffer.Clear();
+            for (int i = 0; i < _resolvedHits.Count; i++)
+            {
+                _targetBuffer.Add(EffectTarget.From(_resolvedHits[i].Object));
+            }
+
+            // One activation, many receivers: the ability commits once (one cost, one cooldown) and applies
+            // its effect sequence to each target. Detection decided who was hit; the ability decides what
+            // happens — the two never mix, even for a multi-target blow.
+            if (abilities.TryActivate(step.Ability, _targetBuffer) == AbilityActivationResult.Activated)
+            {
+                _lastTargetsHit += _resolvedHits.Count;
+                _hasContactPoint = true;
+                for (int i = 0; i < _resolvedHits.Count; i++)
+                {
+                    _struckThisContact.Add(_resolvedHits[i].Object);
+
+                    // Per-target impact: each confirmed hit reports its own contact point, so VFX and juice
+                    // appear on every struck body rather than only the first.
+                    _lastContactPoint = _resolvedHits[i].ContactPoint;
+                    Impacted?.Invoke(_resolvedHits[i].ContactPoint);
+                }
+            }
         }
 
-        // Resolve one emitter and fold its nearest result into the running best. The detector's list is
-        // reused across calls, so the nearest is captured here before the next emitter overwrites it.
-        private bool ConsiderNearest(HitVolumeEmitter emitter, GameplayObject attacker, ref HitResult best, ref float bestSqr)
+        /// <summary>
+        /// Opens a contact window (the clip's <c>OnAttackContactStart</c>): counts as the step's contact if it
+        /// is still winding up, then keeps its hit volume live every frame until <c>OnAttackContactEnd</c>,
+        /// striking each target at most once. If the wind-up timer already landed the contact this frame, the
+        /// window simply opens for the current step and continues its once-per-target bookkeeping.
+        /// </summary>
+        public void NotifyContactWindowStart()
         {
-            if (emitter == null)
+            if (_sequencer == null || !_sequencer.IsCommitted || ActiveStepUsesAttack())
+            {
+                return;
+            }
+
+            if (_sequencer.Phase == ComboPhase.WindUp)
+            {
+                Handle(_sequencer.NotifyContact());
+            }
+
+            _windowStep = _sequencer.StepIndex;
+            _windowOpen = _windowStep >= 0;
+        }
+
+        /// <summary>Closes the contact window (the clip's <c>OnAttackContactEnd</c>).</summary>
+        public void NotifyContactWindowEnd()
+        {
+            _windowOpen = false;
+        }
+
+        // Sweep an open contact window. It only lives within its own committed step: a chain to the next step,
+        // the commitment ending, or a cancelled combo all close it, so it can never strike from a stale attack.
+        private void TickContactWindow()
+        {
+            if (!_windowOpen)
+            {
+                return;
+            }
+
+            if (_sequencer == null || !_sequencer.IsCommitted || _sequencer.StepIndex != _windowStep)
+            {
+                _windowOpen = false;
+                return;
+            }
+
+            Strike(_windowStep, reaimAtTarget: false);
+        }
+
+        // Whether the active step is driven by an authored attack asset (its windows and timing), in which case
+        // the clip's animation events are ignored for it.
+        private bool ActiveStepUsesAttack()
+        {
+            int index = _sequencer != null ? _sequencer.StepIndex : -1;
+            return index >= 0 && index < _steps.Length && _steps[index].Attack != null;
+        }
+
+        /// <summary>
+        /// Drives an attack-asset step for this frame: reads its clip's normalized time from the Animator, lands
+        /// the step's contact when the first window opens, sweeps every window open during the frame (each its
+        /// own hit instance), and ends the commitment at the asset's commit end. Runs only while the step is
+        /// committed, so nothing strikes from the Release grace or after a cancel.
+        /// </summary>
+        private void TickAttackAsset()
+        {
+            if (!_sequencer.IsCommitted)
+            {
+                return;
+            }
+
+            int index = _sequencer.StepIndex;
+            StepRuntime step = index >= 0 && index < _steps.Length ? _steps[index] : null;
+            if (step?.Attack == null || !TryGetStateTime(step, out float normalizedTime))
+            {
+                return;
+            }
+
+            AttackTimelineTick tick = step.Timeline.Advance(normalizedTime);
+            if (tick.ContactReached && _sequencer.Phase == ComboPhase.WindUp)
+            {
+                Handle(_sequencer.NotifyContact());
+            }
+
+            step.Timeline.OpenWindows(_openWindows);
+            for (int i = 0; i < _openWindows.Count; i++)
+            {
+                StrikeWindow(step, _openWindows[i]);
+            }
+
+            if (tick.CommitEnded)
+            {
+                Handle(_sequencer.NotifyAttackEnd());
+            }
+        }
+
+        // The normalized time of the step's animator state, preferring the state being transitioned INTO (a step
+        // starting while the previous clip blends out — including a fresh combo re-entering the same state).
+        // Readings from a previous instance of the same state that is still playing out (see StaleTime) are
+        // rejected until the new instance has begun, so a fresh attack never inherits a finished one's time.
+        private bool TryGetStateTime(StepRuntime step, out float normalizedTime)
+        {
+            normalizedTime = 0f;
+            if (_animator == null)
             {
                 return false;
             }
 
-            IReadOnlyList<HitResult> hits = emitter.Detect(attacker, _detector);
-            bool found = false;
-            for (int i = 0; i < hits.Count; i++)
+            if (_animator.IsInTransition(0))
             {
-                if (hits[i].SqrDistance < bestSqr)
+                AnimatorStateInfo next = _animator.GetNextAnimatorStateInfo(0);
+                if (next.shortNameHash == step.StateHash)
                 {
-                    bestSqr = hits[i].SqrDistance;
-                    best = hits[i];
+                    step.StaleTime = -1f;
+                    normalizedTime = next.normalizedTime;
+                    return true;
                 }
-
-                found = true;
             }
 
-            return found;
+            AnimatorStateInfo current = _animator.GetCurrentAnimatorStateInfo(0);
+            if (current.shortNameHash != step.StateHash)
+            {
+                return false;
+            }
+
+            if (step.StaleTime >= 0f)
+            {
+                if (current.normalizedTime >= step.StaleTime)
+                {
+                    return false; // still the old instance
+                }
+
+                step.StaleTime = -1f;
+            }
+
+            normalizedTime = current.normalizedTime;
+            return true;
         }
 
         /// <summary>
-        /// Turns to a world direction immediately, with no turn-rate easing — used when a swing commits so
+        /// Sweeps one open hit window: every limb it names (as swept capsules from the character's strike
+        /// profile) plus its optional area, unioned and deduped, then filtered by the window's own hit-instance
+        /// record (once per target, or the re-hit interval). New targets receive the window's ability in one
+        /// multi-target activation; <see cref="Impacted"/> fires per target at its real contact point.
+        /// </summary>
+        private void StrikeWindow(StepRuntime step, int windowIndex)
+        {
+            GameplayObject attacker = _behaviour != null ? _behaviour.Object : null;
+            if (attacker == null || !attacker.IsActive || !attacker.TryGet(out AbilitySet abilities))
+            {
+                return;
+            }
+
+            HitWindow window = step.Attack.Windows[windowIndex];
+            var filter = new HitFilter(_enemyTag, _targetLayers);
+            _resolvedHits.Clear();
+
+            for (int limb = 0; limb < StrikeLimbs.Count; limb++)
+            {
+                if (!StrikeLimbs.Contains(window.Limbs, (StrikeLimb)limb) ||
+                    !_strikeProfile.TryGetSweep((StrikeLimb)limb, out Vector3 pa, out Vector3 pb, out Vector3 ca, out Vector3 cb, out float radius))
+                {
+                    continue;
+                }
+
+                IReadOnlyList<HitResult> hits = _detector.DetectLimbSweep(pa, pb, ca, cb, radius, filter, attacker);
+                for (int h = 0; h < hits.Count; h++)
+                {
+                    if (!AlreadyResolved(hits[h].Object)) _resolvedHits.Add(hits[h]);
+                }
+            }
+
+            HitVolumeEmitter area = step.WindowAreas[windowIndex];
+            if (area != null)
+            {
+                IReadOnlyList<HitResult> hits = area.Detect(attacker, _detector);
+                for (int h = 0; h < hits.Count; h++)
+                {
+                    if (!AlreadyResolved(hits[h].Object)) _resolvedHits.Add(hits[h]);
+                }
+            }
+
+            float now = Time.time;
+            for (int i = _resolvedHits.Count - 1; i >= 0; i--)
+            {
+                if (!_ledger.CanStrike(windowIndex, _resolvedHits[i].Object, now, window.RehitInterval))
+                {
+                    _resolvedHits.RemoveAt(i);
+                }
+            }
+
+            if (_resolvedHits.Count == 0)
+            {
+                return;
+            }
+
+            _resolvedHits.Sort(HitResult.Compare);
+            _targetBuffer.Clear();
+            for (int i = 0; i < _resolvedHits.Count; i++)
+            {
+                _targetBuffer.Add(EffectTarget.From(_resolvedHits[i].Object));
+            }
+
+            if (abilities.TryActivate(step.WindowAbilities[windowIndex], _targetBuffer) == AbilityActivationResult.Activated)
+            {
+                _lastTargetsHit += _resolvedHits.Count;
+                _hasContactPoint = true;
+                for (int i = 0; i < _resolvedHits.Count; i++)
+                {
+                    _ledger.Record(windowIndex, _resolvedHits[i].Object, now);
+                    _lastContactPoint = _resolvedHits[i].ContactPoint;
+                    WindowStruck?.Invoke(window.Id);
+                    Impacted?.Invoke(_resolvedHits[i].ContactPoint);
+                }
+            }
+        }
+
+        // The canonical hit query for one step: resolve its primary contact region plus any multi-volume
+        // extras, each anchored to its socket/bone, and gather every live enemy across all of them into a
+        // deduped, deterministically ordered set. The same vocabulary the enemy strike and hazards use — no
+        // bespoke overlap loop lives here. Returns whether at least one target was found; results are left
+        // in <see cref="_resolvedHits"/> (nearest first) for the caller to consume before the next query.
+        private bool CollectHits(StepRuntime step, GameplayObject attacker)
+        {
+            _resolvedHits.Clear();
+            AccumulateHits(step.Primary, attacker);
+
+            HitVolumeEmitter[] extras = step.Extras;
+            if (extras != null)
+            {
+                for (int i = 0; i < extras.Length; i++)
+                {
+                    AccumulateHits(extras[i], attacker);
+                }
+            }
+
+            // Deterministic nearest-first order across all emitters (the detector orders within one volume;
+            // this re-orders the union), so multi-target resolution never depends on emitter or query order.
+            _resolvedHits.Sort(HitResult.Compare);
+            return _resolvedHits.Count > 0;
+        }
+
+        // Copy one emitter's results out of the detector's reused buffer into the running set, skipping any
+        // object already found by an earlier emitter — one target is hit once per contact event even when it
+        // sits inside two overlapping volumes.
+        private void AccumulateHits(HitVolumeEmitter emitter, GameplayObject attacker)
+        {
+            if (emitter == null)
+            {
+                return;
+            }
+
+            IReadOnlyList<HitResult> hits = emitter.Detect(attacker, _detector);
+            for (int i = 0; i < hits.Count; i++)
+            {
+                HitResult hit = hits[i];
+                if (!AlreadyResolved(hit.Object))
+                {
+                    _resolvedHits.Add(hit);
+                }
+            }
+        }
+
+        private bool AlreadyResolved(GameplayObject candidate)
+        {
+            for (int i = 0; i < _resolvedHits.Count; i++)
+            {
+                if (_resolvedHits[i].Object == candidate)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Turns to a world direction immediately, with no turn-rate easing — used when a step commits so
         /// the attack always goes exactly where the player aimed it.
         /// </summary>
         private void SnapFacing(Vector3 direction)
@@ -448,6 +1092,55 @@ namespace ToyChest.Gameplay.Player
 
             Quaternion rotation = Quaternion.LookRotation(planar, Vector3.up);
             transform.rotation = Quaternion.RotateTowards(transform.rotation, rotation, _turnSpeedDegrees * Time.deltaTime);
+        }
+
+        // The resolved, bound runtime of one combo step: its ability, its hit regions, its animation trigger,
+        // and the timing the adapter needs (the sequencer owns wind-up/recovery/continuation; this keeps the
+        // wind-up and recovery, whose sum is the window the player is rooted to the attack's root motion).
+        private sealed class StepRuntime
+        {
+            public StepRuntime(
+                DefinitionId ability, HitVolumeEmitter primary, HitVolumeEmitter[] extras,
+                string animatorTrigger, float windUp, float recovery)
+            {
+                Ability = ability;
+                Primary = primary;
+                Extras = extras;
+                AnimatorTrigger = animatorTrigger;
+                WindUp = windUp;
+                Recovery = recovery;
+            }
+
+            public DefinitionId Ability { get; }
+
+            public HitVolumeEmitter Primary { get; }
+
+            public HitVolumeEmitter[] Extras { get; }
+
+            public string AnimatorTrigger { get; }
+
+            public float WindUp { get; }
+
+            public float Recovery { get; }
+
+            // Attack-asset steps only (null otherwise): the authored windows, their timeline, the animator state
+            // their time is read from, and each window's resolved ability and optional area emitter.
+            public AttackDefinition Attack { get; set; }
+
+            public AttackTimeline Timeline { get; set; }
+
+            public int StateHash { get; set; }
+
+            /// <summary>
+            /// When the step starts while a previous instance of its state is still playing out (a fresh combo
+            /// pressed right after the last one released), that instance's normalized time at the start; current-
+            /// state readings at or past it belong to the old instance and are ignored. -1 = none.
+            /// </summary>
+            public float StaleTime { get; set; } = -1f;
+
+            public DefinitionId[] WindowAbilities { get; set; }
+
+            public HitVolumeEmitter[] WindowAreas { get; set; }
         }
     }
 }

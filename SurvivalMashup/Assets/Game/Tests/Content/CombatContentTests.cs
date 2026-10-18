@@ -20,11 +20,13 @@ namespace ToyChest.Tests.Content
     /// <summary>
     /// End-to-end verification of the Milestone 2 combat foundation against real authored content:
     /// the player's strike ability damages a Grunt through the existing Ability → Gameplay Effect →
-    /// Resource path, honours its cooldown, and kills the Grunt in a readable
-    /// number of hits (which triggers the Resource-depleted death signal). The Grunt is an ordinary
-    /// Gameplay Object composed from the same capabilities as everything else, and it strikes back
-    /// through its own authored ability. No combat/damage manager is involved — this is the same
-    /// machinery the loot loop and hazards use.
+    /// Resource path, applies to several targets in one activation (RG5D Multiple Targets), and kills the
+    /// Grunt in a readable number of hits (which triggers the Resource-depleted death signal). As of RG5D
+    /// the strike carries no cooldown — attack cadence is owned by the combo sequencer, not the ability —
+    /// and the player is granted the two continuation abilities. The Grunt is an ordinary Gameplay Object
+    /// composed from the same capabilities as everything else, and it strikes back through its own authored
+    /// ability. No combat/damage manager is involved — this is the same machinery the loot loop and hazards
+    /// use.
     /// </summary>
     public sealed class CombatContentTests
     {
@@ -87,18 +89,58 @@ namespace ToyChest.Tests.Content
         }
 
         [Test]
-        public void PlayerStrike_HonoursItsCooldown()
+        public void PlayerStrike_HasNoCooldown_SoCadenceIsTheComboSequencers()
         {
+            // RG5D moved attack cadence out of the ability's cooldown and into the combo sequencer's step
+            // timing (so chained combo hits are not blocked by a shared cooldown). The strike therefore
+            // activates repeatedly at the ability layer; the sequencer, not this cooldown, paces swings.
             GameplayObject player = Spawn(PlayerId);
             GameplayObject grunt = Spawn(GruntId);
             AbilitySet abilities = player.Get<AbilitySet>();
 
             Assert.AreEqual(AbilityActivationResult.Activated,
                 abilities.TryActivate(new DefinitionId(PlayerStrikeId), EffectTarget.From(grunt)));
-            Assert.AreEqual(AbilityActivationResult.OnCooldown,
+            Assert.AreEqual(AbilityActivationResult.Activated,
                 abilities.TryActivate(new DefinitionId(PlayerStrikeId), EffectTarget.From(grunt)),
-                "A second immediate swing is on cooldown.");
-            Assert.AreEqual(GruntMaxHealth - 20f, Health(grunt).Current, Tolerance, "The blocked swing deals no damage.");
+                "With no cooldown, a second immediate strike also lands — cadence is the sequencer's job.");
+        }
+
+        [Test]
+        public void PlayerStrike_HitsMultipleTargets_InOneActivation()
+        {
+            // The RG5D Multiple Targets path against real content: one strike applies its authored damage to
+            // several grunts a single contact frame legitimately hit, still through the Ability → Effect path.
+            GameplayObject player = Spawn(PlayerId);
+            GameplayObject a = Spawn(GruntId);
+            GameplayObject b = Spawn(GruntId);
+            var targets = new List<EffectTarget> { EffectTarget.From(a), EffectTarget.From(b) };
+
+            AbilityActivationResult result =
+                player.Get<AbilitySet>().TryActivate(new DefinitionId(PlayerStrikeId), targets);
+
+            Assert.AreEqual(AbilityActivationResult.Activated, result);
+            Assert.AreEqual(GruntMaxHealth - 20f, Health(a).Current, Tolerance, "The strike damages the first grunt.");
+            Assert.AreEqual(GruntMaxHealth - 20f, Health(b).Current, Tolerance, "…and the second, in one activation.");
+        }
+
+        [Test]
+        public void ComboContinuationAbilities_AreGrantedToThePlayer_AndZeroCooldown()
+        {
+            GameplayObject player = Spawn(PlayerId);
+            GameplayObject grunt = Spawn(GruntId);
+            AbilitySet abilities = player.Get<AbilitySet>();
+
+            var combo2 = new DefinitionId("ability.player_combo2");
+            var combo3 = new DefinitionId("ability.player_combo3");
+            Assert.IsTrue(abilities.Has(combo2), "The player is granted the second combo attack.");
+            Assert.IsTrue(abilities.Has(combo3), "The player is granted the third combo attack.");
+
+            // Zero cooldown so a chained combo step is never blocked mid-string.
+            Assert.AreEqual(AbilityActivationResult.Activated,
+                abilities.TryActivate(combo2, EffectTarget.From(grunt)));
+            Assert.AreEqual(AbilityActivationResult.Activated,
+                abilities.TryActivate(combo2, EffectTarget.From(grunt)),
+                "A combo attack has no cooldown, so it never blocks the next chained step.");
         }
 
         [Test]
@@ -117,7 +159,7 @@ namespace ToyChest.Tests.Content
                 Assert.AreEqual(AbilityActivationResult.Activated,
                     abilities.TryActivate(new DefinitionId(PlayerStrikeId), EffectTarget.From(grunt)),
                     $"Strike {i + 1} should land.");
-                abilities.Tick(0.5f);        // Clears the 0.4s cooldown for the next swing.
+                abilities.Tick(0.5f);        // Advances time; the strike is now cooldown-free, so each lands.
             }
 
             Assert.IsTrue(gruntHealth.IsDepleted, "Three 20-damage strikes kill the 50-health Grunt.");

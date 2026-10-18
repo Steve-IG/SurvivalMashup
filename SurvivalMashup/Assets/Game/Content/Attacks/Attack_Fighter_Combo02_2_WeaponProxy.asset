@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 68ff734ae7828bd439fcf2bfccabd03a, type: 3}
+  m_Name: Attack_Fighter_Combo02_2_WeaponProxy
+  m_EditorClassIdentifier: ToyChest.Gameplay::ToyChest.Gameplay.Combat.AttackDefinition
+  _clip: {fileID: 7400000, guid: 2c1043e6c4538fa42bc2946b9c9f22a3, type: 3}
+  _abilityId: 
+  _commitEnd: 0.86333317
+  _cancelFrom: 0
+  _windows:
+  - _id: Weapon chop
+    _start: 0.2
+    _end: 0.34
+    _limbs: 32
+    _area: {fileID: 0}
+    _areaBone: 18
+    _abilityId: 
+    _rehitInterval: 0
+    _verified: 0
+  _strikeHint: 0.28
