@@ -44,7 +44,9 @@ public static class RenderClipContactSheet
 
     private static string RenderOne()
     {
-        string clipPath = $"Assets/Frank_Fighter/Assets/Animations/FBX Animation/Root_Motion/Frank_RPG_Fighter_{Clip}.FBX";
+        // A bare name is a Frank Fighter clip; a full asset path renders any humanoid clip (e.g. Frank RPG Dual).
+        string clipPath = Clip.Contains("/") ? Clip : $"Assets/Frank_Fighter/Assets/Animations/FBX Animation/Root_Motion/Frank_RPG_Fighter_{Clip}.FBX";
+        string sheetName = Path.GetFileNameWithoutExtension(clipPath).Replace("Frank_RPG_Fighter_", string.Empty);
         var clip = AssetDatabase.LoadAssetAtPath<AnimationClip>(clipPath);
         var attack = string.IsNullOrEmpty(Attack) ? null
             : AssetDatabase.LoadAssetAtPath<ToyChest.Gameplay.Combat.AttackDefinition>($"Assets/Game/Content/Attacks/Attack_{Attack}.asset");
@@ -134,12 +136,12 @@ public static class RenderClipContactSheet
         {
             AnimationMode.StopAnimationMode();
             Directory.CreateDirectory("Temp/Sheets");
-            File.WriteAllBytes($"Temp/Sheets/{Clip}{(attack != null ? "_win" : "")}.png", sheet.EncodeToPNG());
+            File.WriteAllBytes($"Temp/Sheets/{sheetName}{(attack != null ? "_win" : "")}.png", sheet.EncodeToPNG());
             cam.targetTexture = null;
             foreach (Object o in temp) if (o != null) Object.DestroyImmediate(o);
         }
 
-        return $"Temp/Sheets/{Clip}.png: {Columns} frames {From * clip.length:0.00}-{To * clip.length:0.00}s of {clip.length:0.00}s";
+        return $"Temp/Sheets/{sheetName}.png: {Columns} frames {From * clip.length:0.00}-{To * clip.length:0.00}s of {clip.length:0.00}s";
     }
 
     private static void Grab(Camera cam, RenderTexture rt, Texture2D cellTex, Texture2D sheet, int column, int row)

@@ -135,6 +135,11 @@ namespace ToyChest.Gameplay.Player
         private Vector3 _lastContactPoint;
         private bool _hasContactPoint;
 
+        // A loadout swap requested while a combo is in progress, applied the moment that combo ends or is
+        // cancelled so the strike in flight is never cut short (see SetCombo).
+        private ComboDefinition _pendingCombo;
+        private bool _hasPendingCombo;
+
         // Reused across steps so repeated hit resolution stays allocation-free (the emitters' detector is
         // pooled; these hold the deduped, ordered target set and its capability views for one contact frame).
         private readonly List<HitResult> _resolvedHits = new List<HitResult>();
@@ -181,6 +186,12 @@ namespace ToyChest.Gameplay.Player
 
         /// <summary>The authored combo the attack input drives (null = the single-swing fallback).</summary>
         public ComboDefinition Combo => _combo;
+
+        /// <summary>Whether a <see cref="SetCombo"/> made mid-attack is waiting for the current combo to end.</summary>
+        public bool HasPendingCombo => _hasPendingCombo;
+
+        /// <summary>The combo that becomes active when the current one ends (meaningful only with <see cref="HasPendingCombo"/>).</summary>
+        public ComboDefinition PendingCombo => _pendingCombo;
 
         /// <summary>Whether a combo/swing is currently in progress.</summary>
         public bool IsAttacking => _sequencer != null && _sequencer.IsActive;
@@ -294,6 +305,7 @@ namespace ToyChest.Gameplay.Player
                 _locomotion.Jumped -= OnMovementAction;
                 _locomotion.Rolled -= OnMovementAction;
                 _locomotion.SetMovementCommitted(false, 1f);
+                _locomotion.SetAerialHold(false);
             }
         }
 
@@ -448,6 +460,7 @@ namespace ToyChest.Gameplay.Player
             }
 
             _windowOpen = false;
+            ApplyPendingCombo();
             SyncCommitment();
 
             if (_bufferTimer > 0f)
@@ -462,20 +475,46 @@ namespace ToyChest.Gameplay.Player
 
         /// <summary>
         /// Swaps the authored combo the attack input drives (a loadout change — e.g. the dojo's test-combo
-        /// selector). Any combo in progress is cancelled first; the new combo's steps are bound exactly as at
+        /// selector). When idle it applies at once; while a combo is in progress the swap is <b>deferred</b> until
+        /// that combo finishes or is cancelled, so the strike in flight completes intact (the last request wins;
+        /// re-selecting the current combo clears a pending swap). The new combo's steps are bound exactly as at
         /// startup, so it plays through the same pipeline. Null restores the single-swing fallback.
         /// </summary>
         public void SetCombo(ComboDefinition combo)
         {
             if (_sequencer != null && _sequencer.IsActive)
             {
-                CancelCombo();
+                _pendingCombo = combo;
+                _hasPendingCombo = combo != _combo;
+                return;
+            }
+
+            ApplyCombo(combo);
+        }
+
+        private void ApplyCombo(ComboDefinition combo)
+        {
+            _pendingCombo = null;
+            _hasPendingCombo = false;
+            if (combo == _combo && _steps != null)
+            {
+                return;
             }
 
             _combo = combo;
             _bufferTimer = 0f;
             BuildSteps(_animator);
             _sequencer = new ComboSequencer(BuildTimings());
+        }
+
+        // Called at idle points only (never mid-tick, so no step runtime is rebuilt while it is being swept): a
+        // swap requested mid-attack lands once that combo has finished or been cancelled.
+        private void ApplyPendingCombo()
+        {
+            if (_hasPendingCombo)
+            {
+                ApplyCombo(_pendingCombo);
+            }
         }
 
         /// <summary>
@@ -554,6 +593,9 @@ namespace ToyChest.Gameplay.Player
                 CancelCombo();
             }
 
+            // A fresh combo always starts on the latest selection, even when the previous combo ended this frame.
+            ApplyPendingCombo();
+
             if (!CanStartCombo(out GameplayObject attacker, out AbilitySet abilities))
             {
                 return false;
@@ -578,7 +620,9 @@ namespace ToyChest.Gameplay.Player
             // A jump or a roll owns the character until it finishes: an attack must never cut one short. The
             // press is not thrown away — TryAttack buffers it, so it fires as soon as the player lands or the
             // roll recovers, which keeps mashing responsive without stealing control from movement.
-            if (_locomotion != null && (_locomotion.IsRolling || !_locomotion.IsGrounded))
+            // An aerial opener (its first step flies) may also start in the air, so a jump can open an air string.
+            bool aerialOpener = _steps != null && _steps.Length > 0 && _steps[0].Attack != null && _steps[0].Attack.IsAerial;
+            if (_locomotion != null && (_locomotion.IsRolling || (!_locomotion.IsGrounded && !aerialOpener)))
             {
                 return false;
             }
@@ -612,7 +656,16 @@ namespace ToyChest.Gameplay.Player
         // after the leap, a roll, a jump, or a cancelled combo.
         private void SyncCommitment()
         {
-            _locomotion?.SetMovementCommitted(_sequencer != null && _sequencer.IsCommitted, _commitMoveScale);
+            bool committed = _sequencer != null && _sequencer.IsCommitted;
+            _locomotion?.SetMovementCommitted(committed, _commitMoveScale);
+            _locomotion?.SetAerialHold(committed && ActiveStepIsAerial());
+        }
+
+        // Whether the active step is an aerial attack (its asset carries a height profile the controller follows).
+        private bool ActiveStepIsAerial()
+        {
+            int index = _sequencer != null ? _sequencer.StepIndex : -1;
+            return _steps != null && index >= 0 && index < _steps.Length && _steps[index].Attack != null && _steps[index].Attack.IsAerial;
         }
 
         // A roll or jump is a different action: it ends the combo outright (so a later press cannot resume
@@ -869,6 +922,12 @@ namespace ToyChest.Gameplay.Player
             }
 
             AttackTimelineTick tick = step.Timeline.Advance(normalizedTime);
+
+            // An aerial step's height comes from its authored profile, applied over exactly the span the clip advanced.
+            if (step.Attack.IsAerial)
+            {
+                _locomotion?.ApplyVerticalMotion(step.Attack.AirHeightDelta(step.Timeline.Previous, step.Timeline.Current));
+            }
             if (tick.ContactReached && _sequencer.Phase == ComboPhase.WindUp)
             {
                 Handle(_sequencer.NotifyContact());

@@ -12,6 +12,12 @@ namespace ToyChest.Gameplay.Player
     /// left unassigned is simply skipped, so the same adapter degrades cleanly to a hook. Nothing here
     /// feeds back into gameplay — the enemy's own hit flash already fires from the damage it takes, now
     /// naturally synced to the contact frame because damage lands at impact.
+    ///
+    /// <para><b>One beat, one hit-stop.</b> <see cref="PlayerCombat.Impacted"/> fires once per target, and a swept limb
+    /// reaches each body on a different frame — so per-impact hit-stop and shake turned one kick through a crowd into a
+    /// chain of separate freezes (measured: six in 0.4s) and a stacked camera jolt. The weighty juice (hit-stop, camera
+    /// impulse) now fires once per <i>beat</i> — one hit window of one step (a contact event for steps without an
+    /// attack asset) — while every target still gets its own impact VFX and sound at its own contact point.</para>
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class PlayerAttackFeedback : MonoBehaviour
@@ -68,6 +74,11 @@ namespace ToyChest.Gameplay.Player
         private bool _bound;
         private Coroutine _hitStopRoutine;
 
+        // The current beat: bumped when a step starts, keyed by the window that struck (WindowStruck precedes Impacted).
+        private int _stepSerial;
+        private string _beatWindow;
+        private string _feltBeat;
+
         private void Awake()
         {
             if (_combat == null)
@@ -91,6 +102,7 @@ namespace ToyChest.Gameplay.Player
             if (_combat != null && !_bound)
             {
                 _combat.Attacked += OnSwing;
+                _combat.WindowStruck += OnWindowStruck;
                 _combat.Impacted += OnImpact;
                 _bound = true;
             }
@@ -101,6 +113,7 @@ namespace ToyChest.Gameplay.Player
             if (_combat != null && _bound)
             {
                 _combat.Attacked -= OnSwing;
+                _combat.WindowStruck -= OnWindowStruck;
                 _combat.Impacted -= OnImpact;
                 _bound = false;
             }
@@ -113,8 +126,13 @@ namespace ToyChest.Gameplay.Player
             }
         }
 
+        private void OnWindowStruck(string windowId) => _beatWindow = windowId;
+
         private void OnSwing(string animatorTrigger)
         {
+            _stepSerial++;
+            _beatWindow = null;
+
             if (_swingSound != null && _audioSource != null)
             {
                 _audioSource.PlayOneShot(_swingSound);
@@ -123,7 +141,12 @@ namespace ToyChest.Gameplay.Player
 
         private void OnImpact(Vector3 hitPoint)
         {
-            if (_impulse != null)
+            // The first target of a beat carries its weight; later targets of the same beat add only their own VFX/sound.
+            string beat = _stepSerial + "/" + (_beatWindow ?? "contact");
+            bool firstOfBeat = beat != _feltBeat;
+            _feltBeat = beat;
+
+            if (firstOfBeat && _impulse != null)
             {
                 _impulse.Shake(_impactShake);
             }
@@ -139,7 +162,7 @@ namespace ToyChest.Gameplay.Player
                 _audioSource.PlayOneShot(_impactSound);
             }
 
-            if (_hitStopDuration > 0f && isActiveAndEnabled)
+            if (firstOfBeat && _hitStopDuration > 0f && isActiveAndEnabled)
             {
                 if (_hitStopRoutine != null)
                 {

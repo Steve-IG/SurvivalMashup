@@ -98,6 +98,7 @@ namespace ToyChest.Gameplay.Player
         private float _moveLockScale = 1f;
         private bool _committed;
         private float _committedScale;
+        private bool _aerialHeld;
         private bool _sprinting;
         private float _rollTimer;
         private Vector3 _rollDirection;
@@ -333,14 +334,7 @@ namespace ToyChest.Gameplay.Player
 
         private void ApplyGravity(float delta, bool grounded)
         {
-            if (grounded && _verticalVelocity < 0f)
-            {
-                _verticalVelocity = -2f;
-            }
-            else
-            {
-                _verticalVelocity -= _gravity * delta;
-            }
+            _verticalVelocity = LocomotionMotor.VerticalVelocity(_verticalVelocity, _gravity, delta, grounded, _aerialHeld);
         }
 
         // The character's single CharacterController.Move for the frame. Everything that moves the
@@ -378,6 +372,34 @@ namespace ToyChest.Gameplay.Player
         public void ApplyRootMotion(Vector3 worldDelta)
         {
             _pendingRootMotion += new Vector3(worldDelta.x, 0f, worldDelta.z);
+        }
+
+        /// <summary>
+        /// Holds the character's height for an aerial attack step: while held, gravity does not accumulate and the only
+        /// vertical motion is what <see cref="ApplyVerticalMotion"/> feeds in. A held state mirrored from the attack
+        /// every frame (like <see cref="SetMovementCommitted"/>), never a timer, so it cannot outlive the step; on
+        /// release the character falls from rest under normal gravity and lands through the usual path.
+        /// </summary>
+        public void SetAerialHold(bool held)
+        {
+            if (held && !_aerialHeld)
+            {
+                _verticalVelocity = 0f;
+            }
+
+            _aerialHeld = held;
+        }
+
+        /// <summary>Whether an aerial attack currently owns the character's height.</summary>
+        public bool IsAerialHeld => _aerialHeld;
+
+        /// <summary>
+        /// Queues a vertical displacement (metres) from an aerial attack's authored height profile, folded into the
+        /// frame's single <c>CharacterController.Move</c> like root motion, so collisions (floor, ceilings) still apply.
+        /// </summary>
+        public void ApplyVerticalMotion(float deltaHeight)
+        {
+            _pendingRootMotion.y += deltaHeight;
         }
 
         private Vector3 RollDirection()

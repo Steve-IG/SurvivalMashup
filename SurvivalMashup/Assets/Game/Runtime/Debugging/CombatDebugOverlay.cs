@@ -295,11 +295,16 @@ namespace ToyChest.Debugging
             bool justContacted = Time.time - _lastContactTime < 0.25f;
             bool justHit = Time.time - _lastHitTime < 0.25f;
 
-            GUILayout.BeginArea(new Rect(Screen.width - 300f, 10f, 290f, 210f), GUI.skin.box);
+            GUILayout.BeginArea(new Rect(Screen.width - 300f, 10f, 290f, 230f), GUI.skin.box);
             GUILayout.Label("<b>Combat Debug</b> (F2)");
             string combo = _combat.Combo != null ? _combat.Combo.name : "(single swing)";
             string step = _combat.ComboStepIndex >= 0 ? $" — step {_combat.ComboStepIndex + 1}" : string.Empty;
             GUILayout.Label($"Combo: {combo}{step}");
+            if (_combat.HasPendingCombo)
+            {
+                string next = _combat.PendingCombo != null ? _combat.PendingCombo.name : "(single swing)";
+                GUILayout.Label($"Next combo: {next} (after this attack)");
+            }
             GUILayout.Label($"Phase: {_combat.Phase}");
             GUILayout.Label($"Contact frame: {(justContacted ? "YES" : "-")}");
             GUILayout.Label($"Hit confirmed: {(justHit ? "YES" : "-")}");

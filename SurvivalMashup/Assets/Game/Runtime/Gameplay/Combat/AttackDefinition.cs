@@ -136,6 +136,13 @@ namespace ToyChest.Gameplay.Combat
                  "the other lands the blow). Set it in the Attack Authoring window. Not read at runtime.")]
         private float _strikeHint = -1f;
 
+        [SerializeField]
+        [Tooltip("Aerial attacks only: the character's height above where the step began (metres) over normalized clip " +
+                 "time. The controller supplies this height — gravity is held while the step is committed — and the clip " +
+                 "(a ZeroHeight / _0H variant, root at standing height) supplies the body motion. Authored from the clip's " +
+                 "full-height twin (its root height minus the _0H twin's). Empty = a ground attack.")]
+        private AnimationCurve _airHeight = new AnimationCurve();
+
         public AnimationClip Clip => _clip;
         public string AbilityId => _abilityId;
         public float CommitEnd => _commitEnd;
@@ -144,6 +151,20 @@ namespace ToyChest.Gameplay.Combat
         public float CancelFrom => _cancelFrom;
 
         public IReadOnlyList<HitWindow> Windows => _windows;
+
+        /// <summary>Height profile of an aerial attack (see the field); empty for a ground attack.</summary>
+        public AnimationCurve AirHeight => _airHeight;
+
+        /// <summary>Whether this attack is performed in the air: the controller follows <see cref="AirHeight"/>.</summary>
+        public bool IsAerial => _airHeight != null && _airHeight.length > 1;
+
+        /// <summary>
+        /// The height the character should gain (negative: lose) as the clip advances from <paramref name="from"/> to
+        /// <paramref name="to"/> (normalized). Applied as a delta, so a chained aerial step continues from wherever the
+        /// character already is rather than snapping to the curve's absolute value. 0 for a ground attack.
+        /// </summary>
+        public float AirHeightDelta(float from, float to) =>
+            IsAerial && to > from ? _airHeight.Evaluate(to) - _airHeight.Evaluate(from) : 0f;
 
         /// <summary>Authoring-only strike-frame hint (normalized time, or -1 for none).</summary>
         public float StrikeHint => _strikeHint;

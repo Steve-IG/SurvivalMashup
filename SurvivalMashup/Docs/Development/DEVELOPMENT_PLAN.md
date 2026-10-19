@@ -43,6 +43,9 @@ Review Group 5A	Hit Detection Architecture	✅ Complete (awaiting review)
 Review Group 5B	Asset-Driven Hit Detection & Authoring Workflow	✅ Complete (awaiting review)
 Review Group 5C	Combat Feel Iteration & Debug Tooling	✅ Complete (awaiting review)
 Review Group 5D	Combat Arena, Combos & Multi-Target Combat	✅ Complete (awaiting review)
+Review Group 5E	Attack Authoring Validation & Combo Library	✅ Complete (awaiting review)
+Review Group 5F	Combat Test Controls & Weapon Validation	✅ Complete (reviewed; follow-ups done)
+Review Group 5G	Aerial Combos — Stage 1 (airborne player steps)	✅ Complete (awaiting review)
 
 Architecture changes are only acceptable when a genuine architectural defect is discovered.
 
@@ -207,6 +210,37 @@ Duplicate `VerticalSlice` scene removed (drift resolved)
 No new engine architecture. No speculative systems. No new framework concepts.
 
 Current AI Task
+Milestone 2, Review Group 5G (Aerial Combos — Stage 1) — complete, paused for review.
+
+- **Real airborne attack steps.** `AttackDefinition._airHeight` (authored as the full clip's root height minus its `_0H` twin's) drives the controller's height while an aerial step is committed. `PlayerLocomotion.SetAerialHold` / `ApplyVerticalMotion` (gravity held), with `LocomotionMotor.VerticalVelocity` pure. An aerial opener may start in the air.
+- **`Combo_Test_AirString`** (Fighter AirCombo Launcher → 1 → 2 → 3 on `_0H` clips, seventh pad) via `AuthorAirString.cs`. The proposer ran on the full-height twins; windows were corrected from limb-speed peaks, and the finisher's slam is timed from the accumulated string height.
+- **Validated live** (`VerifyAirString.cs`): peak 3.49 m; airborne at every chain with 0.00 m drop at step changes; gravity held exactly while committed; lands and moves; air windows hit a target at altitude; the shockwave hits ground dummies; a jump opens the string; ground combos still refuse to start in the air.
+- **Not built (stage 2):** enemy launch and juggle. `Combo_Test_AerialHeavy` is unchanged (its steps 2–3 are ground clips).
+- EditMode 480/480; all combat probes pass.
+
+See `COMBAT.md` (RG5G). Awaiting review.
+
+Milestone 2, Review Group 5F (Combat Test Controls & Weapon Validation) — complete, paused for review.
+
+- **Loadout pads fixed.** The pad triggers were 0.1 m slabs, and the CharacterController capsule rests 0.08 m above the floor (its skin width), so the capsule only grazed them and the physics step never reported a contact. They are now 1 m trigger columns (scene + `AuthorAttackLibraryContent`), guarded by a content test. `PlayerCombat.SetCombo` now **defers** a swap requested mid-attack until the combo ends, so a strike is never cut; the overlay shows "Next combo".
+- **Pads verified in play mode** with `VerifyComboPads.cs`, which drives real keyboard input. All five pads select from four directions, and the next combo executes that combo's own steps and windows. Re-entry, two pads in sequence, mid-attack touch and a fresh session also pass (37/37).
+- **`VerifyAttackEnd` rewritten** for the attack-asset termination path:
+  - exact release frame at `CommitEnd` or the cancel point;
+  - stray clip events are ignored;
+  - chaining happens at the last window;
+  - it has a fault-injection self-check. **PASS.**
+- **Real weapon test not built.** Humanoid Frank RPG Dual sword clips exist, but no standalone weapon prop does: the swords are skinned into the Dual character, and JC Stylized Weapons is not imported. **Decided at review:** the next review group imports the JC Stylized Weapons unitypackage and builds one real sword attack from a JC sword prop and a Frank RPG Dual humanoid sword clip. Until then the proxy remains and validates only the socket path.
+- EditMode **471/471**. All combat verification probes pass.
+
+See `COMBAT.md` (RG5F). Awaiting review.
+
+RG5F follow-ups (after review):
+- **Hit-stop stutter fixed.** Measured: no frame drop; per-target hit-stop and shake chained into 6 separate freezes in 0.4 s on a multi-target sweep. Hit-stop and camera impulse now fire once per beat (one window of one step); VFX and sound stay per target. `VerifyHitStopBeats.cs`.
+- **First real weapon attack.** JC Stylized Weapons imported. `SM_Sword_01` is in the right hand with the grip measured from Frank Dual's own sword, and `Weapon2` uses blade sockets. Frank Dual `Combo03_1` gives a verified 'Sword thrust' window. `Combo_Test_Sword` has a sixth pad. Validated live with `VerifySwordAttack.cs` (anchor, trajectory, window alignment, reach, facing, once per window, Grunt damage).
+- **Aerial combos and juggling: proposal only** (`COMBAT.md`). Stage 1 is real airborne player steps using the existing `_0H`/`ZeroHeight` air clips. Stage 2 is enemy launch and juggle, the first enemy hit-reaction mechanic, which needs architecture review.
+- EditMode 472/472; all combat probes pass.
+
+
 Milestone 2, Review Group 5E (Attack Authoring Validation & Combo Library) — complete, paused for review.
 
 Validated the attack-authoring workflow by building a test library of **nine attacks in four data-authored combos** from real Frank RPG Fighter clips, with **no per-attack gameplay code**:

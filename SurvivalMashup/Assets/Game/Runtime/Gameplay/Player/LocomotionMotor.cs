@@ -11,6 +11,27 @@ namespace ToyChest.Gameplay.Player
     public static class LocomotionMotor
     {
         /// <summary>
+        /// Next vertical velocity. <paramref name="held"/> (an aerial attack step owns the character's height) holds it
+        /// at zero — no gravity accumulates, so the controller follows the attack's authored height exactly and drops
+        /// from rest when the hold ends. Grounded and falling settles to a small stick-to-ground value; otherwise
+        /// gravity integrates.
+        /// </summary>
+        public static float VerticalVelocity(float current, float gravity, float delta, bool grounded, bool held)
+        {
+            if (held)
+            {
+                return 0f;
+            }
+
+            if (grounded && current < 0f)
+            {
+                return -2f;
+            }
+
+            return current - gravity * delta;
+        }
+
+        /// <summary>
         /// Camera-relative horizontal velocity for a move intent. <paramref name="moveInput"/> is
         /// (strafe, forward) in the range [-1, 1]; <paramref name="cameraForward"/> is the camera's
         /// facing (flattened onto the ground plane); <paramref name="speed"/> is units per second.

@@ -61,7 +61,11 @@ public static class VerifyDeadEnemyUnhittable
             var volume = new HitVolume(HitShape.Sphere, 3f, 0f, multiTarget: true, maxTargets: 8);
             var filter = new HitFilter("Enemy", ~0);
 
-            int hitsWhileAlive = detector.Detect(volume, filter, position, Vector3.forward, null).Count;
+            // Count only hits on the target itself: the target is "the first Grunt found" (unordered), and a live
+            // neighbour within the 3m probe sphere would otherwise read as the corpse still being hittable (RG5G fix).
+            GameplayObject self = behaviour.Object;
+            int hitsWhileAlive = 0;
+            foreach (HitResult h in detector.Detect(volume, filter, position, Vector3.forward, null)) if (h.Object == self) hitsWhileAlive++;
 
             // Kill it.
             health.Consume(health.Maximum);
@@ -69,7 +73,8 @@ public static class VerifyDeadEnemyUnhittable
             Physics.SyncTransforms();
 
             bool corpseStillPresent = Target != null && Target.gameObject != null;
-            int hitsWhileDead = detector.Detect(volume, filter, position, Vector3.forward, null).Count;
+            int hitsWhileDead = 0;
+            foreach (HitResult h in detector.Detect(volume, filter, position, Vector3.forward, null)) if (h.Object == self) hitsWhileDead++;
 
             bool pass = hitsWhileAlive > 0 && corpseStillPresent && hitsWhileDead == 0;
             string msg = $"[VerifyDeadEnemyUnhittable] hitsWhileAlive={hitsWhileAlive} corpseStillPresent={corpseStillPresent} " +

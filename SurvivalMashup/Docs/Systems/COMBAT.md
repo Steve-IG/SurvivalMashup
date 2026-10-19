@@ -494,7 +494,7 @@ RG5E asked one question: **can we keep adding varied melee attacks by authoring 
 
 Attack assets: `Assets/Game/Content/Attacks/Attack_Fighter_*.asset`. Each step uses an existing zero-cooldown ability (`player_strike` / `combo2` / `combo3`). No stamina or resource cost. New preset: `HV_GroundShockwave` (sphere, r 2.2m, multi-target, max 8), anchored to the right hand in the slam window.
 
-**Selecting a combo:** walk onto one of the five coloured **loadout pads** behind the spawn, at z = −4: Shipped Melee, QuickStrikes, Sweeping, AerialHeavy, WeaponProxy. `ComboLoadoutPad` (`ToyChest.Gameplay.Player`) is the loadout counterpart of `EnemySpawnTrigger`: a thin trigger that calls `PlayerCombat.SetCombo`. It is not a selection system. The F2 overlay now shows the active combo and step (read-only). Every combo then runs the normal path: input → combo → Animator state → limb/area windows → `HitDetector` → `AbilitySet.TryActivate(id, targets)` → `Impacted` per target.
+**Selecting a combo:** walk onto one of the five coloured **loadout pads** behind the spawn, at z = −4: Shipped Melee, QuickStrikes, Sweeping, AerialHeavy, WeaponProxy. `ComboLoadoutPad` (`ToyChest.Gameplay.Player`) is the loadout counterpart of `EnemySpawnTrigger`: a thin trigger that calls `PlayerCombat.SetCombo`. It is not a selection system. The F2 overlay now shows the active combo and step (read-only). *(RG5F: as shipped in RG5E the pads never fired — see "Combat Test Controls & Weapon Validation (Review Group 5F)" below for the fix and the selection rules.)* Every combo then runs the normal path: input → combo → Animator state → limb/area windows → `HitDetector` → `AbilitySet.TryActivate(id, targets)` → `Impacted` per target.
 
 ## Authoring workflow & what the exercise found
 
@@ -554,7 +554,7 @@ Every combo was equipped via `SetCombo` and driven through `TryAttack`. Placemen
 | AerialHeavy | 0.41s | 0.73s | 2.15s |
 | Shipped melee (unchanged) | 0.27s | 0.48s | 2.36s |
 
-Shipped-combo regressions all pass: `VerifyAttackWindows`, `VerifyComboFixes`, `VerifyComboWindow`, `VerifyComboRooting`, `VerifyFinisherCancel`, `VerifyRoll`, `VerifyDeadEnemyUnhittable`. `VerifyAttackEnd` fails as before this group: it drives the clip-event `NotifyAttackEnd()`, which attack-asset steps intentionally ignore since the limb-window migration. It is obsolete, not a regression.
+Shipped-combo regressions all pass: `VerifyAttackWindows`, `VerifyComboFixes`, `VerifyComboWindow`, `VerifyComboRooting`, `VerifyFinisherCancel`, `VerifyRoll`, `VerifyDeadEnemyUnhittable`. `VerifyAttackEnd` fails as before this group: it drives the clip-event `NotifyAttackEnd()`, which attack-asset steps intentionally ignore since the limb-window migration. It is obsolete, not a regression. *(RG5F rewrote it for the attack-asset path; it passes.)*
 
 ## Remaining gaps
 
@@ -566,6 +566,272 @@ Shipped-combo regressions all pass: `VerifyAttackWindows`, `VerifyComboFixes`, `
 - The probe scenarios use static dummies. Moving targets crossing a sweep were covered only by root travel, not by moving the targets.
 
 ---
+
+# Combat Test Controls & Weapon Validation (Review Group 5F)
+
+A maintenance group: make the RG5E test library dependable. No new systems, managers or attack code.
+
+## Loadout pads — root cause and fix
+
+**Symptom.** Walking onto any coloured pad did nothing; the combo never changed and `[ComboLoadoutPad]` never logged.
+
+**Root cause (traced live, not assumed).** Every other link was sound: pads active, enabled `BoxCollider` triggers on Default (Default×Default collides), player tagged `Player`, `GetComponentInParent<PlayerCombat>` resolves, `SetCombo` binds correctly, nothing overwrites the combo afterwards, and the overlay reads `PlayerCombat.Combo` live. The trigger **geometry** was the fault. Each pad was a 0.1 m slab (world y 0 → 0.1), and the player's `CharacterController` rests its **skin width (0.08 m) above the floor**, so its capsule grazed the trigger by ~2 cm at its rounded tip. `Physics.OverlapCapsule` saw the overlap on every frame across the pad, but the physics step never delivered `OnTriggerEnter`. The `EnemySpawnPad` works because it is 0.3 m tall, and the same walk does fire it.
+
+**Fix.** The visual stays a thin slab; each pad's `BoxCollider` became a **1 m-tall trigger column** (world y 0 → 1.0) over the same 1.6 × 1.6 m footprint. This is set in the scene and in `AuthorAttackLibraryContent.BuildPads` (`PadTriggerHeight`), so re-running the authoring script keeps it. A content test (`EveryLoadoutPadTriggerReachesIntoTheRestingPlayerCapsule`) requires each trigger to start at or below the resting capsule's bottom and reach at least one capsule radius into it. The old geometry fails that test (0.02 m against 0.5 m).
+
+**Selection rules** (`PlayerCombat.SetCombo`, the one runtime seam; the pad stays a thin trigger):
+- **Idle:** the combo applies at once. The next attack press uses it.
+- **Mid-attack:** the swap is **deferred** until the current combo finishes or is cancelled, so the strike in flight completes intact. Previously `SetCombo` cancelled the combo, so a sweep whose root motion carried the player onto a pad would have been cut mid-blow. The latest request wins, and re-selecting the active combo clears a pending swap. The swap is applied only at idle points (the idle `Update` branch, or just before a fresh combo starts), never mid-tick. `HasPendingCombo` / `PendingCombo` expose it read-only. The F2 overlay shows `Next combo: … (after this attack)`.
+- **Persistence:** the selection holds after stepping off, until another pad (or an explicit `SetCombo`) changes it. Re-entering the active combo's pad is a no-op (no rebuild, no log). Each play session starts on the Player's authored combo (`Combo_PlayerMelee`).
+- The pad still calls only `SetCombo`. It goes through the normal Bootstrap composition and needs no debug path. The debug overlay only observes.
+
+## Pad acceptance (play mode, `VerifyComboPads.cs`)
+
+This runs entirely on the normal path. Keyboard state (W/A/S/D, Q) is queued into the Input System, so `PlayerInputBridge` → `PlayerLocomotion` walks the CharacterController onto each pad, and the attack presses run the whole combo against the lone Training Dummy at 0.9 m. Only the start of each walk is placed directly.
+
+| Pad | Combo | Approach | Selected on pad | Kept after stepping off | Next attack played this combo's steps | Windows that struck the dummy |
+|---|---|---|---|---|---|---|
+| QuickStrikes | `Combo_Test_QuickStrikes` | from the south (moving N) | ✓ | ✓ | Combo04_1 → 04_2 → 03_1 | Right/Left punch ×5 |
+| Sweeping | `Combo_Test_Sweeping` | from the west (moving E) | ✓ | ✓ | Combo02_1 → 06_1 | Left hook, both sweep kicks |
+| AerialHeavy | `Combo_Test_AerialHeavy` | from the east (moving W) | ✓ | ✓ | AirCombo_Launcher → 02_2 → 02_3 | Rising kick, Overhead smash, Hammer slam |
+| WeaponProxy | `Combo_Test_WeaponProxy` | from the south (moving N) | ✓ | ✓ | Combo02_2 (Weapon1 socket) | Weapon chop |
+| Shipped Melee | `Combo_PlayerMelee` | from the north (moving S) | ✓ | ✓ | Attack → Combo2 → Combo3 | Left/Right punch, both kicks |
+
+Also passing:
+- **Re-entering** the active pad twice: no change, nothing pending.
+- **Two pads in one walk** (QuickStrikes → Sweeping): the last pad wins, and Sweeping then executes.
+- **A pad touched mid-attack:** the Sweeping combo's root travel carries the player across the AerialHeavy pad. `HasPendingCombo` is set, Sweeping runs to its last step uninterrupted, AerialHeavy becomes active when it ends, and the next combo plays AerialHeavy's steps.
+- **Fresh session:** the session starts on `Combo_PlayerMelee` with nothing pending, and the pads work.
+
+37/37 checks. Every check also verifies that each struck window belongs to the selected combo. The F2 overlay was checked visually on the pad, mid-attack ("Next combo") and after the attack. Note: the probe ends by restoring the combo it started with, because the shipped-combo probes assume `Combo_PlayerMelee`.
+
+## Attack termination — `VerifyAttackEnd` rewritten
+
+**The old probe** (RG5D) started a punch, held a movement input, called the clip-event seam `PlayerCombat.NotifyAttackEnd()`, and expected the attack to end that frame and movement to resume. **It was obsolete, as RG5E reported (confirmed):** every shipped step now has an attack asset, `NotifyAttackEnd`/`NotifyAnimationContact` are gated by `!ActiveStepUsesAttack()`, and so the call was a no-op. Re-run unchanged in RG5F, it failed: `endedOnEventFrame=False`.
+
+**Current termination model.** `AttackTimeline` reads the step's Animator state time each `LateUpdate`. The step's contact is its **last window closing**, which is when a buffered press chains, skipping recovery. **`CommitEnd`** raises `ComboSequencer.NotifyAttackEnd`, which ends the commitment and, with no press buffered (ContinuationWindow 0), the combo. Past a **cancel point** (`CancelFrom`, never before the last window), a held move input ends the recovery early. The step's fallback recovery timer is only a backstop and must never run ahead of the clip.
+
+**The new probe** keeps the old purpose (an exit that is exact and snappy) and tests the supported path. It runs on step 1 of all five combos, with a move input held:
+- the player stays rooted through the commitment;
+- a stray clip `NotifyAttackEnd()` mid-commitment is **ignored**;
+- the release lands on **the exact frame** the clip crosses `CommitEnd`, or one frame after crossing the cancel point for cancellable attacks;
+- the release is never before the last window and never on the timer;
+- the combo ends with the commitment, and movement resumes at full speed.
+
+It then chains the shipped combo by pressing ahead. Each step must start after the previous step's last window and before its `CommitEnd`, and the finisher must release at its `CommitEnd`.
+
+Finally a **fault injection** run equips an in-memory clone of the shipped combo with a 0.05 s recovery timer, the documented "timer runs ahead of the event" regression. The probe must catch it, and it does: released at 0.63 against the expected 0.95.
+
+Results: shipped 0.950 → released 0.952 on the crossing frame; QuickStrikes 0.950; Sweeping hook cancellable at 0.343 → released one frame later at 0.350; AerialHeavy 0.950; WeaponProxy 0.863. Chain: step 2 started at step 1 t=0.46, step 3 at step 2 t=0.22, finisher released at 0.952. **PASS.**
+
+## Real weapon validation — assets assessed, not built
+
+- **Available:** humanoid (`animationType: 3`) **sword** clips in Frank RPG Dual (`Assets/Frank_RPG_Dual/Assets/Animations/FBX Animation/Root_Motion/`: `Combo01_1`–`Combo07_*`, `Skill03_PowerAttack`, air combos; 92 of 93 clips humanoid).
+- **Not available as a prop:** the only imported weapon meshes are `Sword_R` / `Sword_L`, **skinned into** `Frank_Dual_Unity_Skin.FBX` (bound to the pack's extra sword bones, which humanoid retargeting does not carry). No standalone, hand-attachable weapon prefab exists. `JC_StylizedWeapons` is present only as an unimported `.unitypackage`. Kevin Iglesias has no weapon attacks. Frank Fighter clips are unarmed.
+- **Decision deferred to review.** A real test needs one of two things: deriving a prop from the baked sword mesh (with an unverified pivot/bind offset), or importing JC Stylized Weapons. Either way it also needs new Player Animator states, clip import configuration, and authored hilt/tip sockets aligned to the blade. That is content work beyond a maintenance group, so it was not invented here. **Decided at review (2026-10-19):** the next review group imports `JC_StylizedWeapons` and builds one real sword attack from a JC sword prop (on the RightHand, with authored hilt/tip sockets) and a Frank RPG Dual humanoid sword clip, through the existing attack-authoring pipeline.
+- **The proxy remains the only weapon test.** It proves only the socket-shaped hit-volume path (a `Sockets` strike shape on the right hand that follows the animation). **True blade orientation and trajectory validation remains outstanding.** The proxy is unchanged.
+
+## Regression results
+
+- EditMode **471/471** (+1, the pad-geometry test).
+- Play mode from `Bootstrap.unity`, all PASS: `VerifyComboPads`, `VerifyAttackEnd`, `VerifyAttackWindows`, `VerifyComboFixes`, `VerifyComboWindow`, `VerifyComboRooting`, `VerifyFinisherCancel`, `VerifyRoll` (launch 15, jump 12), `VerifyDeadEnemyUnhittable`, and `VerifyLeapCoverage` (the dummy is inside the finisher volume for the whole window).
+- `VerifyAttackLibrary` reproduces RG5E exactly: no duplicate window hits, nothing from behind, identical flow timings, and Grunts 3/3.
+- **Probes are order-sensitive.** Run the shipped-combo probes on `Combo_PlayerMelee`, and run `VerifyDeadEnemyUnhittable` early in a session. It targets the first non-dummy enemy, which earlier probes can kill.
+
+## Follow-up 1 — multi-target hit-stop stutter (fixed)
+
+**Report.** The Sweeping combo's second step (the leg sweep) stuttered badly when it hit several enemies.
+
+**Measured, not guessed** (`VerifyHitStopBeats.cs`, Sweeping into one dummy, then into a three-dummy arc):
+- It was **not a frame-rate drop**. The worst real frame was 7.7 ms.
+- It was overlapping hit feedback. `PlayerCombat.Impacted` fires once per target, and `PlayerAttackFeedback` restarted its near-frozen global hit-stop (`timeScale` 0.06 for 0.05 s) and fired a camera impulse on every call.
+- A swept limb reaches each body on a different frame. Step 2 into three dummies therefore produced **6 separate freezes in ~0.4 s** (9 for the whole combo, 81 frozen frames), with a few normal frames between each. That freeze → run → freeze pattern is the stutter. The six summed Cinemachine impulses added a jolt on top.
+
+**Fix** (presentation only, `PlayerAttackFeedback`; gameplay and events unchanged):
+- The weighty juice (hit-stop and camera impulse) fires once per **beat**: one hit window of one step, or one contact event for steps without an attack asset. The beat key comes from the existing `Attacked` and `WindowStruck` events.
+- Every target still gets its own impact VFX and sound at its own contact point.
+- Two kicks still read as two beats; a crowd no longer multiplies them.
+
+**After the fix:** 3 freezes with 1 dummy and **3 with 3 dummies** (one each for the hook, right kick and left kick); 27 frozen frames. The probe passes when the arc produces no more freezes than a single target and no real frame exceeds 50 ms. (One run caught a single 54 ms Editor hitch on a frame with no hit; two reruns peaked at 8.1 and 22.7 ms.)
+
+## Follow-up 2 — the first real weapon attack (Combo_Test_Sword)
+
+**Assets.** `JC_StylizedWeapons` (URP) was imported from the bundle's `.unitypackage` into `Assets/JC_StylizedWeapons/`: 8 models and prefabs (sword, axe, dagger, hammer, stave, 2 bows, shield), materials, textures, and a demo scene. Nothing outside that folder changed. The clip is Frank RPG Dual `Combo03_1`, humanoid.
+
+**Built through the existing pipeline, with no gameplay code** (`Tools/CoplayScripts/AuthorSwordAttack.cs`, idempotent):
+- **Prop.** `SM_Sword_01` is a nested prefab named `Sword_Prop` under the Player's RightHand bone (`Player.prefab`; the dojo Player is an instance of it). Its colliders are removed.
+- **Grip.** The grip is measured, not guessed. Frank Dual's own skinned `Sword_R` was posed on its own rig by the same clip, and the blade axis, edge and grip point were expressed in the hand's anatomical frame (wrist→knuckles, pinky→index, palm normal). The result: blade = 0.56 fingers + 0.82 across + 0.12 palm, and the grip sits at half the knuckle span. That frame is rebuilt from the Warrior rig's finger bones, so the sword sits the way the clips were animated even though the skeletons differ. An earlier guess (blade straight out of the thumb side) visibly pointed wrong on the contact sheet.
+- **Strike shape.** `Weapon2` uses sockets `Sword_Hilt` (blade base) → `Sword_Tip`: 0.80 m, radius 0.07. `Weapon1` (the RG5E proxy) is untouched.
+- **Clip import.** The same settings as the library clips: rotation and Y baked into the pose, XZ as root motion.
+- **Attack.** `Attack_Dual_Combo03_1_Sword` was created through the Attack Authoring tool's own `CreateAttackAsset → Propose → ApplyProposal`. The proposer independently picked the right hand at 0.35–0.48 s as the striking limb and set the commit end at 0.95.
+- **Window correction.** Measured from the blade tip on the Player: a slow wind-up raises the sword at the right side (0–0.30 s, ≤ 11 m/s), then the thrust drives the tip from beside the body to 1.81 m in front between 0.32 and 0.40 s (peak 45 m/s). The window is **'Sword thrust' 0.32–0.48 s on Weapon2**: the drive plus 0.08 s past full extension, the proposer's own strike-end rule. It was marked **verified** only after the contact sheet showed the window covering exactly the swing-into-thrust frames and a live hit landed.
+- **Content.** The `Dual_Combo03_1` Animator state (AnyState trigger in, exit on `!AttackCommitted`), `Combo_Test_Sword` (one step, `ability.player_strike`), and a sixth loadout pad, **Sword** at x = 9 (1 m trigger column).
+- **Tooling.** `RenderClipContactSheet` now accepts a full clip path, so it can render non-Fighter clips.
+
+**Validated live** (`VerifySwordAttack.cs`, Bootstrap, the pad walked onto and every attack pressed with real keyboard input):
+
+| Check | Result |
+|---|---|
+| Anchor follows the socket | `Weapon2` resolves to `Sword_Hilt → Sword_Tip` under `Sword_Prop` under `RightHand` (0.80 m) |
+| Hit volume tracks the weapon | every contact point lies within 0.29 m of the hilt→tip segment (radius 0.07 + the dojo's 0.3 m reach padding) |
+| Window matches the visible motion | tip at 9.6 m/s when the window opens → peak 55.7 m/s → 1.8 m/s after it closes; the tip reaches 1.76 m ahead |
+| Reach | 0.9 / 1.4 / 2.0 / 2.6 m hit, 3.2 m misses |
+| Facing | 0 hits behind and 0 on the left flank (the cut comes from the right) |
+| At most once per window | three-dummy arc: 2 targets hit, once each |
+| Shared pipeline | a real Grunt went 50 → 30 health through `ability.player_strike`, with one `Impacted` (impact VFX and hit-stop via `PlayerAttackFeedback`) |
+
+**Scope limits.**
+- The sword is **always held**, including during the unarmed combos. Hiding it per combo would need loadout-driven visuals, which don't exist and weren't added; the visible sword never strikes outside `Combo_Test_Sword`, whose window alone names `Weapon2`.
+- `Combo03_1` is one step. The rest of the Dual set (mostly whirlwind spins with tip speeds of 80–120 m/s) is available for more sword attacks through the same script.
+- The proposer still does not analyse weapon limbs. The blade window was placed from the measured tip curve (`AuthorSwordAttack.Analyse` / `Curve`).
+
+## Proposal — aerial combos and juggling (stage 1 approved and built as RG5G, below; stage 2 not built)
+
+**Why AerialHeavy steps 2 and 3 snap to the ground.** The library clips bake root **height** into the pose (RG5E): `PlayerLocomotion.ApplyRootMotion` keeps only XZ, and the CharacterController never leaves the ground. The launcher's leap is therefore pose-only. Step 2 chains when the launcher's last window closes, which is mid-flight in the pose. Its clip (`Combo02_2`, a *ground* overhead smash) starts with the feet on the floor, so the 0.06 s blend drops the character to the ground. The gameplay also forbids air attacks outright: `PlayerCombat.CanStartCombo` refuses to start a combo while `!IsGrounded`.
+
+**What juggling needs.** Each piece builds on the existing pipeline:
+1. **Real airborne attack steps (player only; the smallest first step).**
+   - Add a data flag on `AttackDefinition`, for example `Aerial`: apply the clip's vertical root motion and suspend or scale gravity while the step is committed.
+   - `PlayerLocomotion` would then apply root Y during such a step, so the launcher genuinely lifts the controller, and the following steps start in the air from the real position.
+   - Gravity resumes when the combo ends, or on a slam step's landing window.
+   - Lift the "no attack while airborne" gate for aerial steps, so a jump can open an air string.
+   - **Content already exists:** Frank Fighter `AirCombo_Launcher/1/2/3` and Frank Dual `Air_Combo_Start/1/2/3`, each with a **`_0H` / `ZeroHeight`** variant. Those clips are made for exactly this: the controller supplies the height and the clip supplies the body motion. A reworked Aerial/Heavy would be Launcher → AirCombo_1 → AirCombo_2 → slam, with the sword set getting the Dual air clips the same way.
+   - This touches `PlayerLocomotion`, `PlayerCombat`'s start gate and one data field: a locomotion and combat contract change, so it needs review.
+2. **Juggling enemies (the bigger step).**
+   - A **Launch** Gameplay Effect (vertical knock-up applied through the existing ability → effect pipeline) plus a **Juggled** status effect.
+   - While juggled, the enemy's controller holds a reduced-gravity hang, its AI and attacks pause, and each air hit refreshes the hang. It recovers on landing.
+   - This is the project's **first enemy hit-reaction mechanic** (RG5D excluded poise, stagger and knockback). It belongs in `ENEMY_SYSTEM.md` and the Status Effect system, and it needs explicit architecture approval.
+3. **Air-hit tuning** that comes with it:
+   - air-friendly hit volumes (aerial clips swing below the hips);
+   - hit-stop per beat (already in place);
+   - a camera that frames vertical action;
+   - and an answer to whether a launched enemy can be hit by other enemies or hazards.
+
+**Recommendation.** Build stage 1 first as its own review group. It fixes the snap and makes air strings real using authored clips, and it is testable against static dummies placed in the air. Treat stage 2 (launch and juggle) as a separate, reviewed enemy-system extension.
+
+## Regression results (follow-ups)
+
+- EditMode **472/472**. That includes `SwordStrikesThroughTheBladeOfARealPropOnAFrankDualClip` and the pad tests, now expecting six pads.
+- Play mode (fresh Bootstrap session), results below. `VerifyComboPads` now also walks onto the Sword pad and checks that the next attack plays the sword step and window.
+
+```
+VerifyDeadEnemyUnhittable   hitsWhileAlive=1 corpseStillPresent=True hitsWhileDead=0 => PASS
+VerifyAttackWindows         noWindowHitTwice=True finisherKicks=True finisherSlam=True | d=0.9m: hit1:Left punch@0.00s hit2:Right punch@0.
+VerifyComboFixes            (A) pressAfterReleaseRestartsAtHit1=True | (B) finisherCommitted=1.88s freeAfterRoll=True | (C) animatorHandOf
+VerifyComboWindow           (A) endsAtAttackEnd=True pressAfterEnd->hit1=True pressDuring->hit2=True | (B) finisher hits at [0.29s 0.29s 0
+VerifyComboRooting          maxInputSpeedWhileAttacking=0.00 (want ~0) | speedAfterCombo=7.00 (want >3) | rooted=True resumed=True => PASS
+VerifyFinisherCancel        (A) stick: released=1.04s running=1.08s animatorLeftCombo3=1.18s (was committed to 1.87s) hits=3 | (B) mash: n
+VerifyRoll                  grounded=True entrySpeed=7.0 rolling=True rollLaunchSpeed=15.0 (expect ~15) jumpVVel=12.0
+VerifyLeapCoverage          dummy inside finisher volume during: [0.01-end] (window 0.25-0.95s) | volume origin peaked 2.09m above the cha
+VerifyComboPads             => PASS
+VerifyHitStopBeats          freezes 1 dummy=3 3 dummies=3 worst real frame=7.8ms => PASS
+VerifySwordAttack           => PASS
+VerifyAttackEnd             => PASS
+VerifyAttackLibrary         0 duplicate window hits; Grunts vs Combo_Test_AerialHeavy: 3/3 dead after 2 combos, 8 impacts, 4.6s
+```
+
+---
+
+---
+
+# Aerial Combos — Stage 1 (Review Group 5G)
+
+Stage 1 of the aerial proposal above was approved: **real airborne player attack steps** on the packs' existing ZeroHeight air clips. **No enemy juggling.** It was built by composition on the existing pipeline (attack asset → combo step → Animator state → limb windows → HitDetector → ability), with one data field and two small locomotion seams. No new system, no per-attack code.
+
+## The model: the clip supplies the body, the controller supplies the height
+
+The Frank packs ship every air move twice:
+- the full clip, whose root height (`RootT.y`) carries the jump;
+- a **`_0H` / ZeroHeight** twin, with identical body motion and timing but the root held at standing height.
+
+The difference between the two *is* the authored jump, so it is captured as data:
+
+- **`AttackDefinition._airHeight`** (`AnimationCurve`: metres over normalized clip time; empty means a ground attack). `AuthorAirString` writes it as *full-twin root height − `_0H` root height*. `IsAerial` is true when a profile is present, and `AirHeightDelta(from, to)` gives the change over a span, never running backwards.
+- **`PlayerCombat`** applies `AirHeightDelta(Timeline.Previous, Timeline.Current)` in `TickAttackAsset` each frame of a committed aerial step. Because it is a delta, a chained air step continues from wherever the player is, with no snap. The aerial hold is mirrored in `SyncCommitment` as *committed and aerial*, a held state like the rooting, so it can't outlive the attack.
+- **`PlayerLocomotion`**:
+  - `SetAerialHold(bool)`: gravity is held and vertical velocity zeroed while true.
+  - `ApplyVerticalMotion(dy)`: folded into the frame's single `CharacterController.Move`, like root motion, so floors and ceilings still collide.
+  - Gravity is now the pure `LocomotionMotor.VerticalVelocity(current, gravity, dt, grounded, held)`.
+  - When the hold ends, the player falls from rest and lands through the normal Fall/Land path.
+- **Start gate.** `CanStartCombo` still refuses a combo in the air *unless its first step is aerial*, so a jump can open an air string (the jump's remaining vertical speed is caught at the hold). Ground combos pressed mid-air still wait for the floor, as before.
+
+The `_0H` clips use the library's root settings, except height is baked **based upon Original**. Feet-based baking would plant tucked air poses on the floor.
+
+## Content: `Combo_Test_AirString` (pad **AirString**, x = 12)
+
+`Fighter_AirCombo_Launcher_0H → _1_0H → _2_0H → _3_0H`, authored by `Tools/CoplayScripts/AuthorAirString.cs` (two phases: `Propose`, then `Execute`). The attacks went through `CreateAttackAsset → Propose → ApplyProposal`, with the proposer run on the **full-height twin** so its leap analysis sees the real height. Windows were then corrected from `SurveyLimbSweeps` limb-speed peaks and contact sheets, and marked verified after the live hits below.
+
+| Step | Windows | Chain point / height |
+|---|---|---|
+| Launcher | Rising kick 0.30–0.48 s (both feet, 61 m/s) | 0.48 s, ~1.6 m up |
+| AirCombo_1 | Left strike 0.36–0.45 · left spin strike 0.72–0.88 (72 m/s) · right spin strike 1.02–1.20 (hand + foot) | 1.20 s |
+| AirCombo_2 | Spin kick 0.22–0.38 (both feet, 77 m/s) · right kick 0.58–0.73 | 0.73 s |
+| AirCombo_3 (finisher) | Overhead swing 0.48–0.58 · **landing slam 1.21–1.33 s** with the `HV_GroundShockwave` area | lands |
+
+**What the proposer got wrong, and why.**
+- **Landing slams on standalone clips.** Each air clip is a standalone move that ends by landing, so the proposer, correctly for a lone clip, puts a landing slam last. In a string that would make every step land before chaining, so non-final steps keep only their airborne blows. This is the same call RG5E made on the Launcher.
+- **Air-to-air blows went unseen.** AirCombo_1's hand strikes were missed: the leap path scores only feet, at ≥ 18 m/s.
+- **"Landing" is relative to the clip.** For the finisher, the proposer's landing (when the clip returns to its *own* start height) is still 2.6 m up mid-dive, because the step begins high. `AuthorAirString` therefore times the slam from the **accumulated string height** (computed as the runtime applies it) reaching the floor. A content test caught the original 2.6 m.
+
+**Altitude.** The string chains at 1.63 / 2.56 / 2.72 m and peaks around 3.5 m. It rides slightly higher than the original continuous take, because the chain points cut each clip's descent. The finisher's dive and gravity close the gap.
+
+## Verified (play mode, `VerifyAirString.cs`)
+
+The pad was walked onto and every press was a real keyboard event (Q, Space).
+
+| Check | Result |
+|---|---|
+| The controller leaves the ground | full string peaks at **3.49 m**; launcher alone 1.72 m |
+| No snap between steps | airborne at every chain (1.63 / 2.56 / 2.72 m); largest drop at a step change **0.00 m** |
+| Gravity held exactly while an aerial step is committed | 0 mismatched frames |
+| Lands, then moves | lands 0.05–0.14 s after the combo ends; moves 1.7–1.8 m in the next 0.3 s |
+| Air strikes connect at altitude (a target held level with the player, just ahead, standing in for a launched enemy) | steps 2–4: left strike, left spin strike, right spin strike, spin kick, right kick, overhead swing, landing slam |
+| Ground payoff | the launcher's kick hits a ground dummy; the finisher's shockwave hits 2 of 3 ground dummies around the landing |
+| Stopping after the launcher | lands normally (nothing strands in the air) |
+| A jump opens the string | airborne at the press, launcher starts, peak 2.12 m |
+| Ground combos in the air | still refused mid-air (buffered for the floor, as before) |
+
+Visual check: Game view captures mid-string show the character about 2 m and 3.6 m up in tucked or kicking air poses above the Grunts, not a standing pose floating.
+
+## Limits (stage 1 by design)
+
+- **No juggling.** Ground enemies aren't lifted, so mid-air windows only meet airborne targets. Against grounded enemies the string pays off only through the launcher kick and the finisher's shockwave. Stage 2 (Launch effect + Juggled status) remains a separate, reviewed enemy-system extension.
+- **`Combo_Test_AerialHeavy` is unchanged** as the RG5E baseline. Its steps 2–3 are *ground* clips (the overhead smash, the diving hammer-fist), so they can't be made aerial without air clips, and the snap the reviewer saw is inherent to that combo. `Combo_Test_AirString` is the real air string.
+- **Nothing cancels an air step except its cancel point.** Roll and jump need the floor; none of the air steps has a cancel point.
+- **Hit-stop during air steps** freezes time globally, as on the ground. It is per beat (RG5F), so it doesn't accumulate.
+
+## Tests
+
+- EditMode **480/480** (+8):
+  - `AerialAttackTests` (7 pure tests): aerial means a profile is present; ground attacks feed no height; per-frame deltas sum to the profile's change however the frames fall; time never runs backwards into height; the timeline span drives the delta; held means no gravity, and a jump's momentum is caught; released falls from rest, landing settles, and a jump still rises.
+  - `TheAirStringFliesOnZeroHeightClipsAndLandsOnlyOnTheFinisher`: every step aerial on a `_0H` clip with the right import; airborne above 1 m entering each chained step; the finisher's slam opens within 1 m of the floor.
+  - The pad tests now expect seven pads.
+- Play mode (fresh Bootstrap session), results below:
+
+```
+VerifyDeadEnemyUnhittable   hitsWhileAlive=1 corpseStillPresent=True hitsWhileDead=0 => PASS  (rerun after the probe fix; see note)
+VerifyAttackWindows         noWindowHitTwice=True finisherKicks=True finisherSlam=True | d=0.9m: hit1:Left punch@0.00s hit2:Right punch@0.00s |
+VerifyComboFixes            (A) pressAfterReleaseRestartsAtHit1=True | (B) finisherCommitted=1.88s freeAfterRoll=True | (C) animatorHandOffAfte
+VerifyComboWindow           (A) endsAtAttackEnd=True pressAfterEnd->hit1=True pressDuring->hit2=True | (B) finisher hits at [0.29s 0.29s 0.89s]
+VerifyComboRooting          maxInputSpeedWhileAttacking=0.00 (want ~0) | speedAfterCombo=7.00 (want >3) | rooted=True resumed=True => PASS
+VerifyFinisherCancel        (A) stick: released=1.04s running=1.08s animatorLeftCombo3=1.17s (was committed to 1.87s) hits=3 | (B) mash: newCom
+VerifyRoll                  grounded=True entrySpeed=7.0 rolling=True rollLaunchSpeed=15.0 (expect ~15) jumpVVel=12.0
+VerifyLeapCoverage          dummy inside finisher volume during: [0.01-end] (window 0.25-0.95s) | volume origin peaked 2.10m above the characte
+VerifyComboPads             => PASS
+VerifyHitStopBeats          freezes 1 dummy=3 3 dummies=3 worst real frame=8.1ms => PASS
+VerifySwordAttack           => PASS
+VerifyAirString             => PASS
+VerifyAttackEnd             => PASS
+VerifyAttackLibrary         0 duplicate window hits; Grunts vs Combo_Test_AerialHeavy: 3/3 dead after 2 combos, 8 impacts, 4.6s
+```
+
+**Probe fix: `VerifyDeadEnemyUnhittable`.** In one fresh session it reported `hitsWhileAlive=2 … hitsWhileDead=1`. The probe takes "the first Grunt" from an unordered `FindObjectsByType` and sweeps a 3 m sphere around it. That run's target had a live Grunt within 3 m, so the neighbour was counted both times. Exactly the target disappeared after the kill, and a direct check confirmed the corpse is not detectable. The probe now counts only hits on its own target object. Its purpose (a corpse is unhittable) is unchanged.
+
+**Other probe hygiene fixed during RG5F/RG5G:**
+- Dummies are parked on the ±25 m floor, never off it.
+- `Physics.SyncTransforms()` is called right after moving CharacterController actors (`autoSyncTransforms` is off).
+- Facing is set with real input, because `PlayerLocomotion` turns back toward its last move direction.
+- Live Grunts are parked away from the probe origin so they can't kill the player before the next probe.
 
 # Purpose
 

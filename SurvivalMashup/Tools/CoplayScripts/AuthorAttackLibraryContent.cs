@@ -34,6 +34,7 @@ public static class AuthorAttackLibraryContent
     private const string PlayerPrefab = "Assets/Game/Content/Prefabs/Player.prefab";
     private const string ScenePath = "Assets/Game/Scenes/VerticalSlice.unity";
     private const string ShockwavePath = "Assets/Game/Content/HitVolumes/HV_GroundShockwave.asset";
+    private const float PadTriggerHeight = 1f; // world-space height of each loadout pad's trigger column
 
     // The assets AuthorAttackLibrary created (kept in sync with its list; run_script compiles one file at a time).
     private static readonly string[] AttackNames =
@@ -394,7 +395,13 @@ public static class AuthorAttackLibraryContent
             pad.transform.SetParent(group, false);
             pad.transform.position = new Vector3(-6f + 3f * i, 0.05f, -4f);
             pad.transform.localScale = new Vector3(1.6f, 0.1f, 1.6f);
-            pad.GetComponent<BoxCollider>().isTrigger = true;
+            // The visual is a 0.1m slab, but the trigger must be a column the player's capsule sits inside: a
+            // CharacterController rests its skin width (~0.08m) above the floor, so a slab-thin trigger is only
+            // grazed and never reported. Local size/center are in the slab's scale (y 0.1): world y 0 → 1m.
+            var box = pad.GetComponent<BoxCollider>();
+            box.isTrigger = true;
+            box.size = new Vector3(1f, PadTriggerHeight / 0.1f, 1f);
+            box.center = new Vector3(0f, (PadTriggerHeight * 0.5f - 0.05f) / 0.1f, 0f);
 
             string matPath = $"Assets/Game/Content/Materials/M_{padName}.mat";
             var mat = AssetDatabase.LoadAssetAtPath<Material>(matPath);
