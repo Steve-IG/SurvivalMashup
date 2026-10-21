@@ -5011,6 +5011,10 @@ PrefabInstance:
       propertyPath: _attackConeHalfAngle
       value: 70
       objectReference: {fileID: 0}
+    - target: {fileID: 5309560790164383245, guid: add171372f47d514eb802c901d522c5c, type: 3}
+      propertyPath: _spawnPoint
+      value:
+      objectReference: {fileID: 1616180892}
     - target: {fileID: 5759710288402882586, guid: add171372f47d514eb802c901d522c5c, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -5051,25 +5055,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 6361528815803648793, guid: add171372f47d514eb802c901d522c5c, type: 3}
-      propertyPath: _jumpSpeed
-      value: 12
-      objectReference: {fileID: 0}
-    - target: {fileID: 6361528815803648793, guid: add171372f47d514eb802c901d522c5c, type: 3}
-      propertyPath: _acceleration
-      value: 80
-      objectReference: {fileID: 0}
-    - target: {fileID: 6361528815803648793, guid: add171372f47d514eb802c901d522c5c, type: 3}
-      propertyPath: _turnSpeedDegrees
-      value: 900
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 428409306736505765, guid: add171372f47d514eb802c901d522c5c, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 4119268866684415577}
     - targetCorrespondingSourceObject: {fileID: 428409306736505765, guid: add171372f47d514eb802c901d522c5c, type: 3}
       insertIndex: -1
       addedObject: {fileID: 4119268866684415578}
@@ -5079,43 +5068,11 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 5759710288402882586, guid: add171372f47d514eb802c901d522c5c, type: 3}
   m_PrefabInstance: {fileID: 4119268866684415572}
   m_PrefabAsset: {fileID: 0}
---- !u!143 &4119268866684415574 stripped
-CharacterController:
-  m_CorrespondingSourceObject: {fileID: 7916979900576479329, guid: add171372f47d514eb802c901d522c5c, type: 3}
-  m_PrefabInstance: {fileID: 4119268866684415572}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &4119268866684415575 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 300134740153185549, guid: add171372f47d514eb802c901d522c5c, type: 3}
-  m_PrefabInstance: {fileID: 4119268866684415572}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4119268866684415576}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7782a806841bb0d4a876babcc1459451, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: ToyChest.Framework::ToyChest.Framework.Objects.GameplayObjectBehaviour
 --- !u!1 &4119268866684415576 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 428409306736505765, guid: add171372f47d514eb802c901d522c5c, type: 3}
   m_PrefabInstance: {fileID: 4119268866684415572}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &4119268866684415577
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4119268866684415576}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b0ce26f9a1ea76241912653f0f03eef8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: ToyChest.Gameplay.Player::ToyChest.Gameplay.Player.PlayerRespawnController
-  _behaviour: {fileID: 4119268866684415575}
-  _spawnPoint: {fileID: 1616180892}
-  _healthResourceId: resource.health
-  _characterController: {fileID: 4119268866684415574}
 --- !u!114 &4119268866684415578
 MonoBehaviour:
   m_ObjectHideFlags: 0

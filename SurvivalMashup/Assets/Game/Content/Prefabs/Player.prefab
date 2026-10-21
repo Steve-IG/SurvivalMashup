@@ -243,12 +243,12 @@ MonoBehaviour:
   _movementSpeedAttributeId: attribute.movement_speed
   _fallbackSpeed: 7
   _gravity: 25
-  _turnSpeedDegrees: 620
-  _acceleration: 60
+  _turnSpeedDegrees: 900
+  _acceleration: 80
   _deceleration: 80
   _airControl: 0.6
   _sprintMultiplier: 1.5
-  _jumpSpeed: 8.5
+  _jumpSpeed: 12
   _rollImpulse: 8
   _rollMaxSpeed: 20
   _rollDeceleration: 18
@@ -324,10 +324,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b0ce26f9a1ea76241912653f0f03eef8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: ToyChest.Gameplay.Player::ToyChest.Gameplay.Player.PlayerRespawnController
-  _behaviour: {fileID: 0}
+  _behaviour: {fileID: 300134740153185549}
   _spawnPoint: {fileID: 0}
   _healthResourceId: resource.health
-  _characterController: {fileID: 0}
+  _characterController: {fileID: 7916979900576479329}
 --- !u!114 &4488444188538886054
 MonoBehaviour:
   m_ObjectHideFlags: 0
