@@ -362,7 +362,8 @@ public static class AuthorSwordAttack
             AnimatorStateTransition entry = sm.AddAnyStateTransition(state);
             entry.hasExitTime = false;
             entry.duration = 0.06f;
-            entry.canTransitionToSelf = false;
+            // Re-entering the same state must restart the clip (mashing a step that restarts itself), or the step freezes.
+            entry.canTransitionToSelf = true;
             entry.AddCondition(AnimatorConditionMode.If, 0f, StateName);
             entry.AddCondition(AnimatorConditionMode.IfNot, 0f, "Dead");
         }

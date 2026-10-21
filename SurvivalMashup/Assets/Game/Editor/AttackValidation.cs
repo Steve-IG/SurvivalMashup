@@ -141,7 +141,8 @@ namespace ToyChest.Editor
 
         /// <summary>
         /// Checks one combo step against the Animator controller it plays on: its attack asset, its state (exists,
-        /// plays the attack's clip, entered by its trigger, leaves on <c>!AttackCommitted</c>) and its ability.
+        /// plays the attack's clip, entered by its trigger and able to restart itself, leaves on <c>!AttackCommitted</c>)
+        /// and its ability.
         /// </summary>
         public static List<Issue> ValidateStep(ComboStep step, AnimatorController controller, ICollection<StrikeLimb> availableLimbs = null)
         {
@@ -188,9 +189,18 @@ namespace ToyChest.Editor
             {
                 issues.Add(new Issue(Severity.Error, $"Animator has no trigger '{step.AnimatorTrigger}'."));
             }
-            else if (!HasAnyStateEntry(controller, state, step.AnimatorTrigger))
+            else
             {
-                issues.Add(new Issue(Severity.Error, $"No Any State → '{state.name}' transition on trigger '{step.AnimatorTrigger}' — the clip never plays."));
+                AnimatorStateTransition entry = FindAnyStateEntry(controller, state, step.AnimatorTrigger);
+                if (entry == null)
+                {
+                    issues.Add(new Issue(Severity.Error, $"No Any State → '{state.name}' transition on trigger '{step.AnimatorTrigger}' — the clip never plays."));
+                }
+                else if (!entry.canTransitionToSelf)
+                {
+                    issues.Add(new Issue(Severity.Error,
+                        $"Any State → '{state.name}' cannot transition to self — pressing the step again while its clip still plays never restarts it, so the step freezes on the clip's last pose."));
+                }
             }
 
             if (!HasCommittedExit(state))
@@ -320,7 +330,7 @@ namespace ToyChest.Editor
             return false;
         }
 
-        private static bool HasAnyStateEntry(AnimatorController controller, AnimatorState state, string trigger)
+        private static AnimatorStateTransition FindAnyStateEntry(AnimatorController controller, AnimatorState state, string trigger)
         {
             foreach (AnimatorControllerLayer layer in controller.layers)
             {
@@ -335,13 +345,13 @@ namespace ToyChest.Editor
                     {
                         if (c.mode == AnimatorConditionMode.If && c.parameter == trigger)
                         {
-                            return true;
+                            return t;
                         }
                     }
                 }
             }
 
-            return false;
+            return null;
         }
 
         private static bool HasCommittedExit(AnimatorState state)

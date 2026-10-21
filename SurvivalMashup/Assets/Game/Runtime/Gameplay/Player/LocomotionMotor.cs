@@ -108,6 +108,32 @@ namespace ToyChest.Gameplay.Player
         }
 
         /// <summary>
+        /// The velocity a roll in progress bleeds toward. Normally that is the player's ongoing locomotion intent
+        /// (<paramref name="desiredVelocity"/>), so a moving roll recovers straight into a run. But a roll is never
+        /// allowed to settle below <paramref name="minSpeed"/> while it lasts: with no (or only a slight) intent the
+        /// target is <paramref name="minSpeed"/> along the intent, or along <paramref name="heading"/> when there is
+        /// none — so a standing roll keeps travelling through the whole tumble instead of stopping mid-roll and
+        /// spinning in place. Pure and deterministic. A degenerate heading falls back to world forward.
+        /// </summary>
+        public static Vector3 RollTargetVelocity(Vector3 desiredVelocity, Vector3 heading, float minSpeed)
+        {
+            Vector3 desired = new Vector3(desiredVelocity.x, 0f, desiredVelocity.z);
+            float floor = Mathf.Max(0f, minSpeed);
+            if (desired.magnitude >= floor)
+            {
+                return desired;
+            }
+
+            Vector3 dir = desired.sqrMagnitude > 1e-6f ? desired : new Vector3(heading.x, 0f, heading.z);
+            if (dir.sqrMagnitude < 1e-6f)
+            {
+                dir = Vector3.forward;
+            }
+
+            return dir.normalized * floor;
+        }
+
+        /// <summary>
         /// Projects a planar velocity into the character's own frame, giving (strafe, forward) where
         /// +Y is along <paramref name="facingForward"/> and +X is to its right. This is what a
         /// directional (8-way) locomotion blend tree consumes: "movement relative to facing". Pure and

@@ -201,5 +201,42 @@ namespace ToyChest.Tests.Player
 
             Assert.AreEqual(15f, launch.magnitude, Tolerance);
         }
+
+        [Test]
+        public void RollTarget_WithNoIntent_HoldsMinSpeedAlongHeading()
+        {
+            // A standing roll keeps travelling through the tumble instead of bleeding to a stop mid-roll.
+            Vector3 target = LocomotionMotor.RollTargetVelocity(Vector3.zero, new Vector3(3f, 0f, 0f), minSpeed: 6f);
+
+            Assert.AreEqual(new Vector3(6f, 0f, 0f), target);
+        }
+
+        [Test]
+        public void RollTarget_WithRunIntent_IsTheIntentUnchanged()
+        {
+            // A moving roll still recovers straight into the run the player is holding.
+            Vector3 run = new Vector3(0f, 0f, 7f);
+            Vector3 target = LocomotionMotor.RollTargetVelocity(run, Vector3.right, minSpeed: 6f);
+
+            Assert.AreEqual(run, target);
+        }
+
+        [Test]
+        public void RollTarget_WithSlightIntent_RaisesItToMinSpeedAlongTheIntent()
+        {
+            // A light stick tilt steers the roll, but never slows it below the roll's minimum.
+            Vector3 target = LocomotionMotor.RollTargetVelocity(new Vector3(-1f, 0f, 0f), Vector3.forward, minSpeed: 6f);
+
+            Assert.AreEqual(-6f, target.x, Tolerance);
+            Assert.AreEqual(0f, target.z, Tolerance);
+        }
+
+        [Test]
+        public void RollTarget_WithZeroMinSpeed_LetsTheRollStop()
+        {
+            Vector3 target = LocomotionMotor.RollTargetVelocity(Vector3.zero, Vector3.forward, minSpeed: 0f);
+
+            Assert.AreEqual(0f, target.magnitude, Tolerance);
+        }
     }
 }

@@ -55,6 +55,21 @@ namespace ToyChest.Tests.Content
         }
 
         [Test]
+        public void ARollPressedMidRollRestartsTheRollClip()
+        {
+            // Without a self-transition a chained roll moves the body while the previous roll's get-up still plays.
+            var controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(ControllerPath);
+            AnimatorStateTransition entry = null;
+            foreach (AnimatorStateTransition t in controller.layers[0].stateMachine.anyStateTransitions)
+            {
+                if (t.destinationState != null && t.destinationState.name == "Roll") entry = t;
+            }
+
+            Assert.IsNotNull(entry, "No Any State → Roll transition.");
+            Assert.IsTrue(entry.canTransitionToSelf, "Any State → Roll must be able to restart the Roll state.");
+        }
+
+        [Test]
         public void LibraryHasAtLeastThreeMultiStepCombosBuiltFromFrankFighterClips()
         {
             int multiStep = 0;

@@ -833,6 +833,18 @@ VerifyAttackLibrary         0 duplicate window hits; Grunts vs Combo_Test_Aerial
 - Facing is set with real input, because `PlayerLocomotion` turns back toward its last move direction.
 - Live Grunts are parked away from the probe origin so they can't kill the player before the next probe.
 
+## Fix — mashing a single-step combo froze the player
+
+**Symptom.** Mashing attack with `Combo_Test_WeaponProxy` or `Combo_Test_Sword` left the player rooted on the clip's last pose for about a second.
+
+**Cause.** Both combos have one step, so each new press restarts the same Animator state. Every Any State → attack transition had **Can Transition To Self** off. A press that landed while the previous swing's clip was still playing set the trigger, but the Animator could not re-enter the state. The old clip ran out, and `PlayerCombat` correctly rejected its time as stale (`StepRuntime.StaleTime`). So the new step never saw its windows or its `CommitEnd`, and it stayed committed until the wind-up + recovery fallback timers ran out.
+
+**Fix.** Any State → every attack state (and → `Roll`) now has `canTransitionToSelf = true`, so a re-press restarts the clip. `AttackValidation.ValidateStep` reports an **error** when a step's entry can't restart itself, which also covers `AttackLibraryContentTests.EveryComboValidatesAgainstThePlayerWithoutErrors`. The `Author*` content scripts now create the entries this way. Multi-step combos use distinct states, so their behaviour is unchanged.
+
+**Verified.** The new probe `Tools/CoplayScripts/VerifyMashAndRoll.cs` mashes at 12 presses/s for 4 s. Worst committed stall while the clip isn't advancing went from 3.0 s (WeaponProxy) and 1.8 s (Sword) to 0.000 s.
+
+**Probe note.** In an unfocused Editor the Game view doesn't render, so `WaitForEndOfFrame` never resumes and `VerifyAttackEnd` stalls. Run it with the Editor focused. `VerifyMashAndRoll` only yields `null`.
+
 # Purpose
 
 Combat is the primary gameplay activity through which players reclaim dangerous regions.

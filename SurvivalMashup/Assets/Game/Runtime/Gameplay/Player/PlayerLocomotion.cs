@@ -85,6 +85,12 @@ namespace ToyChest.Gameplay.Player
         private float _rollDeceleration = 18f;
 
         [SerializeField]
+        [Min(0f)]
+        [Tooltip("Slowest the character may travel while a roll lasts, in units per second. A standing roll bleeds " +
+                 "its burst down to this rather than to a stop, so it covers ground through the whole tumble.")]
+        private float _rollMinSpeed = 6f;
+
+        [SerializeField]
         [Tooltip("Duration of the roll before control returns to ordinary locomotion, in seconds.")]
         private float _rollDuration = 0.5f;
 
@@ -318,10 +324,12 @@ namespace ToyChest.Gameplay.Player
             // Bleed the explosive burst back toward the player's ongoing locomotion intent rather than
             // toward a dead stop: if they keep holding a direction the roll recovers straight into a run
             // (momentum preserved, no re-acceleration from zero and no recovery foot-slide); if they let
-            // go it glides down to idle. The same _planarVelocity + Accelerate the ground loop uses makes
-            // the hand-back at roll end seamless.
+            // go it glides down to the roll's minimum speed and stops once the roll ends. The same
+            // _planarVelocity + Accelerate the ground loop uses makes the hand-back at roll end seamless.
             Vector3 cameraForward = _cameraTransform != null ? _cameraTransform.forward : Vector3.forward;
-            Vector3 desired = LocomotionMotor.PlanarVelocity(_moveInput, cameraForward, CurrentSpeed());
+            Vector3 heading = _planarVelocity.sqrMagnitude > 1e-4f ? _planarVelocity : _rollDirection;
+            Vector3 desired = LocomotionMotor.RollTargetVelocity(
+                LocomotionMotor.PlanarVelocity(_moveInput, cameraForward, CurrentSpeed()), heading, _rollMinSpeed);
             _planarVelocity = LocomotionMotor.Accelerate(
                 _planarVelocity, desired, _acceleration, _rollDeceleration, delta);
 

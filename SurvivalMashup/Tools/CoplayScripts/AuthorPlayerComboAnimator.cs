@@ -101,7 +101,8 @@ public static class AuthorPlayerComboAnimator
         AnimatorStateTransition transition = sm.AddAnyStateTransition(destination);
         transition.hasExitTime = false;
         transition.duration = 0.06f;
-        transition.canTransitionToSelf = false;
+        // Re-entering the same state must restart the clip (mashing a step that restarts itself), or the step freezes.
+        transition.canTransitionToSelf = true;
         transition.AddCondition(AnimatorConditionMode.If, 0f, trigger);
         transition.AddCondition(AnimatorConditionMode.IfNot, 0f, "Dead");
     }
