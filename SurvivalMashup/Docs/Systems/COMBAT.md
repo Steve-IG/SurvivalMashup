@@ -845,6 +845,34 @@ VerifyAttackLibrary         0 duplicate window hits; Grunts vs Combo_Test_Aerial
 
 **Probe note.** In an unfocused Editor the Game view doesn't render, so `WaitForEndOfFrame` never resumes and `VerifyAttackEnd` stalls. Run it with the Editor focused. `VerifyMashAndRoll` only yields `null`.
 
+## Ground Slam — the first player-activated ability (Review Group B)
+
+**What the player does.** Press **Ability1** (R, right mouse, or gamepad right shoulder). The character hammers the ground (the Combo02_3 "Hammer slam" clip), and a shockwave damages every enemy in reach, whether in front, beside, or behind. Ground Slam then has a 6 s cooldown, shown on the HUD above the health bar.
+
+**How it is built (no new combat code path).**
+- The attack is `Combo_Ability_GroundSlam`: a one-step `ComboDefinition` that reuses `Attack_Fighter_Combo02_3` unchanged. Its "Hammer slam" window sweeps a limb plus the `HV_GroundShockwave` area (sphere, r 2.2 m, anchored to the right hand, multi-target, max 8).
+- `PlayerCombat.StartAbilityAttack(attack)` plays it through the same step pipeline as the melee combo: the same Animator state, hit-window ledger (one hit per target per window), `HitDetector`, `Attacked`/`Contacted`/`Impacted` events, and Multiple Targets activation. While the ability attack runs, the melee combo's runtime is parked. It is restored when the attack finishes or is cancelled (by a roll, a jump, or a melee press past its cancel point).
+- The window applies `ability.ground_slam_impact` (Provided, 0 s cooldown, `Fx_Damage_GroundSlam` = 30, which is 1.5× a punch) to every target in one activation.
+- `PlayerCombat.CanStartAbilityAttack` mirrors the combo-start gate. The player must be grounded and not rolling (airborne is allowed only for an aerial opener), and either idle or past the current attack's cancel point.
+
+**The cooldown is not PlayerCombat's.** It lives on the separate activation ability and is committed at press, before the attack starts (see `ABILITY_SYSTEM.md`, *Player Activation Pattern*). `PlayerCombat` never checks it, so the melee path is untouched: `ability.player_strike`/`combo2`/`combo3` keep their 0 s cooldowns, and the `TryPress` arc check is unchanged.
+
+**Feedback.**
+- `PlayerAttackFeedback` spawns `_abilityContactVfx` (Epic Toon FX `ToonBodySlam`) at the player's feet on the ability attack's contact frame, hit or miss.
+- Impact VFX, hit-stop, and camera shake still fire only on a confirmed hit, once per beat, exactly as for melee.
+- `PlayerAbilityHud` (IMGUI, like `PlayerHealthBar`) shows `[R / RMB] Ground Slam — READY` or the seconds remaining, with a draining fill. It flashes red when a press is refused.
+
+**Verified.** `GroundSlamContentTests` (14 EditMode tests) plus the play-mode probe `Tools/CoplayScripts/VerifyGroundSlam.cs`, run from `Bootstrap.unity` with real queued keyboard input. The probe confirmed:
+- 3/3 dummies around the player were hit once each, for 30.
+- An immediate re-press was refused OnCooldown, with no second slam.
+- Q still plays `Combo_PlayerMelee` and lands a punch during the cooldown.
+- A no-target slam plays, bursts, and starts the cooldown.
+- An ungranted press is refused NotGranted and consumes no cooldown.
+- A press during a roll commits nothing.
+- 3/3 Grunts of a wave were hit.
+
+**Probe note.** Queued keyboard input reaches the game only while the Game view has focus (`editorInputBehaviorInPlayMode = PointersAndKeyboardsRespectGameViewFocus`). In an unfocused Editor every press is silently dropped, so input-driven probes fail. Focus the Game view first (`EditorWindow.FocusWindowIfItsOpen(GameView)`).
+
 # Purpose
 
 Combat is the primary gameplay activity through which players reclaim dangerous regions.

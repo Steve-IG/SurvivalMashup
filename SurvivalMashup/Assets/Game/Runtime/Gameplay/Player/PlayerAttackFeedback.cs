@@ -43,6 +43,16 @@ namespace ToyChest.Gameplay.Player
         [Tooltip("Seconds before a spawned impact VFX is destroyed.")]
         private float _impactVfxLifetime = 2f;
 
+        [Header("Ability attack burst")]
+        [SerializeField]
+        [Tooltip("One-shot burst spawned at the player's feet when an ability attack (e.g. Ground Slam) reaches its contact " +
+                 "frame — hit or miss, so the slam always reads. Impact juice still waits for a confirmed hit. Optional.")]
+        private GameObject _abilityContactVfx;
+
+        [SerializeField]
+        [Tooltip("Seconds before a spawned ability burst is destroyed.")]
+        private float _abilityContactVfxLifetime = 2f;
+
         [Header("Camera")]
         [SerializeField]
         [Tooltip("Camera-shake force when a swing connects (stronger than the swing-start shake).")]
@@ -102,6 +112,7 @@ namespace ToyChest.Gameplay.Player
             if (_combat != null && !_bound)
             {
                 _combat.Attacked += OnSwing;
+                _combat.Contacted += OnContact;
                 _combat.WindowStruck += OnWindowStruck;
                 _combat.Impacted += OnImpact;
                 _bound = true;
@@ -113,6 +124,7 @@ namespace ToyChest.Gameplay.Player
             if (_combat != null && _bound)
             {
                 _combat.Attacked -= OnSwing;
+                _combat.Contacted -= OnContact;
                 _combat.WindowStruck -= OnWindowStruck;
                 _combat.Impacted -= OnImpact;
                 _bound = false;
@@ -137,6 +149,19 @@ namespace ToyChest.Gameplay.Player
             {
                 _audioSource.PlayOneShot(_swingSound);
             }
+        }
+
+        // The contact frame of an ability attack: its area burst plays whether or not anything is inside it. Not
+        // impact feedback — no shake or hit-stop here; those stay on a confirmed hit (OnImpact).
+        private void OnContact()
+        {
+            if (_abilityContactVfx == null || _combat == null || !_combat.IsPerformingAbilityAttack)
+            {
+                return;
+            }
+
+            GameObject burst = Instantiate(_abilityContactVfx, transform.position, Quaternion.identity);
+            Destroy(burst, Mathf.Max(0.1f, _abilityContactVfxLifetime));
         }
 
         private void OnImpact(Vector3 hitPoint)

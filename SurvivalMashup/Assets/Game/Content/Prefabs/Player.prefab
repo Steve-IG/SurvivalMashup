@@ -152,6 +152,8 @@ GameObject:
   - component: {fileID: 6690063030529903403}
   - component: {fileID: 7090502564320689023}
   - component: {fileID: 8503631265468922502}
+  - component: {fileID: 4730078602012068993}
+  - component: {fileID: 6513338035885675492}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -252,6 +254,7 @@ MonoBehaviour:
   _rollImpulse: 8
   _rollMaxSpeed: 20
   _rollDeceleration: 18
+  _rollMinSpeed: 6
   _rollDuration: 0.5
 --- !u!114 &4211837459567673632
 MonoBehaviour:
@@ -274,10 +277,13 @@ MonoBehaviour:
   _sprintAction: Sprint
   _jumpAction: Jump
   _rollAction: Roll
+  _abilitySlotActions:
+  - Ability1
   _locomotion: {fileID: 0}
   _interactor: {fileID: 0}
   _equipment: {fileID: 0}
   _combat: {fileID: 0}
+  _abilities: {fileID: 0}
 --- !u!114 &3487029620120474720
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -465,6 +471,8 @@ MonoBehaviour:
   _impactVfx: {fileID: 102696, guid: 185035e4680c4b344b62bf5ace4674b8, type: 3}
   _impactVfxOffset: {x: 0, y: 0, z: 0}
   _impactVfxLifetime: 2
+  _abilityContactVfx: {fileID: 195466, guid: 56c3274d2f9ec214ab584a80b5ce2d6d, type: 3}
+  _abilityContactVfxLifetime: 2
   _impactShake: 0.35
   _audioSource: {fileID: 0}
   _swingSound: {fileID: 0}
@@ -522,6 +530,47 @@ MonoBehaviour:
     _radius: 0.07
   _animator: {fileID: 0}
   _reachPadding: 0.1
+--- !u!114 &4730078602012068993
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 428409306736505765}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0b521a942e3a1ad4e80d2e2a46da78e0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ToyChest.Gameplay.Player::ToyChest.Gameplay.Player.PlayerAbilityActivator
+  _behaviour: {fileID: 0}
+  _combat: {fileID: 0}
+  _slots:
+  - _displayName: Ground Slam
+    _activationAbilityId: ability.ground_slam
+    _attack: {fileID: 11400000, guid: ae5e5675d0274cc1a54fa9106b2aad41, type: 2}
+  _bufferWindow: 0.18
+--- !u!114 &6513338035885675492
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 428409306736505765}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3efb3b46423adc4fb9528c485ae74eb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ToyChest.Gameplay.Player::ToyChest.Gameplay.Player.PlayerAbilityHud
+  _abilities: {fileID: 0}
+  _inputHints:
+  - R / RMB
+  _size: {x: 260, y: 22}
+  _margin: {x: 24, y: 52}
+  _readyColor: {r: 0.95, g: 0.7, b: 0.2, a: 1}
+  _cooldownColor: {r: 0.45, g: 0.45, b: 0.5, a: 1}
+  _backgroundColor: {r: 0, g: 0, b: 0, a: 0.55}
+  _refusedFlashColor: {r: 1, g: 0.25, b: 0.2, a: 1}
+  _flashDuration: 0.3
 --- !u!1 &443057010201223419
 GameObject:
   m_ObjectHideFlags: 0

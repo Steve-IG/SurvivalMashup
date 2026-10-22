@@ -67,6 +67,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "Ability1",
+                    "type": "Button",
+                    "id": "5d1a7c2e-6b4f-4e8a-9c3d-2f8e1a0b7c61",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -276,6 +285,39 @@
                     "processors": "",
                     "groups": "",
                     "action": "Roll",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "7e2b9d41-3c5a-4f60-8b1e-9a4c6d2e8f13",
+                    "path": "<Mouse>/rightButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Ability1",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "8f3cae52-4d6b-4071-9c2f-ab5d7e3f9024",
+                    "path": "<Keyboard>/r",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Ability1",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "9a4dbf63-5e7c-4182-8d30-bc6e8f4a0135",
+                    "path": "<Gamepad>/rightShoulder",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Ability1",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

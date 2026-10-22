@@ -34,7 +34,7 @@ namespace ToyChest.Gameplay.Player
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(GameplayObjectBehaviour))]
-    public sealed class PlayerCombat : MonoBehaviour, IAttackContactReceiver
+    public sealed class PlayerCombat : MonoBehaviour, IAttackContactReceiver, IAbilityAttackPerformer
     {
         [SerializeField]
         [Tooltip("The behaviour whose composed object is the attacker. Defaults to the sibling.")]
@@ -158,6 +158,15 @@ namespace ToyChest.Gameplay.Player
         private readonly HitWindowLedger _ledger = new HitWindowLedger();
         private readonly List<int> _openWindows = new List<int>();
 
+        // An ability attack (a one-off authored attack started by an ability activation, see StartAbilityAttack)
+        // borrows the step pipeline: its runtime replaces the combo's while it plays, and the combo's is parked
+        // here and restored the moment the ability attack ends or is cancelled. Each attack is bound once.
+        private ComboDefinition _abilityAttack;
+        private StepRuntime[] _parkedSteps;
+        private ComboSequencer _parkedSequencer;
+        private readonly Dictionary<ComboDefinition, StepRuntime[]> _abilityAttackSteps =
+            new Dictionary<ComboDefinition, StepRuntime[]>();
+
         /// <summary>
         /// Stage 1 — raised when a step starts, carrying that step's animator trigger so presentation plays
         /// the right attack clip. It is <b>not</b> impact feedback: it fires on every step start, hit or miss.
@@ -202,6 +211,9 @@ namespace ToyChest.Gameplay.Player
         /// is true; in the Release grace the player is free even though the combo can still continue.
         /// </summary>
         public bool IsMovementCommitted => _sequencer != null && _sequencer.IsCommitted;
+
+        /// <summary>Whether the attack in progress is an ability attack (see <see cref="StartAbilityAttack"/>), not the combo.</summary>
+        public bool IsPerformingAbilityAttack => _abilityAttack != null;
 
         /// <summary>The active step's phase (Idle / WindUp / Recovery). Debug tooling reads this.</summary>
         public ComboPhase Phase => _sequencer != null ? _sequencer.Phase : ComboPhase.Idle;
@@ -276,7 +288,7 @@ namespace ToyChest.Gameplay.Player
                 _strikeProfile = gameObject.AddComponent<CharacterStrikeProfile>();
             }
 
-            BuildSteps(animator);
+            _steps = BuildSteps(_combo, animator);
             _sequencer = new ComboSequencer(BuildTimings());
         }
 
@@ -310,30 +322,30 @@ namespace ToyChest.Gameplay.Player
         }
 
         /// <summary>
-        /// Builds the per-step runtime — either from the authored combo (each step's ability, hit volume(s),
+        /// Builds the per-step runtime — either from an authored combo (each step's ability, hit volume(s),
         /// anchor, and animation trigger) or, with no combo assigned, a single synthetic step from the
         /// inline fallback fields. This is the whole authoring workflow resolved to runtime form: the
         /// adapter holds no attack-specific data of its own beyond the fallback.
         /// </summary>
-        private void BuildSteps(Animator animator)
+        private StepRuntime[] BuildSteps(ComboDefinition combo, Animator animator)
         {
-            if (_combo != null && _combo.StepCount > 0)
+            if (combo != null && combo.StepCount > 0)
             {
-                IReadOnlyList<ComboStep> authored = _combo.Steps;
-                _steps = new StepRuntime[authored.Count];
+                IReadOnlyList<ComboStep> authored = combo.Steps;
+                var steps = new StepRuntime[authored.Count];
                 for (int i = 0; i < authored.Count; i++)
                 {
                     ComboStep step = authored[i];
                     HitVolumeEmitter primary = step.BuildPrimaryEmitter(_enemyTag, _targetLayers);
                     primary.Bind(transform, animator);
                     HitVolumeEmitter[] extras = BindExtras(step.ExtraVolumes, animator);
-                    _steps[i] = new StepRuntime(
+                    steps[i] = new StepRuntime(
                         new DefinitionId(step.AttackAbilityId), primary, extras,
                         step.AnimatorTrigger, step.WindUpDuration, step.Timing.Recovery);
-                    BindAttack(_steps[i], step, animator);
+                    BindAttack(steps[i], step, animator);
                 }
 
-                return;
+                return steps;
             }
 
             // Fallback: a single swing authored inline, anchored to the hand bone (falls back to the body
@@ -352,7 +364,7 @@ namespace ToyChest.Gameplay.Player
                 }
             }
 
-            _steps = new[]
+            return new[]
             {
                 new StepRuntime(_attackAbility, fallbackPrimary, _extraContactVolumes, "Attack", _windUpDuration, _recoveryDuration),
             };
@@ -503,8 +515,92 @@ namespace ToyChest.Gameplay.Player
 
             _combo = combo;
             _bufferTimer = 0f;
-            BuildSteps(_animator);
+            _steps = BuildSteps(_combo, _animator);
             _sequencer = new ComboSequencer(BuildTimings());
+        }
+
+        /// <summary>
+        /// Whether <see cref="StartAbilityAttack"/> could start <paramref name="attack"/> right now: grounded and
+        /// not rolling (airborne only when the attack's first step is aerial, as for a combo opener), and either
+        /// idle or past the current attack's cancel point. A press the caller cannot start now is the caller's to
+        /// buffer — exactly as <see cref="TryAttack"/> buffers a melee press.
+        /// </summary>
+        public bool CanStartAbilityAttack(ComboDefinition attack)
+        {
+            if (attack == null || attack.StepCount == 0 || _sequencer == null)
+            {
+                return false;
+            }
+
+            AttackDefinition opener = attack.Steps[0].Attack;
+            bool aerialOpener = opener != null && opener.IsAerial;
+            if (_locomotion != null && (_locomotion.IsRolling || (!_locomotion.IsGrounded && !aerialOpener)))
+            {
+                return false;
+            }
+
+            if (_sequencer.IsCommitted && !InCancelableRecovery())
+            {
+                return false;
+            }
+
+            GameplayObject attacker = _behaviour != null ? _behaviour.Object : null;
+            return attacker != null && attacker.IsActive;
+        }
+
+        /// <summary>
+        /// Plays an ability's authored attack — a <see cref="ComboDefinition"/>, typically one step — through the same
+        /// step pipeline as the combo: its animation, its hit windows and areas, and its impact ability applied to every
+        /// target through the Multiple Targets path, with <see cref="Attacked"/>/<see cref="Contacted"/>/<see cref="Impacted"/>
+        /// raised as for any step. The caller has already committed the ability's activation (cost and cooldown); this
+        /// only performs it, so it never consults a cooldown. Any combo in progress is cancelled (the caller checked
+        /// <see cref="CanStartAbilityAttack"/>, so it is past its cancel point) and a buffered melee press is dropped.
+        /// Returns false, starting nothing, when the attack cannot start.
+        /// </summary>
+        public bool StartAbilityAttack(ComboDefinition attack)
+        {
+            if (!CanStartAbilityAttack(attack))
+            {
+                return false;
+            }
+
+            if (_sequencer.IsActive)
+            {
+                CancelCombo();
+            }
+
+            ApplyPendingCombo();
+
+            if (!_abilityAttackSteps.TryGetValue(attack, out StepRuntime[] steps))
+            {
+                steps = BuildSteps(attack, _animator);
+                _abilityAttackSteps.Add(attack, steps);
+            }
+
+            _parkedSteps = _steps;
+            _parkedSequencer = _sequencer;
+            _abilityAttack = attack;
+            _steps = steps;
+            _sequencer = new ComboSequencer(attack.BuildTimings());
+            _bufferTimer = 0f;
+
+            Handle(_sequencer.Press());
+            return true;
+        }
+
+        // The ability attack is over (finished or cancelled): hand the step pipeline back to the combo.
+        private void EndAbilityAttack()
+        {
+            if (_abilityAttack == null)
+            {
+                return;
+            }
+
+            _steps = _parkedSteps;
+            _sequencer = _parkedSequencer;
+            _parkedSteps = null;
+            _parkedSequencer = null;
+            _abilityAttack = null;
         }
 
         // Called at idle points only (never mid-tick, so no step runtime is rebuilt while it is being swept): a
@@ -645,6 +741,7 @@ namespace ToyChest.Gameplay.Player
             else if (tick.Finished)
             {
                 _activeStep = -1;
+                EndAbilityAttack();
             }
 
             SyncCommitment();
@@ -685,6 +782,7 @@ namespace ToyChest.Gameplay.Player
             _sequencer.Cancel();
             _activeStep = -1;
             _windowOpen = false;
+            EndAbilityAttack();
             SyncCommitment();
         }
 

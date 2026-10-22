@@ -20,7 +20,7 @@ Every AI implementation session should begin with:
 
 1. `Docs/AI_AGENT_INDEX.md`
 2. `Docs/Development/DEVELOPMENT_PLAN.md`
-3. `Docs/Development/MILESTONE_1_VERTICAL_SLICE.md` (the Milestone 1 gameplay contract)
+3. `Docs/Development/MILESTONE_1_VERTICAL_SLICE.md` (historical engine-validation record; the current Milestone 1 — The First Fun — contract is `Docs/Foundations/PROJECT_ROADMAP.md` + `DEVELOPMENT_PLAN.md`)
 4. `Docs/Architecture/CORE_ARCHITECTURE.md`
 5. `Docs/Architecture/ENGINE_PRINCIPLES.md`
 6. `Docs/Architecture/CODING_PRINCIPLES.md`

@@ -80,6 +80,60 @@ Validation order for the multi-target path mirrors the single-target path (grant
 
 ---
 
+# Player Activation Status (Review Group A audit, 2026-10-21)
+
+The Ability System has no gap. The gap is in its **callers**. These are the only callers that activate abilities today:
+
+- `InteractionSystem`: interactions as abilities.
+- `PlayerCombat`: per-hit-window melee and combo-step abilities. They are Provided-target with 0 s cooldown, and combo cadence lives in `ComboSequencer`.
+- `EnemyCombatant`: enemy strike.
+
+**No caller activates a player ability from deliberate input.** `ability.second_wind` is granted by equipment but cannot be used by the player.
+
+Constraint for the first player ability: `PlayerCombat` checks `CanActivate` only when a target is already in the arc, which suits zero-cooldown melee. An ability with a real cooldown must commit its cooldown **at press time** through a Self-mode activation. Otherwise a whiff ignores the cooldown and a later hit fails silently.
+
+The proposed composition (see `DEVELOPMENT_PLAN.md`, *Recommended First Active Ability*) adds no new framework:
+- a thin input-slot activator;
+- a Self **activation ability** that owns the gates, cost, and cooldown;
+- an authored attack whose hit window applies a Provided **impact ability** to every hit through the Multiple Targets overload.
+
+The reserved *Multi-stage activation* extension point remains the engine-level alternative. It requires approval.
+
+---
+
+# Player Activation Pattern (Review Group B — Ground Slam)
+
+The first player-activated ability is built from the composition above, with **no Ability System change**. Core and Framework are unchanged.
+
+```
+Ability1 input → PlayerInputBridge → PlayerAbilityActivator (slot 0)
+  → AbilitySlotActivation.Press
+      1. AbilitySet.CanActivate(ability.ground_slam)    refused → TryActivate publishes AbilityActivationFailed; nothing plays
+      2. PlayerCombat.CanStartAbilityAttack(attack)     busy    → press buffered 0.18 s; nothing committed
+      3. AbilitySet.TryActivate(ability.ground_slam)    commits: 6 s cooldown, AbilityCooldownStarted, AbilityActivated
+      4. PlayerCombat.StartAbilityAttack(Combo_Ability_GroundSlam)
+  → "Hammer slam" hit window → HitDetector (HV_GroundShockwave)
+  → AbilitySet.TryActivate(ability.ground_slam_impact, targets)   one activation, damage per target
+  → PlayerCombat.Impacted → PlayerAttackFeedback
+```
+
+**Two definitions.**
+- `ability.ground_slam` is the **activation ability**: Self target, 6 s cooldown, no cost, no effects. It owns every rule about *whether* the slam may happen.
+- `ability.ground_slam_impact` is the **impact ability**: Provided target, 0 s cooldown, `Fx_Damage_GroundSlam`. It owns *what happens* to each target hit.
+- `Obj_Player` grants both. Progression may move the grant later (Review Group D).
+
+**Cooldown semantics.** The cooldown is the Ability System's ordinary fixed cooldown on the activation ability. It is committed at press, before any hit detection. As a result:
+- A slam that hits nothing still costs its cooldown.
+- A press the Ability System refuses (OnCooldown, NotGranted, tag gate, cost) commits nothing, publishes `AbilityActivationFailed`, and plays no animation.
+- A press made while the character is busy (mid-attack before the cancel point, rolling, or airborne) is buffered like a melee press. It commits nothing unless the slam actually starts. These movement-state refusals happen in the adapter, before the Ability System is asked, so **they publish no `AbilityActivationFailed`**. The player has no movement-state tags the activation could gate on, and adding them would be new framework state.
+- The cooldown saves and restores through the existing `SaveManager` capture and `RestoreCooldown` (covered by `GroundSlamContentTests`).
+
+**Adding the next ability** takes data plus one slot: an activation ability, an impact ability, an attack asset (a `ComboDefinition` plus an `AttackDefinition`), and a `PlayerAbilityActivator` slot bound to a new input action listed in `PlayerInputBridge._abilitySlotActions`. A Self ability that carries its own effects and has no attack, such as Second Wind, does not fit a slot yet, because a slot requires an attack. Review Group D decides whether to allow an attack-less slot.
+
+**Pure rules, testable without a scene.** `AbilitySlotActivation` holds the press, buffer, and commit order. `IAbilityAttackPerformer` is the seam: `PlayerCombat` implements it, and tests fake it. `PlayerAbilityActivator` and `PlayerAbilityHud` are thin Unity adapters.
+
+---
+
 # Purpose
 
 The Ability System is the universal framework that defines actions performed by actors within the game.

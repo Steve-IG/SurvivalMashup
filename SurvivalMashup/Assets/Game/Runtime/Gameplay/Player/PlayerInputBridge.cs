@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -7,7 +8,7 @@ namespace ToyChest.Gameplay.Player
     /// The thin Unity Input System adapter: it reads the player's authored input actions and
     /// forwards intent to the gameplay adapters — the move vector to <see cref="PlayerLocomotion"/>
     /// and the interact button to <see cref="PlayerInteractor"/> (which routes through the engine's
-    /// interaction system). It holds no gameplay rules and makes no gameplay decisions; it only
+    /// interaction system), and each ability button to its <see cref="PlayerAbilityActivator"/> slot. It holds no gameplay rules and makes no gameplay decisions; it only
     /// translates device input into calls on sibling adapters, so control bindings stay data and the
     /// gameplay stays engine-owned.
     /// </summary>
@@ -51,6 +52,10 @@ namespace ToyChest.Gameplay.Player
         private string _rollAction = "Roll";
 
         [SerializeField]
+        [Tooltip("Button actions for the ability input slots, in slot order (element 0 presses slot 0).")]
+        private string[] _abilitySlotActions = { "Ability1" };
+
+        [SerializeField]
         [Tooltip("Locomotion adapter the move vector drives. Defaults to the sibling.")]
         private PlayerLocomotion _locomotion;
 
@@ -66,6 +71,10 @@ namespace ToyChest.Gameplay.Player
         [Tooltip("Combat adapter the attack button triggers. Defaults to the sibling. Optional.")]
         private PlayerCombat _combat;
 
+        [SerializeField]
+        [Tooltip("Ability adapter the ability buttons press. Defaults to the sibling. Optional.")]
+        private PlayerAbilityActivator _abilities;
+
         private InputAction _move;
         private InputAction _interact;
         private InputAction _equip;
@@ -73,6 +82,8 @@ namespace ToyChest.Gameplay.Player
         private InputAction _sprint;
         private InputAction _jump;
         private InputAction _roll;
+        private InputAction[] _abilitySlots = Array.Empty<InputAction>();
+        private Action<InputAction.CallbackContext>[] _abilitySlotHandlers = Array.Empty<Action<InputAction.CallbackContext>>();
 
         private void Awake()
         {
@@ -94,6 +105,11 @@ namespace ToyChest.Gameplay.Player
             if (_combat == null)
             {
                 _combat = GetComponent<PlayerCombat>();
+            }
+
+            if (_abilities == null)
+            {
+                _abilities = GetComponent<PlayerAbilityActivator>();
             }
         }
 
@@ -145,6 +161,19 @@ namespace ToyChest.Gameplay.Player
                 _roll.performed += OnRoll;
             }
 
+            _abilitySlots = new InputAction[_abilitySlotActions.Length];
+            _abilitySlotHandlers = new Action<InputAction.CallbackContext>[_abilitySlotActions.Length];
+            for (int i = 0; i < _abilitySlotActions.Length; i++)
+            {
+                int slot = i;
+                _abilitySlots[i] = map.FindAction(_abilitySlotActions[i], throwIfNotFound: false);
+                _abilitySlotHandlers[i] = _ => _abilities?.TryActivateSlot(slot);
+                if (_abilitySlots[i] != null)
+                {
+                    _abilitySlots[i].performed += _abilitySlotHandlers[i];
+                }
+            }
+
             map.Enable();
         }
 
@@ -175,6 +204,14 @@ namespace ToyChest.Gameplay.Player
                 _roll.performed -= OnRoll;
             }
 
+            for (int i = 0; i < _abilitySlots.Length; i++)
+            {
+                if (_abilitySlots[i] != null)
+                {
+                    _abilitySlots[i].performed -= _abilitySlotHandlers[i];
+                }
+            }
+
             _actions?.FindActionMap(_actionMap, throwIfNotFound: false)?.Disable();
             _move = null;
             _interact = null;
@@ -183,6 +220,8 @@ namespace ToyChest.Gameplay.Player
             _sprint = null;
             _jump = null;
             _roll = null;
+            _abilitySlots = Array.Empty<InputAction>();
+            _abilitySlotHandlers = Array.Empty<Action<InputAction.CallbackContext>>();
         }
 
         private void Update()

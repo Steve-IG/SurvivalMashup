@@ -1,5 +1,7 @@
 # Milestone 1 — Vertical Slice
 
+> **Historical record: relationship to the Foundations roadmap (added by Review Group A, 2026-10-21).** This document records the **engine-validation** milestone (Review Groups 3–8, referred to as EV-RG3–8 in `DEVELOPMENT_PLAN.md`). It is preserved as written. Despite the shared name, it is **not** `PROJECT_ROADMAP.md`'s *Milestone 1 — The First Fun*, which is the current milestone, and not its *Milestone 2 — Vertical Slice*, which comes later. Its exit criteria certified the engine, not the core loop's fun. The current milestone contract, gap audit, and next task live in `DEVELOPMENT_PLAN.md` (*Milestone Alignment*, *Verified Gap Audit*). One correction to the Abilities line below: the Second Wind player ability was granted and validated at the system level, but it has no player activation path (see `ABILITY_SYSTEM.md`, *Player Activation Status*).
+
 **Status:** Complete (awaiting certification) — Review Groups 3–8 done. The slice is integrated end-to-end on the canonical scene `Assets/Game/Scenes/VerticalSlice.unity` and validated entirely through the frozen Milestone 0 engine and authored data; **no engine architecture change was required**. Every Success Criterion and Exit Criterion below is met (335 EditMode tests green; clean play-mode boot).
 
 **Purpose**

@@ -1,9 +1,9 @@
-DEVELOPMENT_PLAN.md (Version 1.1)
+DEVELOPMENT_PLAN.md (Version 1.2)
 Status
 
 Living Document
 
-Version: 1.1
+Version: 1.2 (Review Group A — Milestone 1 alignment and gap audit, 2026-10-21)
 
 Owner: Technical Creative Director
 
@@ -19,20 +19,142 @@ Every implementation task should originate from this document.
 
 Every completed review group should update this document.
 
-Milestone 1 proceeds through small, testable, vertical slices that continuously validate the existing engine.
+Work proceeds through small, testable review groups. Each one must leave the game playable.
 
 Documentation authority, terminology, and AI read order are defined in Docs/AI_AGENT_INDEX.md.
 
 Current Phase
 Phase
 
-🟢 Milestone 2 — Gameplay Expansion (in progress)
+🟡 **Milestone 1 — The First Fun** (Foundations roadmap), in progress.
 
-Milestone 0 is complete and architecturally frozen. Milestone 1 (the Vertical Slice, Review Groups 3–8) is certified complete on the canonical scene `Assets/Game/Scenes/VerticalSlice.unity` and required no engine architecture changes.
+Milestone 0 (Foundation) is complete and architecturally frozen. The engine has been validated end-to-end, and movement and ordinary melee combat are built and verified. The rest of the First Fun loop is still missing: Hub, region, active ability, elite, crafting, companion, progression, world reaction, and in-game save. See the gap audit below.
 
-Milestone 2 expands gameplay (combat and beyond) on the same frozen engine, still built from authored content, existing systems, and composition. The engine is assumed frozen unless a genuine architectural defect is discovered.
+The engine stays frozen unless a genuine architectural defect is discovered. New gameplay is built from authored content, existing systems, and thin adapters.
 
-Milestone 2 Progress
+## Milestone Alignment (Review Group A)
+
+`Docs/Foundations/PROJECT_ROADMAP.md` defines the intended player experience per milestone. This plan defines the operational order. Before Review Group A, this plan used the same milestone numbers for different work. The table reconciles them. The historical records below keep their original labels, unedited.
+
+| Historical label in this plan | What it actually delivered | Where it sits on the Foundations roadmap |
+|---|---|---|
+| Milestone 0 — Foundation | Frozen engine: Gameplay Objects, Tags, Attributes, Resources, Abilities, Effects, Statuses, Items, Inventory, Equipment, Interactions, Events, Data Registry, Save | **Milestone 0 — Foundation.** Complete. |
+| "Milestone 1 — Vertical Slice", Review Groups 3–8 (record: `MILESTONE_1_VERTICAL_SLICE.md`) | Engine validation: every M0 system exercised through authored content in `VerticalSlice.unity`; save/load determinism by test | **Engine validation**, foundational work completing Milestone 0. It is *not* the roadmap's Milestone 1 (The First Fun) or Milestone 2 (Vertical Slice). Referred to below as **EV-RG3…EV-RG8**. |
+| "Milestone 2 — Gameplay Expansion", Review Groups 1–5G | Locomotion, combat feel, hit detection, attack authoring, combos, attack library, sword, aerial string, combat dojo | **First tranche of Milestone 1 — The First Fun**: the "player movement and ordinary combat" requirement plus combat authoring tooling. Referred to below as **GX-RG1…GX-RG5G**. |
+| — | — | **Milestone 1 — The First Fun**: current milestone. New review groups are lettered: **Review Group A** (this audit), **B**, **C**, … |
+| — | — | **Milestone 2 — Vertical Slice** (roadmap): the later, polished 30–60 minute experience. Not started. The scene is still named `VerticalSlice.unity`; that is a historical name, not this milestone. |
+
+The `EV-` and `GX-` prefixes only disambiguate references to old records. They are not a new milestone taxonomy.
+
+## Milestone 1 (The First Fun) — Verified Gap Audit (Review Group A)
+
+Evidence is from the working tree at `e7702bd7`. This session ran the full EditMode suite (**485/485 pass**) and one new play-mode audit probe, booted through `Bootstrap.unity`. The probe reported **73 definitions, 27 scene participants injected, 23 objects composed, 0 console errors**, and its results are cited as "audit probe" below. Combat play-mode probes (`Tools/CoplayScripts/Verify*.cs`) were **not re-run** in this group; their results are as recorded in GX-RG5E–5G.
+
+Status key: **Verified** (implementation plus test or play evidence) · **Unverified** (exists, not demonstrated) · **Partial** · **Missing** · **Blocked**.
+
+| Requirement | Status | Evidence | Confidence |
+|---|---|---|---|
+| Canonical scene + bootstrap as a test path | **Verified** | `Assets/Editor/PlayFromBootstrap.cs` forces Play to start at `Bootstrap.unity`. `GameBootstrap` (`Assets/Game/Runtime/Boot/GameBootstrap.cs:40,116`) loads `VerticalSlice`. The audit probe confirms a clean boot, and the scene Player is a `Player.prefab` instance. `RuntimeBootstrapTests`, `GameplayObjectSpawnerTests`. | High |
+| Hub World and return path | **Missing** | `Assets/Game/Scenes/Hub.unity` is an empty placeholder (`Scenes/README.md`). The only scene transition is Bootstrap → VerticalSlice. There is no travel or return code. | High |
+| Handcrafted region and exploration | **Partial** | `VerticalSlice.unity` is a flat combat dojo plus EV-RG8 fixtures (audit probe: 8 dummies, 5 Grunts, Villager, 2 crates, cache, 4 hazards/fixtures, machine). It has no region identity, landmarks, points of interest, or navigation (Technical Debt: NPC/enemy navigation). | High |
+| Player movement and ordinary combat | **Verified** | `LocomotionMotorTests`, `MeleeSwingTests`, `ComboSequencerTests`, `HitWindowTests`, `AerialAttackTests`, `CombatFeelTests`, `CombatContentTests`, `AttackLibraryContentTests`, `HitDetection/*` (all pass). Play probes are recorded in GX-RG5E–5G. The shipped combo is unarmed (`Combo_PlayerMelee`). | High (code); the feel is a reviewer judgment |
+| One weapon | **Partial** | `SM_Sword_01` plus `Combo_Test_Sword` are selectable only from a dojo test pad (GX-RG5F, `VerifySwordAttack.cs`). There is no weapon item or equip path, and the default loadout is fists. | High |
+| **Player-facing active Abilities** | **Missing** (player path) at audit; **Ground Slam implemented in Review Group B (awaiting review)** | See *Ability System — Player-Facing Status* below. Infrastructure is verified; no player-activated ability existed at the audit. Review Group B adds Ground Slam (see its record below). | High |
+| Enemy faction | **Partial** | One archetype: Grunt (`Obj_Grunt`, `EnemyCombatant`, `EnemyAttackCycle`, `PursuitMotor`; `EnemyAttackCycleTests`, `PursuitMotorTests`, `CombatContentTests`). Its identity is only the `Actor.Enemy` tag plus the `HitFilter` faction. Targeting uses Unity tags (Technical Debt). Grunt waves come from `EnemySpawnTrigger`. | High |
+| Elite encounter | **Missing** | No elite archetype, encounter, or reward. `Elite` has 0 hits in `Assets/Game/Runtime`. `HV_BossSlam` exists only as a hit-volume preset. | High |
+| Gathering and inventory integration | **Partial** | Inventory is verified (`InventorySetTests`, `SupplyCrateLootContentTests`). Gathering is limited to one-shot crate loot and the Grunt's `item.monster_fang` drop (`LootPickup`). There are no harvestable nodes. Gathered items have no use, and there is no inventory UI (audit probe: 0 Canvas / 0 UIDocument; the only HUD is the IMGUI `PlayerHealthBar`). | High |
+| Loot | **Partial** | Fixed authored drops only (`AddItemEffect`, `LootPickup`); no loot tables or variety. | High |
+| Equipment | **Verified** | `EquipmentContentTests`, `InventoryEquipTests`, `EquipmentSetTests`. The audit probe equipped the Lucky Charm through `PlayerEquipmentController.Toggle()` live. UX is one toggle for all slots. | High |
+| Simple progression | **Missing** | No XP, levels, unlocks, or upgrade paths (`Experience`/`Recipe` have 0 hits). Equipment is the only power source. | High |
+| Crafting and useful recipes | **Missing** | No runtime code. `Docs/Systems/CRAFTING_SYSTEM.md` is a specification only. | High |
+| One functional companion | **Missing** | No runtime code. `Docs/Systems/COMPANIONS.md` is a specification only. | High |
+| Regional objective and completion | **Partial** | The Ancient Machine → Valley Relic gated interaction (`VerticalSliceIntegrationTests`) proves an authored, persisted objective. It is not a regional threat, has no on-screen objective, and changes nothing in the world. | High |
+| Visible, persistent world reaction / restoration | **Missing** | No World Reaction / region-state runtime. Note that gameplay tags are Derived and do not persist (Technical Debt), so persistent world state must be authored as Resources or inventory. | High |
+| Save/load and loop repeatability | **Partial** | `SaveManager` round-trips are verified by test (`SaveManagerTests`, `RehydrationTests`, `VerticalSliceIntegrationTests`). The **player cannot save or load**: `GameBootstrap` passes `saveJson: null` ("Save-slot selection is a future task"), and there is no save trigger or file I/O. Enemies are transient. Grunt waves can be re-fought, but crates are one-shot. | High |
+
+**Summary.** The foundation, movement, ordinary melee, equipment, and the bootstrap test path are solid. Everything that makes the loop a loop is missing or partial: active ability, elite, progression, crafting, companion, regional objective, world reaction, Hub, and in-game save. **No prerequisite defect blocks the next task.**
+
+## Ability System — Player-Facing Status (Review Group A)
+
+| Layer | Status | Evidence |
+|---|---|---|
+| Generic infrastructure (`AbilitySet`: grant/revoke, tag gates, costs, cooldowns, Self/Provided, multi-target) | **Verified** | `AbilitySystemTests`, `AbilityCategoryTests`, `RehydrationTests` (cooldown restore). |
+| Ordinary melee and combo steps | **Verified** | `ability.player_strike` / `combo2` / `combo3`: Provided target, **0 s cooldown**, granted by `Obj_Player`. They are activated per hit window by `PlayerCombat` (`PlayerCombat.cs:834,1055`). These are attacks, not active abilities. |
+| Interactions as abilities | **Verified** | `InteractionSystem.cs:197-211` routes Loot, Greet, Pray, Activate Machine, and Open to object-owned abilities (`InteractionSystemTests`, content tests). |
+| Enemy abilities | **Verified** | `ability.enemy_strike` via `EnemyCombatant.cs:400`. |
+| **Distinct player-activated ability** | **Missing** | `Ability_SecondWind` (Utility, Self, 10 s cooldown, `HealEffect` 25) is granted when the Lucky Charm is equipped (`EquipmentContentTests`). Nothing activates it: no input action (`Player.inputactions` has only Move, Interact, Equip, Attack, Sprint, Jump, Roll), no adapter, no UI, and no test that activates it. The audit probe called `AbilitySet.TryActivate` directly. It returned **Activated**, health went 10 → 35 (max 75), the cooldown was 10 s, and an immediate retry returned **OnCooldown**. The ability works, but the player cannot reach it. |
+
+Constraint found for the next task: `PlayerCombat.TryPress` (`PlayerCombat.cs:604-609`) checks `CanActivate` **only when a target is already in the arc**. This is correct for zero-cooldown melee. A cooldown-bearing ability routed through the same path, however, would replay its animation on a whiff while on cooldown and silently fail on a hit. The first active ability must therefore commit its cooldown at **press time**. Recorded in `ABILITY_SYSTEM.md`.
+
+## Recommended First Active Ability — Ground Slam
+
+**Recommendation: Ground Slam.** The player leaps or hammers into the ground, and a shockwave damages every enemy within about 2 m, including those behind or beside them, on its own cooldown. It answers crowding by Grunt waves and the elite. This is the "area attack" interplay BUILDCRAFT names, and the "first active ability" beat in FIRST_HOUR.
+
+The repository already supports it:
+- **Animation and timing:** `Attack_Fighter_Combo02_3.asset` has a verified "Hammer slam" window carrying the `HV_GroundShockwave` area (sphere, r 2.2 m, multi-target, max 8), commit end 0.95, and cancel from 0.49. GX-RG5E `VerifyAttackLibrary` recorded "the shockwave slam hits 3 of 3". The Animator state already exists on the player controller.
+- **Targeting:** the Hit Detection vocabulary plus `HitFilter`. It is omnidirectional, so it differs clearly from the forward melee cone.
+- **Effects:** `AbilitySet.TryActivate(id, IReadOnlyList<EffectTarget>)` commits once and applies effects per target (GX-RG5D). The existing `DamageEffect` is reused.
+- **Feedback:** `PlayerCombat.Impacted` → `PlayerAttackFeedback` (VFX, hit-stop, camera impulse) on confirmed hits.
+- **Real use:** the dojo's arc and pair dummy formations and the Grunt spawn pad.
+
+Alternatives considered:
+- **Second Wind:** cheapest, since the system path already works. It is a self-heal, though, so it does not change combat style. Once the activation slot exists it becomes a data-only binding; keep it as the second ability and a progression reward.
+- **Dash or leap:** overlaps Roll.
+- **Projectile or spell:** needs new projectile runtime.
+
+**Reusable pattern the slam establishes** (no new framework):
+
+`Ability input slot` → thin `PlayerAbilityActivator` (Player adapter, `PlayerInteractor`-shaped) → **activation ability** (Self; gates, cost, cooldown; committed at press) → authored **attack** (one-step `ComboDefinition` / `AttackDefinition` played through `PlayerCombat`) → `HitWindow` **area** → **impact ability** (Provided, 0 s cooldown, effects) applied to all hits via the multi-target overload → presentation from existing events.
+
+A future ability is new authored data plus a binding: activation ability, impact ability, attack asset, and hit volume.
+
+**Review question:** the activation/impact split uses two definitions per ability. The engine-level alternative is the reserved **Multi-stage activation** extension (`ABILITY_SYSTEM.md`). That would change the frozen Ability System and needs approval. The recommendation is the composition approach now, with the extension revisited only if the pattern proves awkward across several abilities.
+
+## Minimum Enjoyable Loop — Sequenced Plan
+
+The minimum loop is: Hub → region → discover and gather → encounter (combat plus active ability) → reward and progression → regional objective → visible consequence → return to Hub. This is a minimum interpretation of the roadmap, not the full FIRST_HOUR narrative. Each step below is one testable review group, listed in dependency order. Abilities stay central: B introduces the first ability, D rewards with the second, and F gates the objective on combat.
+
+| RG | Player-facing experience | Reuse | Missing work | Depends on | Acceptance (summary) |
+|---|---|---|---|---|---|
+| **B — First Active Ability (Ground Slam)** | Press a dedicated button; slam hits the crowd around you; clear cooldown readout | Combo02_3 slam attack, `HV_GroundShockwave`, multi-target activation, `PlayerAttackFeedback`, dojo | Input action, `PlayerAbilityActivator`, 2 ability definitions, one-step attack, minimal cooldown HUD | — | See *Next Review Group* below |
+| **C — Elite Encounter** | A tougher, readable Grunt elite (bigger, telegraphed AoE slam, more health) guarding something; defeating it is an event | `Obj_Grunt` composition, `EnemyAttackCycle` interrupt windows, `HV_BossSlam`, `EnemyCombatant` | Elite definition and prefab (data); persistent "defeated" state as an authoritative Resource on an encounter object (per the tag-persistence rule); elite drop | B (slam is the counterplay) | Elite composes from data only; its slam is telegraphed and dodgeable; death persists through save; drops its reward |
+| **D — Reward and Simple Progression** | Elite and Grunt materials unlock something you feel: equip a reward and gain **Second Wind** on a second ability slot; one upgrade raises slam power | Equipment grants (abilities, attributes), `AddItemEffect`, ability slot from B | Bind slot 2 (data); one authored upgrade path (equipment tier or ability grant); a simple feedback toast | B, C | Second Wind activates from input; progression grant survives save; old Grunts measurably easier |
+| **E — Gathering and Basic Crafting** | Harvest 2–3 resource nodes; craft the D reward at a workbench from gathered and elite materials | Interaction → ability → `AddItemEffect`; inventory; one-shot Resource charges | Harvest nodes (data); a minimal craft interaction consuming items (needs the anticipated **Remove Item** effect, already listed as a planned extension); 1–3 recipes | D | Crafted item is the progression reward; recipes are data; inventory consumption is all-or-nothing |
+| **F — Handcrafted Region and Regional Objective** | A small authored region with landmarks; objective: defeat the elite and activate the regional machine; on-screen objective text | VerticalSlice fixtures, Ancient Machine pattern, `GameplayObjectSpawner` | Region layout pass (separate from the dojo); objective gating on elite-defeated state; minimal objective HUD | C, E | Objective completes only after the elite falls; completion persists |
+| **G — Visible World Reaction** | Completing the objective visibly restores the region: corruption gone, Villager returns or opens a service | Authoritative Resource state, scene composition, Villager | Region-state object (Resource-based) and thin scene adapters toggling presentation; a returning NPC | F | Restoration is visible, survives save/load, and enemy waves stop |
+| **H — Hub, Return Path, and In-Game Save** | Travel Hub ↔ region; Hub reflects restoration; save and continue | Bootstrap → scene path, `SaveManager`, `BootstrapConfiguration.SaveJson` | `Hub.unity` content; travel interaction; save trigger and file slot (fills the `saveJson: null` gap); scene-to-scene persistence | G | Full loop playable twice from a fresh boot and from a reloaded save |
+| **I — First Companion** | One companion follows and fights with an ability (e.g. the same slam pattern) | Enemy behaviour pattern, ability pattern from B, `HitFilter` factions | Companion definition, follow and assist adapter, relationship-based targeting (replaces Unity-tag targeting debt) | B, H | Companion uses the ability framework unchanged; persists across Hub ↔ region |
+
+Ordering rationale: B then C complete the combat core, and the elite needs the slam as counterplay. D and E give the encounter a meaningful reward, and progression comes before crafting so crafting has something worth making. F and G turn the dojo into a region with consequence. H closes the loop. The companion is last because it depends on the most systems. It could move before H if the reviewer prefers. Re-evaluate fun after B, C, and D, per the roadmap ("if this milestone is not fun, revisit the design").
+
+## Review Group B: First Player Active Ability (Ground Slam)
+
+**Implemented; awaiting review.** The acceptance results are in the *Review Group B* entry under *Recently Completed*. Two criteria were met differently from the text below:
+- Criterion 2: movement-state refusals (rolling, airborne, or committed mid-attack) are buffered and then dropped by the adapter. They publish no `AbilityActivationFailed`. Only the Ability System's own refusals (cooldown, not granted, gates, cost) publish it.
+- Criterion 7: the "arc formation" check placed three dummies front, side, and behind, to prove the slam is omnidirectional.
+
+Scope: one ability, one input slot, minimal HUD. There is no ability catalogue, no stamina or new resource, no evolution, and no new framework. Engine Core and Framework are unchanged.
+
+Acceptance criteria:
+1. **Input and activation:** a new `Ability1` action (proposed: Mouse Right / Keyboard R / Gamepad Right Shoulder) on `Player.inputactions` reaches a thin `PlayerAbilityActivator` through `PlayerInputBridge`. The activator binds slot → ability id by authored data, with no ability-specific branches.
+2. **Validation:** activation is refused (with `AbilityActivationFailed`) while on cooldown, rolling, or committed mid-attack. Airborne is refused unless authored otherwise. A refused press plays no animation. A press during melee recovery buffers exactly as `TryAttack` does.
+3. **Cooldown:** authored on the activation ability (starting value 6 s) and **committed at press**, so a whiff costs the cooldown too. It ticks through `AbilitySet`, survives save/load via the existing `RestoreCooldown`, and has no resource cost.
+4. **Targeting:** the slam window's `HV_GroundShockwave` hits every live enemy in radius regardless of facing. The Player and Villager are excluded by `HitFilter`; Training Dummies and Grunts are hit. A single target is never struck twice per slam.
+5. **Effects:** one commit applies the impact ability's `DamageEffect` to every hit via `TryActivate(id, targets)`. The damage is authored, starting at about 1.5× a punch.
+6. **Presentation:** the slam animation plays. A ground VFX burst always appears at the slam frame. Hit-stop and shake occur only on a confirmed hit. A minimal HUD shows the ability's name or icon and remaining cooldown, alongside `PlayerHealthBar`.
+7. **Real in-game use:** from `Bootstrap.unity`, a new `VerifyGroundSlam.cs` probe drives real input. Checks: a slam hits all 3 dummies of the arc formation, damages a Grunt wave, an immediate re-press is refused on cooldown, it works again after the cooldown, and ordinary combos are unaffected.
+8. **Tests:** EditMode content test (definitions, grant, cooldown commit on whiff, multi-target damage) plus an activator unit test. Full suite green; existing combat probes still pass.
+9. **Docs:** `ABILITY_SYSTEM.md` (player activation pattern), `COMBAT.md` (slam), and this plan.
+
+Grant source for B: `Obj_Player` grants it initially. D moves or extends ability grants into progression.
+
+---
+
+# Historical Review Group Records
+
+The tables and records below are kept as written at the time. Their milestone labels are historical; see *Milestone Alignment* above.
+
+Gameplay Expansion progress (historical label "Milestone 2"; GX-RG*)
 Review Group	Focus	Status
 Review Group 1	Core Action Foundation (combat sandbox)	✅ Complete (awaiting review)
 Review Group 2	Core Game Feel & Combat Polish	✅ Complete (awaiting review)
@@ -49,7 +171,7 @@ Review Group 5G	Aerial Combos — Stage 1 (airborne player steps)	✅ Complete (
 
 Architecture changes are only acceptable when a genuine architectural defect is discovered.
 
-Milestone 1 Progress
+Engine Validation progress (historical label "Milestone 1 — Vertical Slice"; EV-RG*)
 Review Group	Focus	Status
 Review Group 3	Player Foundation	✅ Complete
 Review Group 4	Interactive Gameplay Loop	✅ Complete
@@ -57,12 +179,14 @@ Review Group 5	Autonomous World Actors	✅ Complete
 Review Group 6	Equipment & Passive Character Progression	✅ Complete
 Review Group 7	Health, Damage & Environmental Hazards	✅ Complete
 Review Group 8	Vertical Slice Integration & Polish	✅ Complete (awaiting certification)
-Active Sprint
-Sprint Goal
+Engine Validation Sprint (historical, complete)
+Sprint Goal (historical)
 
 Complete the Vertical Slice by validating every major gameplay system already implemented during Milestone 0.
 
 The objective is engine validation, not feature expansion.
+
+(The current sprint goal is Milestone 1 — The First Fun; see *Next Review Group* above.)
 
 Priority 0 — Project Setup
 
@@ -210,6 +334,15 @@ Duplicate `VerticalSlice` scene removed (drift resolved)
 No new engine architecture. No speculative systems. No new framework concepts.
 
 Current AI Task
+Milestone 1 (The First Fun), Review Group A (Milestone 1 Alignment & Verified Gameplay Gap Audit): complete, paused for review. Documentation and audit only; no gameplay changed.
+
+- Milestone terminology reconciled (see *Milestone Alignment*). The operational docs now follow the Foundations roadmap numbering, and historical records are kept verbatim.
+- Verified gap matrix, Ability System player-facing status, Ground Slam recommendation, and sequenced loop plan B–I are recorded above.
+- EditMode **485/485**. A play-mode audit probe booted from Bootstrap: clean boot, 23 objects composed, 0 errors. Second Wind activates when called directly, but no player input reaches it.
+- Proposed next: **Review Group B — First Player Active Ability (Ground Slam)**.
+
+Historical review-group task log (newest first; labels as written at the time):
+
 Milestone 2, Review Group 5G (Aerial Combos — Stage 1) — complete, paused for review.
 
 - **Real airborne attack steps.** `AttackDefinition._airHeight` (authored as the full clip's root height minus its `_0H` twin's) drives the controller's height while an aerial step is committed. `PlayerLocomotion.SetAerialHold` / `ApplyVerticalMotion` (gravity held), with `LocomotionMotor.VerticalVelocity` pure. An aerial opener may start in the air.
@@ -334,7 +467,7 @@ No combat, weapons, animation, or enemy AI
 No new managers, no trigger framework, no quest framework, no new gameplay loops
 No Framework or Core change
 Pause after implementation
-Remaining Milestone Roadmap
+Remaining Milestone Roadmap (historical, Engine Validation era; superseded by *Minimum Enjoyable Loop — Sequenced Plan*)
 
 Review Group 6
 
@@ -379,6 +512,26 @@ Avoid allowing this section to become the operational task list.
 
 Its purpose is project history.
 
+- First Player-Activated Ability — Ground Slam (Milestone 1 — The First Fun, Review Group B). **Awaiting review.**
+  - **Player path:** a new `Ability1` action (R / Mouse Right / Gamepad Right Shoulder). `PlayerInputBridge` maps it to slot 0 of the new thin `PlayerAbilityActivator` on `Player.prefab`. The slot is authored data: the activation ability id plus the attack asset. It reaches the player through the normal Bootstrap → VerticalSlice composition, and `Obj_Player` grants both definitions.
+  - **Two definitions:** `ability.ground_slam` (Self, 6 s cooldown, no cost or effects) and `ability.ground_slam_impact` (Provided, 0 s, `Fx_Damage_GroundSlam` 30). The attack, `Combo_Ability_GroundSlam`, is a one-step combo that reuses `Attack_Fighter_Combo02_3` and its `HV_GroundShockwave` window unchanged.
+  - **Cooldown committed at press:** the pure `AbilitySlotActivation` validates through the Ability System first. Refusals publish `AbilityActivationFailed` and play nothing. A busy character buffers the press for 0.18 s with nothing committed. Otherwise the activation commits, and the attack starts in the same call. This uses ordinary `AbilitySet` cooldowns, with no second mechanism.
+  - **PlayerCombat:** a new `CanStartAbilityAttack`/`StartAbilityAttack` plays the attack through the existing step pipeline by parking the combo's runtime. `BuildSteps` now returns its array. The melee press path, its arc check, and melee cooldowns are unchanged.
+  - **Presentation:** an `_abilityContactVfx` ground burst on the contact frame, hit or miss. Hit-stop, shake, and impact VFX remain on confirmed hits only. A minimal IMGUI `PlayerAbilityHud` sits above the health bar and shows the name, key, READY or seconds remaining, and a red flash when a press is refused.
+  - **Architecture:** no Core, Framework, or Ability System change; no stamina or new resource; no ability bar. Two compromises are recorded in `ABILITY_SYSTEM.md`. First, movement-state refusals publish no `AbilityActivationFailed`, because the player has no state tags. Second, a slot requires an attack, so attack-less Self abilities such as Second Wind need a decision in Review Group D.
+  - **Tests:** EditMode **499/499** (485 existing plus 14 new `GroundSlamContentTests`). These cover definitions and grant, the attack wiring, commit-before-attack, a whiff still costing the cooldown, refusal of an immediate repeat, reactivation after the cooldown, an ungranted press committing nothing, buffering and expiry, multi-target damage, melee isolation, and the cooldown surviving save/reload.
+  - **Runtime probe (automated, not a human playtest):** `Tools/CoplayScripts/VerifyGroundSlam.cs`, run from `Bootstrap.unity` with real queued keyboard input, passed all 20 checks: 3/3 dummies front, side, and behind hit once each for 30; re-press refused OnCooldown with no slam; Q melee unchanged during the cooldown; a no-target slam played, burst, and took the cooldown; an ungranted press was refused NotGranted with no cooldown; a press during a roll was dropped with no cooldown; 3/3 Grunts hit. The existing `VerifyComboPads` passed. `VerifyAttackLibrary` (descriptive, no verdict) ran to completion with every combo playing and its Grunt waves killed.
+  - **Manual verification:** no human playtest has been performed yet. Slam feel, cooldown length, damage, and the HUD's readability are reviewer judgments.
+  - **Technical debt found:** input-driven probes need Game-view focus (`PointersAndKeyboardsRespectGameViewFocus`), or every press is silently dropped (`COMBAT.md`). `Player.prefab` now serializes `PlayerLocomotion._rollMinSpeed` at its code default of 6, with no behaviour change.
+  - **Docs:** this plan, `ABILITY_SYSTEM.md` (*Player Activation Pattern*), and `COMBAT.md` (*Ground Slam*).
+
+- Milestone 1 Alignment & Verified Gameplay Gap Audit (Milestone 1 — The First Fun, Review Group A). This group was documentation and audit only, with no gameplay or code change.
+  - Reconciled this plan's historical milestone labels with the Foundations roadmap. The engine-validation slice (EV-RG3–8) is foundational work. Gameplay Expansion (GX-RG1–5G) is the first tranche of The First Fun. New groups are lettered.
+  - Audited every First Fun requirement against the working tree with evidence.
+  - Traced the Ability System end to end. Second Wind is granted and works when called directly, but no input, adapter, or UI reaches it, so no player-active ability exists. `PlayerCombat` checks cooldowns only when a target is in the arc.
+  - Recommended Ground Slam as the first ability, plus the activation/impact composition pattern, and sequenced review groups B–I.
+  - Tests: EditMode 485/485. A play-mode audit probe (session scratch, not committed) booted from Bootstrap: 73 definitions, 27 participants, 23 composed objects, 0 errors.
+  - Docs: this plan, `MILESTONE_1_VERTICAL_SLICE.md` (relationship note), `ABILITY_SYSTEM.md` (player activation status), and `AI_AGENT_INDEX.md` (read-order label).
 - Core Locomotion & Character Feel (Milestone 2, Review Group 3). Made the character satisfying to control even in an empty scene, on the frozen engine, with **no new gameplay systems and no framework concepts** (no movement manager, traversal/dodge framework, or stamina). **Sprint** — `PlayerLocomotion.SetSprint`, hold-not-toggle, releases instantly; a ×1.5 multiplier on the authored **Movement Speed attribute** (the gameplay source of truth), no resource. **Jump** — `PlayerLocomotion.Jump`, single-press, grounded-gated upward impulse integrated by the existing gravity; airborne planar control retained but dampened (`_airControl`); `Jumped` event + grounded flag drive a clean jump→fall→land; no double/wall/ledge/traversal. **Roll** — `PlayerLocomotion.Roll`, single-press evasive burst in the input/facing direction that eases out to a natural recovery; `Rolled` event drives the animation; **no i-frames, stamina, dodge framework, or animation-cancel**. **Directional locomotion** — the RG2 1D speed blend was replaced by a **2D freeform-directional** blend tree keyed on `MoveX`/`MoveY` (velocity relative to facing, normalized to run speed via the new pure, tested `LocomotionMotor.LocalMoveVector`): idle centre, an 8-way **walk** ring, an 8-way **run** ring, a forward-biased **sprint** tier, plus jump/fall/land and roll states — all driven by the thin `PlayerAnimatorDriver` setting parameters from `PlayerLocomotion` (Gameplay → Animator Driver → Animator Controller preserved; no gameplay logic in the state machine). Because the character turns to face movement (correct for a fixed non-orbit camera), forward locomotion dominates while running and the side/back clips play through turns and reversals; a lower turn speed (620°/s) keeps those directional animations visible. **Speed** — authored Movement Speed base raised 5 → 7 for energetic-but-controllable traversal. **Camera** — fixed the distracting rotational drift the reviewer flagged: it was the `CinemachineRotationComposer` (with look-ahead) re-aiming as the player moved; removed it and made the vcam a **stable fixed-angle, position-only** follow (world-space binding, constant downward pitch, light symmetric damping, deoccluder retained), so input feels directly connected to movement. **Feel** — retuned acceleration/deceleration/turn/gravity and added reduced airborne acceleration. New input actions (Sprint/Jump/Roll, keyboard + gamepad) wired through `PlayerInputBridge`. Adds pure `LocomotionMotor.LocalMoveVector` EditMode tests. No Framework or Core change.
 - Core Game Feel & Combat Polish (Milestone 2, Review Group 2). Turned the RG1 combat sandbox from mechanically correct into enjoyable, on the frozen engine, entirely through feel tuning, thin presentation adapters, and authored humanoid content — **no new gameplay systems and no framework concepts**. **Immediate correction — Stamina removed completely**: cleared the strike ability's resource cost, removed the resource from the player, deleted `Res_Stamina` + its Addressables entry, and purged it from tests and docs; a basic attack can never be blocked by a resource. **Movement**: added acceleration/deceleration to locomotion via the new pure, unit-tested `LocomotionMotor.Accelerate` (weighty but crisp, responsive under rapid input reversal); faster turning. **Combat feel** (`PlayerCombat`): attack **input buffering** (a press just before cooldown-end is remembered and fires when ready) and **attack commitment** (a landed swing briefly damps movement through `PlayerLocomotion.ApplyMovementLock`) — timing/feel, not a new system, and never a lockout. **Enemy** (`EnemyCombatant`): the Grunt now **telegraphs** its attack — Ready → Wind-up (rooted anticipation, dodgeable) → Strike → Recover (rooted, vulnerable) — moving cadence out of the ability cooldown into the behaviour adapter; death teardown is deferred so the death animation plays. **Camera**: adopted **Cinemachine 3** as a thin presentation layer (world-space follow, position/rotation damping, look-ahead, deoccluder) replacing the hand-rolled `ThirdPersonCameraRig`; gameplay is unaffected because movement reads the active camera's facing. **Animation**: player and enemy are now rigged **humanoids** (JC Stylized Warrior / Ranger, retained as a child `Model` under each gameplay root) with real **AnimatorControllers** — Idle → Speed-driven locomotion blend tree → Attack / Hit / Death — driven by thin `PlayerAnimatorDriver` / `EnemyAnimatorDriver` adapters purely from gameplay events (locomotion speed, `Attacked` / `WindUpStarted` / health-change / depleted); clips are retargeted humanoid animations (Kevin Iglesias locomotion/idle/hit/death, Frank attack). The graph + parameter contract is the reusable foundation — swapping the character retargets clips without touching the graph; no gameplay logic in the state machine, root motion off. **Presentation** (new thin `ToyChest.Gameplay.Presentation` assembly, consumes existing events only): `HitFlash` tints a character on damage, `CombatImpulse` fires Cinemachine camera-shake on player hit (strong) and swing (subtle). Player/enemy prefabs gained the model, animator, driver, hit flash, and (player) impulse source; the vcam gained an impulse listener. Adds pure `LocomotionMotor.Accelerate` EditMode tests and updates the combat content tests for the stamina removal. No Framework or Core change; no new managers, no camera/animation/combat framework in gameplay code.
 - Core Action Foundation — combat sandbox (Milestone 2, Review Group 1). First gameplay expansion on the frozen engine: a minute-to-minute combat sandbox built **entirely from authored content and thin adapters, with no new framework** — no Combat/AI/Targeting/Weapon manager, no animation framework, no Damage System pipeline (the existing `DamageEffect` is reused, as its own doc anticipates). **Player attack:** an authored `ability.player_strike` (Provided target) using the existing Ability → Gameplay Effect → Resource path — a `DamageEffect` (20) paid with a new **Stamina** resource (cost 25, regen 30/s) and gated by a 0.4s cooldown, so cadence/economy are data. A thin `PlayerCombat` adapter runs the same proximity query as `PlayerInteractor` to pick the nearest `Enemy`-tagged target and activate the ability; a new **Attack** input action (`<Mouse>/leftButton`) drives it through `PlayerInputBridge`. **Enemy:** one excellent archetype, the **Grunt** (`object.grunt`), an ordinary Gameplay Object composing the shared Maximum Health + bound health, an authored `attribute.enemy_speed`, an `Actor.Enemy` tag, and `ability.enemy_strike` (claw, 8 damage, 1.5s cooldown). Its behaviour is `EnemyCombatant` (new `ToyChest.Gameplay.Enemy` assembly), the enemy counterpart to `NpcWanderLocomotion`: it reads speed off the object, asks the pure deterministic `PursuitMotor` for the readable **Idle → Pursue → Attack** phase, drives a `CharacterController`, and activates its attack ability in range (cadence = the ability cooldown). **Death** is the existing Resource-depleted signal driving the normal lifecycle teardown; on death the Grunt drops a `LootPickup` (thin trigger adapter, the pickup counterpart to `HazardVolume`) that grants an authored `item.monster_fang` via `InventorySet.TryAdd` when the player walks over it. Targeting is scene-native via Unity tags (built-in `Player`, added `Enemy`). A combat arena of three Grunts is integrated into the canonical scene beyond the objective; a `Grunt` and `LootPickup` prefab were authored. Adds 14 EditMode tests (pure `PursuitMotor` phases/determinism; player strike damages + costs stamina + honours cooldown + cannot-afford + kills in 3 hits with death detection; enemy strike damages the player; Grunt composes as an ordinary enemy) — full suite at **349 passing**. No Framework or Core change; no new managers or framework concepts. The player gained a stamina resource and the strike ability; `ToyChest.Gameplay.Player` gained Abilities/GameplayEffects references.
@@ -451,14 +604,17 @@ Current documentation focus:
 - **Attack always swings; damage is gated at impact (Milestone 2, Review Group 5).** A press always starts a swing — with no enemy in range the player whiffs (swing animation + whoosh, no impact juice), so attacking never feels dead in the open. When a live enemy *is* in range, the swing start is gated on the ability's `CanActivate` so a fighting player's cadence stays the authored cooldown (an off-cadence press buffers instead of playing a swing that could not land). Whiff cadence is the authored swing duration (wind-up + recovery). The only remaining nuance: while mashing at a live enemy, cadence is the cooldown (buffered), which is intended. No target-independent cooldown query on `AbilitySet` was needed.
 - **Hit-stop uses global `Time.timeScale` (Milestone 2, Review Group 5).** `PlayerAttackFeedback`'s hit-pause briefly scales global time, which is a local single-player feel effect; it is short, self-restoring (including on disable), and authored-optional (set to 0 to disable). It must become non-global for multiplayer (freeze only local presentation, or drop hit-stop server-side). Impact VFX are `Instantiate`+`Destroy` one-shots, not pooled — fine at melee cadence, poolable later on the same event seam.
 
+- **Equipment-granted Second Wind is unreachable (Review Group A finding).** `Ability_SecondWind` is granted by the Lucky Charm but has no input, adapter, UI, or activation test, so the documented "equipment-granted ability" is real only at the system level. It is resolved by the ability slot from RG B and the binding in RG D. Until then, do not describe it as a player-usable ability.
+- **Scene README and bootstrap startup list drifted (Review Group A finding, cosmetic).** `Assets/Game/Scenes/README.md` says Bootstrap spawns the Wooden Crate on Play. The live boot logs "Live objects: 0" after engine init, and all objects are composed by `VerticalSlice`'s spawners. Update the README (or the startup list) during a future scene pass.
+
 Continue recording technical debt intentionally.
 
 Do not redesign architecture during Milestone 1 unless a genuine architectural defect is demonstrated.
 ---
 
-# Milestone 2 Candidate Improvements (documentation only)
+# Engine Validation Follow-up Candidates (documentation only; historical heading "Milestone 2 Candidate Improvements")
 
-Deferred from Milestone 1 by design. Each is a candidate, not a commitment; none is required to certify Milestone 1, and each should still prefer composition/authored data over new framework where possible.
+Deferred from the Engine Validation slice (EV-RG3–8) by design. Where one of these becomes necessary for a First Fun review group (e.g. the Remove Item effect for crafting in RG E), that group adopts it explicitly. Each is a candidate, not a commitment; none is required to certify Milestone 1, and each should still prefer composition/authored data over new framework where possible.
 
 - **Combat vocabulary.** Milestone 1 deliberately shipped without combat. Milestone 2's Damage System (see `Docs/Systems/DAMAGE_SYSTEM.md`) would let `DamageEffect` route through resistances/mitigation without changing authored content, and add enemies as ordinary Gameplay Objects with abilities.
 - **Refcounted shared grants.** Two sources granting the same ability/status share one grant, so the first revoke removes it (carried from Milestone 0; authored content avoids it). A refcounted grant fixes it with no architectural change.
@@ -525,20 +681,11 @@ Documentation
 
 Gameplay
 
-🟢 Excellent Progress
+🟡 Foundation and combat strong; the First Fun loop is not yet playable
 
-The Vertical Slice now demonstrates:
+Verified: authored Gameplay Objects, movement, ordinary melee combat and combos, equipment, interaction, gameplay effects, hazards, NPCs, and save/load (by test).
 
-authored GameplayObjects
-player control
-inventory
-equipment foundation
-interaction
-gameplay effects
-persistence
-autonomous NPCs
-
-Remaining work focuses on validating the final gameplay systems rather than expanding the engine.
+Missing for Milestone 1 (The First Fun): player-activated abilities, elite, progression, crafting, companion, region identity, world reaction, Hub/return, and in-game save. See the gap audit.
 
 Technical Debt
 
@@ -550,8 +697,6 @@ AI Context Quality
 
 Playable Build
 
-🟢 Complete Vertical Slice
+🟡 Combat dojo plus engine-validation fixtures
 
-The project demonstrates a complete, cohesive, end-to-end gameplay experience composed almost entirely through authored data running on the frozen Milestone 0 engine: spawn → explore → meet the Villager → loot → equip → complete an equipment-gated objective → navigate hazards → heal → die → respawn → save/reload into an identical state. Milestone 1 required no engine architecture change.
-
-Milestone 1 is functionally complete and awaiting certification. Future work (Milestone 2) extends the runtime through the same composition/authored-data approach rather than redesigning it.
+From Bootstrap, the player can explore the dojo, fight dummies and Grunt waves with combos, loot, equip, complete the equipment-gated objective, survive hazards, die, and respawn. The engine-validation run was proven save/reload-deterministic by test (EV-RG8). It is not yet a repeatable First Fun loop: there is no Hub, no active ability, no progression, and the player cannot trigger save/load.
