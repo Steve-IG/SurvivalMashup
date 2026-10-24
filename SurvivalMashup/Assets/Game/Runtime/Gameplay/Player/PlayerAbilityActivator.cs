@@ -31,7 +31,8 @@ namespace ToyChest.Gameplay.Player
             private string _activationAbilityId;
 
             [SerializeField]
-            [Tooltip("Authored attack performed when the activation commits. Its hit windows apply the impact ability.")]
+            [Tooltip("Authored attack performed when the activation commits; its hit windows apply the impact abilities. " +
+                     "Empty for an attack-less ability (a Self heal or buff) whose activation's own effects are the whole ability.")]
             private ComboDefinition _attack;
 
             public string DisplayName => _displayName;

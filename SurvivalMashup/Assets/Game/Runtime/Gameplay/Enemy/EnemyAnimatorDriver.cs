@@ -1,3 +1,4 @@
+using ToyChest.Gameplay.Combat;
 using ToyChest.Gameplay.Presentation;
 using UnityEngine;
 
@@ -8,8 +9,9 @@ namespace ToyChest.Gameplay.Enemy
     /// behaviour — it owns no gameplay rules. It reads speed off <see cref="EnemyCombatant"/> to
     /// blend idle/pursue locomotion, and hangs the one-shot states off the combatant's existing
     /// signals: the wind-up telegraph plays the attack animation (so the anticipation the player
-    /// reads is the animation itself), a health decrease plays a hit reaction, and death plays the
-    /// death animation during the corpse's linger delay. Animation is downstream of behaviour.
+    /// reads is the animation itself), a hit reaction (flinch / stagger / knockback) plays the matching hit clip, and death plays the
+    /// death animation during the corpse's linger delay. An elite's signature wind-up plays the slam state.
+    /// Animation is downstream of behaviour.
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(EnemyCombatant))]
@@ -31,9 +33,15 @@ namespace ToyChest.Gameplay.Enemy
         private static readonly int AttackParam = Animator.StringToHash("Attack");
         private static readonly int HitParam = Animator.StringToHash("Hit");
         private static readonly int DeadParam = Animator.StringToHash("Dead");
+        private static readonly int SlamParam = Animator.StringToHash("Slam");
+        private static readonly int HitHeavyParam = Animator.StringToHash("HitHeavy");
+        private static readonly int KnockbackParam = Animator.StringToHash("Knockback");
 
         private bool _bound;
         private bool _dead;
+        private bool _hasSlam;
+        private bool _hasHitHeavy;
+        private bool _hasKnockback;
 
         private void Awake()
         {
@@ -50,6 +58,12 @@ namespace ToyChest.Gameplay.Enemy
             if (_animator != null)
             {
                 _animator.applyRootMotion = false;
+                foreach (AnimatorControllerParameter parameter in _animator.parameters)
+                {
+                    _hasSlam |= parameter.nameHash == SlamParam;
+                    _hasHitHeavy |= parameter.nameHash == HitHeavyParam;
+                    _hasKnockback |= parameter.nameHash == KnockbackParam;
+                }
             }
         }
 
@@ -58,7 +72,8 @@ namespace ToyChest.Gameplay.Enemy
             if (_combatant != null && !_bound)
             {
                 _combatant.WindUpStarted += OnWindUp;
-                _combatant.Damaged += OnDamaged;
+                _combatant.SignatureWindUpStarted += OnSignatureWindUp;
+                _combatant.HitReacted += OnHitReacted;
                 _combatant.Died += OnDied;
                 _bound = true;
             }
@@ -69,18 +84,33 @@ namespace ToyChest.Gameplay.Enemy
             if (_combatant != null && _bound)
             {
                 _combatant.WindUpStarted -= OnWindUp;
-                _combatant.Damaged -= OnDamaged;
+                _combatant.SignatureWindUpStarted -= OnSignatureWindUp;
+                _combatant.HitReacted -= OnHitReacted;
                 _combatant.Died -= OnDied;
                 _bound = false;
             }
         }
 
-        private void OnDamaged()
+        // The hit animation follows the gameplay reaction, never raw damage: a blow too light for this body's Stability
+        // plays nothing (the hit flash still shows it landed), a flinch plays the light hit, a stagger the heavy one, a
+        // knockback the knockback clip. Gameplay has already interrupted / staggered / pushed the enemy; the animator only
+        // presents it. Controllers without the heavier states fall back to the lighter ones.
+        private void OnHitReacted(HitReaction reaction)
         {
-            // A brief hit reaction so blows read as connecting. It is animation only — the enemy's
-            // gameplay attack cadence is driven by EnemyCombatant's own timers, not the animator, so a
-            // flinch never stunlocks the encounter; it just makes the strike feel like it lands.
-            if (!_dead && _animator != null)
+            if (_dead || _animator == null || !reaction.Reacts)
+            {
+                return;
+            }
+
+            if (reaction.Level == HitReactionLevel.Knockback && _hasKnockback)
+            {
+                _animator.SetTrigger(KnockbackParam);
+            }
+            else if (reaction.Level >= HitReactionLevel.Stagger && _hasHitHeavy)
+            {
+                _animator.SetTrigger(HitHeavyParam);
+            }
+            else
             {
                 _animator.SetTrigger(HitParam);
             }
@@ -103,6 +133,16 @@ namespace ToyChest.Gameplay.Enemy
             if (!_dead && _animator != null)
             {
                 _animator.SetTrigger(AttackParam);
+            }
+        }
+
+        // The signature attack's wind-up plays the slam, slowed in the controller so the clip's impact frame lands
+        // on the frame the area resolves. Controllers without a Slam parameter (an ordinary Grunt) ignore it.
+        private void OnSignatureWindUp()
+        {
+            if (!_dead && _hasSlam)
+            {
+                _animator.SetTrigger(SlamParam);
             }
         }
 

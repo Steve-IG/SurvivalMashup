@@ -1,4 +1,5 @@
 using System.Collections;
+using ToyChest.Gameplay.Combat;
 using ToyChest.Gameplay.Presentation;
 using UnityEngine;
 
@@ -43,15 +44,10 @@ namespace ToyChest.Gameplay.Player
         [Tooltip("Seconds before a spawned impact VFX is destroyed.")]
         private float _impactVfxLifetime = 2f;
 
-        [Header("Ability attack burst")]
+        [Header("Area bursts (authored per hit window)")]
         [SerializeField]
-        [Tooltip("One-shot burst spawned at the player's feet when an ability attack (e.g. Ground Slam) reaches its contact " +
-                 "frame — hit or miss, so the slam always reads. Impact juice still waits for a confirmed hit. Optional.")]
-        private GameObject _abilityContactVfx;
-
-        [SerializeField]
-        [Tooltip("Seconds before a spawned ability burst is destroyed.")]
-        private float _abilityContactVfxLifetime = 2f;
+        [Tooltip("Seconds before a spawned area burst (a hit window's Area Effect) is destroyed.")]
+        private float _areaEffectLifetime = 2f;
 
         [Header("Camera")]
         [SerializeField]
@@ -112,7 +108,7 @@ namespace ToyChest.Gameplay.Player
             if (_combat != null && !_bound)
             {
                 _combat.Attacked += OnSwing;
-                _combat.Contacted += OnContact;
+                _combat.AreaActivated += OnAreaActivated;
                 _combat.WindowStruck += OnWindowStruck;
                 _combat.Impacted += OnImpact;
                 _bound = true;
@@ -124,7 +120,7 @@ namespace ToyChest.Gameplay.Player
             if (_combat != null && _bound)
             {
                 _combat.Attacked -= OnSwing;
-                _combat.Contacted -= OnContact;
+                _combat.AreaActivated -= OnAreaActivated;
                 _combat.WindowStruck -= OnWindowStruck;
                 _combat.Impacted -= OnImpact;
                 _bound = false;
@@ -151,17 +147,21 @@ namespace ToyChest.Gameplay.Player
             }
         }
 
-        // The contact frame of an ability attack: its area burst plays whether or not anything is inside it. Not
-        // impact feedback — no shake or hit-stop here; those stay on a confirmed hit (OnImpact).
-        private void OnContact()
+        // A hit window's area went live — the frame its damage lands. The window's authored burst plays on the ground
+        // under the area, sized to it, whether or not anything is inside. Each attack (ability or combo step) brings its
+        // own effect; this adapter knows none of them. Not impact feedback — no shake or hit-stop here; those stay on a
+        // confirmed hit (OnImpact), which fires this same frame when the area catches someone.
+        private void OnAreaActivated(HitWindow window, Vector3 center, float radius)
         {
-            if (_abilityContactVfx == null || _combat == null || !_combat.IsPerformingAbilityAttack)
+            GameObject effect = window != null ? window.AreaEffect : null;
+            if (effect == null || _combat == null)
             {
                 return;
             }
 
-            GameObject burst = Instantiate(_abilityContactVfx, transform.position, Quaternion.identity);
-            Destroy(burst, Mathf.Max(0.1f, _abilityContactVfxLifetime));
+            GameObject burst = Instantiate(effect, _combat.ToCharacterGround(center), effect.transform.rotation);
+            burst.transform.localScale = effect.transform.localScale * (radius / window.AreaEffectRadius);
+            Destroy(burst, Mathf.Max(0.1f, _areaEffectLifetime));
         }
 
         private void OnImpact(Vector3 hitPoint)

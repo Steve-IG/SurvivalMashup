@@ -154,6 +154,7 @@ GameObject:
   - component: {fileID: 8503631265468922502}
   - component: {fileID: 4730078602012068993}
   - component: {fileID: 6513338035885675492}
+  - component: {fileID: 5968701271499533642}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -471,8 +472,7 @@ MonoBehaviour:
   _impactVfx: {fileID: 102696, guid: 185035e4680c4b344b62bf5ace4674b8, type: 3}
   _impactVfxOffset: {x: 0, y: 0, z: 0}
   _impactVfxLifetime: 2
-  _abilityContactVfx: {fileID: 195466, guid: 56c3274d2f9ec214ab584a80b5ce2d6d, type: 3}
-  _abilityContactVfxLifetime: 2
+  _areaEffectLifetime: 2
   _impactShake: 0.35
   _audioSource: {fileID: 0}
   _swingSound: {fileID: 0}
@@ -562,8 +562,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: ToyChest.Gameplay.Player::ToyChest.Gameplay.Player.PlayerAbilityHud
   _abilities: {fileID: 0}
-  _inputHints:
-  - R / RMB
+  _input: {fileID: 0}
+  _inputHints: []
   _size: {x: 260, y: 22}
   _margin: {x: 24, y: 52}
   _readyColor: {r: 0.95, g: 0.7, b: 0.2, a: 1}
@@ -571,6 +571,27 @@ MonoBehaviour:
   _backgroundColor: {r: 0, g: 0, b: 0, a: 0.55}
   _refusedFlashColor: {r: 1, g: 0.25, b: 0.2, a: 1}
   _flashDuration: 0.3
+--- !u!114 &5968701271499533642
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 428409306736505765}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 25b32ffbf19639f4486bb6311d999254, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: ToyChest.Gameplay.Player::ToyChest.Gameplay.Player.PlayerAbilityAreaIndicator
+  _combat: {fileID: 0}
+  _material: {fileID: 0}
+  _color: {r: 1, g: 0.55, b: 0.15, a: 1}
+  _centerAlpha: 0.08
+  _edgeAlpha: 0.3
+  _rimAlpha: 0.9
+  _rimWidth: 0.08
+  _groundOffset: 0.03
+  _impactFlashDuration: 0.2
 --- !u!1 &443057010201223419
 GameObject:
   m_ObjectHideFlags: 0

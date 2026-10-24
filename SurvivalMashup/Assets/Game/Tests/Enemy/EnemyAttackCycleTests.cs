@@ -167,5 +167,42 @@ namespace ToyChest.Tests.Enemy
             Assert.AreEqual(EnemyAttackPhase.WindUp, cycle.Phase);
             Assert.IsTrue(cycle.Advance(WindUp).Struck, "A future attack after an interruption still lands.");
         }
+
+        // --- Early interrupt window (flinch vs stagger) ----------------------------------------------------
+
+        [Test]
+        public void EarlyWindow_AFlinchInterruptsOnlyNearTheAttackStart()
+        {
+            var cycle = new EnemyAttackCycle(WindUp, Recover, windUpInterruptible: true, recoverInterruptible: false, interruptWindowSeconds: 0.2f);
+            cycle.BeginWindUp();
+            cycle.Advance(0.1f);
+            Assert.IsTrue(cycle.IsInterruptible, "Inside the window.");
+            Assert.IsTrue(cycle.TryInterrupt(), "A flinch at 0.1 s cancels the swing.");
+
+            cycle.BeginWindUp();
+            cycle.Advance(0.3f);
+            Assert.IsFalse(cycle.IsInterruptible, "Committed: past the 0.2 s window.");
+            Assert.IsFalse(cycle.TryInterrupt(), "A flinch at 0.3 s no longer stops it.");
+            Assert.IsTrue(cycle.Advance(WindUp).Struck, "The committed swing still lands.");
+        }
+
+        [Test]
+        public void EarlyWindow_AStaggerInterruptsTheWholeWindUp()
+        {
+            var cycle = new EnemyAttackCycle(WindUp, Recover, windUpInterruptible: true, recoverInterruptible: false, interruptWindowSeconds: 0.2f);
+            cycle.BeginWindUp();
+            cycle.Advance(0.45f);
+            Assert.IsTrue(cycle.TryInterrupt(ignoreWindow: true), "A heavy hit stops even a committed swing.");
+            Assert.AreEqual(EnemyAttackPhase.Ready, cycle.Phase);
+        }
+
+        [Test]
+        public void EarlyWindow_NeverOverridesAnUninterruptibleAttack()
+        {
+            var cycle = new EnemyAttackCycle(WindUp, Recover, windUpInterruptible: false, recoverInterruptible: false, interruptWindowSeconds: 0.2f);
+            cycle.BeginWindUp();
+            Assert.IsFalse(cycle.TryInterrupt());
+            Assert.IsFalse(cycle.TryInterrupt(ignoreWindow: true), "Armour beats even a stagger.");
+        }
     }
 }

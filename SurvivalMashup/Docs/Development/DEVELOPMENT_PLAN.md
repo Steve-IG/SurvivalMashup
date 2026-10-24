@@ -61,7 +61,7 @@ Status key: **Verified** (implementation plus test or play evidence) · **Unveri
 | One weapon | **Partial** | `SM_Sword_01` plus `Combo_Test_Sword` are selectable only from a dojo test pad (GX-RG5F, `VerifySwordAttack.cs`). There is no weapon item or equip path, and the default loadout is fists. | High |
 | **Player-facing active Abilities** | **Missing** (player path) at audit; **Ground Slam implemented in Review Group B (awaiting review)** | See *Ability System — Player-Facing Status* below. Infrastructure is verified; no player-activated ability existed at the audit. Review Group B adds Ground Slam (see its record below). | High |
 | Enemy faction | **Partial** | One archetype: Grunt (`Obj_Grunt`, `EnemyCombatant`, `EnemyAttackCycle`, `PursuitMotor`; `EnemyAttackCycleTests`, `PursuitMotorTests`, `CombatContentTests`). Its identity is only the `Actor.Enemy` tag plus the `HitFilter` faction. Targeting uses Unity tags (Technical Debt). Grunt waves come from `EnemySpawnTrigger`. | High |
-| Elite encounter | **Missing** | No elite archetype, encounter, or reward. `Elite` has 0 hits in `Assets/Game/Runtime`. `HV_BossSlam` exists only as a hit-volume preset. | High |
+| Elite encounter | **Missing** at audit; **Grunt Brute encounter implemented in Review Group C (awaiting review)** | At audit: no elite archetype, encounter, or reward. Review Group C adds one (see its section below). | High |
 | Gathering and inventory integration | **Partial** | Inventory is verified (`InventorySetTests`, `SupplyCrateLootContentTests`). Gathering is limited to one-shot crate loot and the Grunt's `item.monster_fang` drop (`LootPickup`). There are no harvestable nodes. Gathered items have no use, and there is no inventory UI (audit probe: 0 Canvas / 0 UIDocument; the only HUD is the IMGUI `PlayerHealthBar`). | High |
 | Loot | **Partial** | Fixed authored drops only (`AddItemEffect`, `LootPickup`); no loot tables or variety. | High |
 | Equipment | **Verified** | `EquipmentContentTests`, `InventoryEquipTests`, `EquipmentSetTests`. The audit probe equipped the Lucky Charm through `PlayerEquipmentController.Toggle()` live. UX is one toggle for all slots. | High |
@@ -147,6 +147,45 @@ Acceptance criteria:
 9. **Docs:** `ABILITY_SYSTEM.md` (player activation pattern), `COMBAT.md` (slam), and this plan.
 
 Grant source for B: `Obj_Player` grants it initially. D moves or extends ability grants into progression.
+
+## Review Group C: Elite Encounter (Grunt Brute)
+
+**Implemented; awaiting review.** Results are in the *Review Group C* entry under *Recently Completed*. There was no detailed RG C section before this one, only the row in the sequenced-plan table. That row's acceptance summary is the contract used here: "Elite composes from data only; its slam is telegraphed and dodgeable; death persists through save; drops its reward."
+
+**The encounter.** A red challenge pad in the empty west half of the dojo, at (−11, 4), more than 12 m (Grunt aggro range) from the existing Grunts. Stepping onto it spawns the **Grunt Brute** and two Grunt escorts. Two more Grunts arrive once, at half health.
+
+**What makes the Brute distinct** (behaviour, not just numbers):
+- It keeps the Grunt's interruptible claw swipe. It adds a signature **Shockwave Slam**: a 1.2 s rooted wind-up, then a 3.5 m circle centred on the Brute that deals 22 damage (a Grunt claw does 8).
+- **Punching does not interrupt the slam.** The Grunt lesson, "hit it while it winds up", is wrong here. The answer is to roll or run out of the circle.
+- After the slam the Brute is rooted for 1.6 s. That **recovery is the punish window** for melee and Ground Slam.
+- The slam has a 5 s cooldown (and a 1.5 s delay when the fight starts), so the claw fills the gaps.
+- It is bigger (1.3× scale), slower (Enemy Speed 2.5 vs 3.5), turns more slowly (300°/s vs 540°/s, so it can be flanked), and has 300 HP (the Grunt has 50).
+
+**Decisions it asks of the player:**
+- Leave the circle, or take 22 to land a few more hits.
+- Spend Ground Slam on the crowd of escorts and reinforcements, or hold it for the Brute's recovery.
+- Kill the escorts first, or focus the Brute.
+
+**Readability.**
+- A ground telegraph (`EnemyAreaTelegraph`) shows the exact circle. A faint disc and a solid rim mark the area, and an inner disc grows to the rim over the wind-up, so the blow lands the instant it meets the rim.
+- The Brute plays the Combo02_3 hammer slam slowed to 0.49×, so the slow raise is the wind-up and the fist lands on the damage frame.
+- A boss bar shows the name and HP, with the callouts "SHOCKWAVE SLAM — GET OUT OF THE CIRCLE" and "STAGGERED — STRIKE NOW".
+- Victory shows an "ELITE DEFEATED" banner that names the reward.
+
+**Ground Slam's role.** Its 3.3 m multi-target area hits the Brute and every escort around it. Pressed during the recovery, it lands safely for 30 on each. It is not a shortcut: alone it would need ten casts (a minute of cooldown) to fell the Brute, and it follows the normal damage rules.
+
+**Completion and reward are authoritative state** (the Supply Crate pattern; no encounter framework):
+- The pad's encounter object `object.elite_encounter_brute` owns a one-shot `resource.encounter_charge`. It also owns `ability.elite_reward_brute`, whose cost is that charge and whose effect adds `item.brute_horn`.
+- Victory activates the reward ability with the player as its target. The Ability System's own cost check grants it **exactly once**.
+- The spent charge is the persisted "defeated" state.
+- A rematch, from the pad after stepping off it, plays the full encounter again, but the reward is refused (CannotAfford).
+- **The Brute's Horn is the hook for RG D** (reward and progression): it sits in the inventory with no use yet.
+
+**Deviations from the table row:**
+- **"Composes from data only":** almost. Every archetype shares `attribute.max_health` (base 50) and `attribute.enemy_speed`, and a definition cannot override base values. The Brute's stats and its `Actor.Elite` tag therefore come from an authored infinite status, `status.elite_brute`: +250 Maximum Health, −1 Enemy Speed, a refill on apply. `EnemyCombatant` applies it on composition from a prefab-authored list. This is data plus a caller, like `HazardVolume`, with no engine change.
+- **"Death persists through save":** verified by EditMode save/reload tests only. There is still no in-game save (RG H).
+- **"Drops its reward":** the reward goes straight into the inventory through `AddItemEffect` when the elite dies, not as a pickup to walk over. That makes it single-grant and persistent by construction. The Brute still drops the Grunt's ordinary fang `LootPickup`.
+- The table described the Brute as "guarding something". It guards nothing: the pad is a challenge. Guarding belongs to RG F's regional objective.
 
 ---
 
@@ -512,6 +551,81 @@ Avoid allowing this section to become the operational task list.
 
 Its purpose is project history.
 
+- Elite Encounter — Grunt Brute (Milestone 1 — The First Fun, Review Group C). **Awaiting review.** Design: see *Review Group C* above.
+  - **Runtime code** (all in `ToyChest.Gameplay.Enemy`; no Core, Framework, or Ability System change):
+    - `EnemyCombatant` gained an optional **signature attack**: an authored ability id, radius, trigger range, wind-up, recovery, cooldown, initial delay, and interruptibility. It is resolved through the shared hit vocabulary as an `Owner`-centred sphere, applied with the Multiple Targets overload. The adapter also gained **innate statuses**, applied once on composition. Grunts and dummies author neither, so their behaviour is unchanged. It raises `SignatureWindUpStarted`/`SignatureStruck` and exposes `TryGetSignatureArea`, the same centre and radius the hit query uses.
+    - The pure, tested `EnemySignatureAttack` wraps a second `EnemyAttackCycle` with a trigger range and cooldown. `EnemyAttackCycle` gained `WindUpProgress`.
+    - `EnemyAreaTelegraph` is the ground disc, rim, growing fill, impact flash, and burst (presentation only). `EnemyAnimatorDriver` plays `Slam` on the signature wind-up and suppresses the hit flinch during it.
+    - `EliteEncounter` is the pad. It spawns through `GameplayObjectSpawner.Compose` (as `EnemySpawnTrigger` does), handles the one-time reinforcements and completion, and grants the reward through the encounter object's ability. `EliteEncounterHud` is IMGUI: pad prompt, boss bar, callouts, banner.
+    - The Enemy asmdef now references `ToyChest.Systems.StatusEffects`.
+  - **Content:**
+    - 11 definitions, all labelled `definitions`: `Obj_GruntBrute`, `Status_EliteBrute`, `Fx_Heal_EliteBrute`, `Tag_Actor_Elite`, `Ability_BruteSlam`, `Fx_Damage_BruteSlam`, `Obj_EliteEncounter`, `Res_EncounterCharge`, `Ability_EliteRewardBrute`, `Fx_AddItem_BruteHorn`, `Item_BruteHorn`.
+    - `GruntBrute.prefab` (a **variant** of `Grunt.prefab`). A `Slam` trigger and state on the shared `EnemyAnimator` (the Combo02_3 clip at speed 0.490, so nt 0.396 lands at 1.2 s; Grunts never fire it).
+    - `M_ElitePad`/`M_EliteArena` materials. The `EliteEncounter` object in `VerticalSlice.unity`: pad, arena floor, and elite, escort, and reinforcement points.
+    - All of it is generated by the idempotent `Tools/CoplayScripts/AuthorEliteEncounter.cs`.
+  - **Tests:** EditMode **527/527**: the 507 baseline, run before any change, plus 20 new.
+    - `EnemySignatureAttackTests` (9): initial delay, trigger range, a single strike at the end of the wind-up, progress 0 → 1, not interruptible / interruptible plus cooldown, recovery never interruptible, cooldown measured from the end of recovery.
+    - `EliteEncounterContentTests` (11): the Brute composes as an enemy with strike and slam; the status gives 300/300 HP, speed 2.5, and `Actor.Elite`; the prefab is a Grunt variant with the status, slam, and telegraph; the slam timing meets fairness invariants; the slam damages the player through `DamageEffect` (22); a punch (20) and Ground Slam (30, elite plus escort) damage the Brute normally; the encounter starts with one charge; the reward is granted once, then refused CannotAfford; the defeated state and the reward survive save/reload; the elite's status and current HP survive save/reload.
+  - **Runtime probe (automated, not a human playtest):** `Tools/CoplayScripts/VerifyEliteEncounter.cs` ran from `Bootstrap.unity`, with real queued input for Q, R, and Ctrl+D, and **passed all 33 checks** with 0 console errors:
+    - The encounter object composes undefeated, with nothing spawned. The pad spawns the Brute at 300/300 with its status, plus 2 escorts, once. Stepping off mid-fight changes nothing.
+    - The Brute engages. The telegraph shows from the first wind-up frame to impact, its fill growing. The Slam state plays. The slam lands **1.206 s** after the wind-up starts (authored 1.2), and at impact the fist is on the ground (hand −0.01 m from the feet).
+    - A player in the circle takes **22 on the impact frame**. A punch during the wind-up lands but does not cancel the slam.
+    - The Brute stays rooted through the recovery, and a punch there lands for 20.
+    - **Rolling out during the wind-up: the slam lands with 0 damage and 0 targets.**
+    - Ground Slam during the recovery hits the Brute and both escorts for **30 each**.
+    - Reinforcements arrive exactly once.
+    - Defeat fires Completed **once** (Activated): Brute's Horn 0 → 1, charge 0. The banner shows. No duplicates after teardown, and the pad re-arms.
+    - A rematch spawns a fresh 300 HP Brute, and its completion is refused the reward (CannotAfford; horns still 1).
+    - Getting there took two probe fixes, both probe mistakes rather than defects: a teleport that landed on the pad and started an early rematch, and a hand-height bound that was too strict.
+  - **Regression:** `VerifyGroundSlam` passed **27/27**, `VerifyComboPads` passed (all checks), and `VerifyAbilityAttackChain` passed. Each had 0 console errors.
+  - **Visual check:** a mid-wind-up screenshot was reviewed. The first arena floor colour (maroon) muddied the red telegraph, so it is now neutral stone.
+  - **Not verified / human playtest needed:** whether the fight is fun, the fairness of 1.2 s / 3.5 m / 22 damage in real hands, HP 300 versus fight length, the escort and reinforcement pressure on a 50 HP player, the readability of the slowed slam animation, and the Brute's visual distinctness. It uses the Grunt model at 1.3×, which is hard to tell apart in a crowd; a tint or a different model is a cheap follow-up. The full fight has never been played start to finish by a person, and the probe shortcuts the last of the Brute's health.
+  - **Docs:** this plan (the RG C section, the gap-audit row, this entry, technical debt) and `ENEMY_SYSTEM.md` (*Review Group C — Elite Encounter*).
+  - **Review adjustments (2026-10-24), requested by Steve.**
+    - **Scalable hit reactions.** These supersede the RG5D rule that "damage interrupts during the wind-up". The canonical description is in `COMBAT.md`, *Hit Reactions*.
+      - Every confirmed player hit now delivers a `HitImpact`: the window's authored **Impact** × the attacker's `attribute.impact_power`. It goes to the struck body's `IHitReactionReceiver`.
+      - The body compares the impact with its `attribute.stability` through the pure `HitReactionResolver`. The outcome tiers are None, Flinch, Stagger, and Knockback.
+      - A **flinch** interrupts only inside the attack's **early interrupt window** (0.25 s of the Grunt's wind-up), then pauses the enemy for 0.4 s.
+      - A **stagger** interrupts the whole interruptible wind-up and locks the enemy.
+      - A **knockback** also slides it back 1.5 m + 1 m per ratio point (capped).
+      - Uninterruptible signature wind-ups are armour.
+      - Hit animations follow the reaction, never raw damage, and use the Frank Fighter clips: Hit01, Hit02 (new `HitHeavy`), and Hit_Knockback (new `Knockback`).
+      - Authored values: Stability 10 on Grunts and dummies; +30 on the Brute (40); player Impact Power 1. Window Impact defaults to 10; the combo finisher is 16 and Ground Slam is 30.
+      - Results: a punch flinches a Grunt, the finisher staggers it, and Ground Slam knocks it back. The Brute ignores punches and finishers and only flinches under Ground Slam.
+      - No Core, Framework, or Ability System change. The new code is `HitImpact`/`HitReaction`/`HitReactionResolver` in `ToyChest.Gameplay.Combat`. `HitResult` gained `Body`; `HitWindow` gained `Impact`; `PlayerCombat.DeliverImpact`/`HitReacted` were added; `EnemyCombatant` implements the receiver.
+    - **Latent bug found and fixed.** The Grunt clip's `OnAttackContact` event could land a *new* wind-up's blow about 0.07 s in, with no telegraph, when the previous swing's clip was still playing: the AnyState→Attack transition could not restart itself.
+      - The transition now restarts the clip.
+      - `EnemyCombatant` ignores contact events in the first half of a wind-up.
+      - Also measured: a normal Grunt blow lands at **~0.34 s** (its clip's contact frame), not at the 0.5 s wind-up timer.
+    - **Camera.** The fixed-angle follow is replaced by an orbiting over-the-shoulder action camera.
+      - The new `ThirdPersonCameraPivot` (Player assembly) rides at 1.2 m and is yawed and pitched by a new `Look` action: mouse delta at 0.12°/px, right stick at 200/120°/s. Pitch is clamped to −30..65°.
+      - The cursor locks during play; Escape releases it and a click recaptures it.
+      - The Cinemachine camera uses a Third Person Follow: shoulder 0.7 m, distance 4.8 m, FOV 55. The old Follow and Deoccluder were removed.
+      - Movement was already camera-relative.
+      - Obstacle avoidance is **off**, because every body shares the Default layer and enemies would yank the camera in. Turn it on once level geometry has its own layer.
+      - **Camera retune (2026-10-24, second pass)**, after the reviewer supplied a God of War reference frame and asked for research on third-person action cameras:
+        - The rig now matches the reference's measured framing: a pivot at shoulder height (0.45 m above the root), 5° pitch, 3.0 m distance, 0.75 m shoulder offset, and vertical FOV 52. The camera sits at about 1.7 m eye height; the character is on the left third with the head 0.38 from the top and the feet at the bottom edge.
+        - Added a gamepad stick dead zone and response curve, gamepad-only auto-align behind travel, and a pitch range of −20…55° that keeps the close camera out of the floor.
+        - The spec, sources, and deferred items (off-screen threat indicators, lock-on, collision layer) are in `COMBAT.md`, *Gameplay Camera*.
+        - `AuthorHitReactionsAndCamera.ExecuteCameraOnly` re-authors only the camera. The full script no longer overwrites a designer-edited Ground Slam cooldown: the reviewer had set it to 1 s.
+        - `GroundSlamContentTests` now ticks fractions of whatever cooldown is authored. `VerifyGroundSlam` explicitly skips its two cooldown-outlasts-the-slam checks when the cooldown is under 2.5 s.
+        - Evidence: EditMode 548/548. `VerifyHitReactions` 18/18, with framing measured on screen and auto-align checked through a virtual gamepad. `VerifyGroundSlam` passed (2 checks skipped at the 1 s cooldown), `VerifyComboPads` passed, `VerifyEliteEncounter` 33/33, `VerifyAbilityAttackChain` passed.
+    - **Tuning.** Grunt speed 3.5 → **2.6** (the Brute's modifier is now −0.3, so it moves at 2.3); claw damage 8 → **5**; Ground Slam cooldown 6 → **3 s**.
+      - The cooldown is designer-editable: `Assets/Game/Content/Definitions/Ability_GroundSlam.asset` → *Cooldown Seconds*. `GroundSlamContentTests` and `VerifyGroundSlam` now read the authored value instead of hard-coding 6 s.
+    - All of it is generated by the idempotent `Tools/CoplayScripts/AuthorHitReactionsAndCamera.cs`. `AuthorEliteEncounter.cs` was updated so that re-running it keeps the new Brute modifiers.
+    - **Tests: EditMode 548/548**, 21 new:
+      - `HitReactionResolverTests` (13 cases)
+      - 3 early-window cases in `EnemyAttackCycleTests`
+      - `HitReactionContentTests` (5): authored stability and power, the Grunt ladder, the Brute ladder, the window is the start of the swing, the Grunt tuning
+      - `CombatContentTests`' claw assertion updated to 5.
+    - **New probe `VerifyHitReactions`: 14/14**, with real input for camera, Q, and R:
+      - The camera sits 4.7 m behind, a 90° orbit turns it to +X, and W then moves along +X.
+      - Q punches flinch a dummy (Hit state) and the finisher staggers it (HitHeavy state).
+      - Ground Slam knocks two Grunts back 1.9 and 2.1 m (Knockback state).
+      - On an attacking Grunt: a flinch at 0.08 s cancels the swing and pauses it with no damage; a flinch at 0.29 s does not cancel; a stagger at 0.29 s does.
+      - The Brute shrugs off a punch-weight blow and flinches under a slam-weight one.
+    - **Regression, all passing:** `VerifyEliteEncounter` 33/33 (speed expectation updated to 2.3), `VerifyGroundSlam`, `VerifyComboPads`, `VerifyAbilityAttackChain`. The chain probe's dummies are now made unshakeable at runtime, because a slam's knockback would push them out of the second pulse.
+    - **Not verified / playtest:** feel of the flinch, stagger, and knockback timings; mouse and stick sensitivity; the camera distance and shoulder side; whether a player can stunlock a Grunt by timing punches into the early window (possible by design today). One more observation: in the probe a committed Grunt swing at a stationary player 1.4 m away dealt no damage, so its cone may whiff close up. That was not investigated.
 - First Player-Activated Ability — Ground Slam (Milestone 1 — The First Fun, Review Group B). **Awaiting review.**
   - **Player path:** a new `Ability1` action (R / Mouse Right / Gamepad Right Shoulder). `PlayerInputBridge` maps it to slot 0 of the new thin `PlayerAbilityActivator` on `Player.prefab`. The slot is authored data: the activation ability id plus the attack asset. It reaches the player through the normal Bootstrap → VerticalSlice composition, and `Obj_Player` grants both definitions.
   - **Two definitions:** `ability.ground_slam` (Self, 6 s cooldown, no cost or effects) and `ability.ground_slam_impact` (Provided, 0 s, `Fx_Damage_GroundSlam` 30). The attack, `Combo_Ability_GroundSlam`, is a one-step combo that reuses `Attack_Fighter_Combo02_3` and its `HV_GroundShockwave` window unchanged.
@@ -524,6 +638,23 @@ Its purpose is project history.
   - **Manual verification:** no human playtest has been performed yet. Slam feel, cooldown length, damage, and the HUD's readability are reviewer judgments.
   - **Technical debt found:** input-driven probes need Game-view focus (`PointersAndKeyboardsRespectGameViewFocus`), or every press is silently dropped (`COMBAT.md`). `Player.prefab` now serializes `PlayerLocomotion._rollMinSpeed` at its code default of 6, with no behaviour change.
   - **Docs:** this plan, `ABILITY_SYSTEM.md` (*Player Activation Pattern*), and `COMBAT.md` (*Ground Slam*).
+  - **Review feedback iteration (2026-10-23).** Four issues were reported and fixed:
+    - **Timing:** damage landed before the visual slam. The window (nt 0.357–0.431) opened while the fist was still raised, and the burst fired only when the window closed. The new dedicated `Attack_GroundSlam` uses one narrow window on the measured landing frame (0.392–0.400) with no limb sweep. The burst hangs off the new `PlayerCombat.AreaActivated`, which fires the frame damage is applied.
+    - **Centre:** the area is now centred on the player (`Owner`, above the root bone), not the right hand. The burst and the indicator draw on the ground under it.
+    - **Indicator:** the new `PlayerAbilityAreaIndicator` shows the exact area as a disc with a gradient fill and a rim, from the slam's start to its end.
+    - **Radius:** 2.2 m → 3.3 m (`HV_GroundSlam`).
+    - The shared `Attack_Fighter_Combo02_3` and `HV_GroundShockwave` are unchanged. `HitWindow.AreaSpace` defaults to the old bone anchoring.
+    - Tests: EditMode **502/502** (`GroundSlamContentTests` 17) at that point. `VerifyGroundSlam` passed all 27 checks, including the same-frame, centre, radius, and indicator checks; a mid-slam screenshot was reviewed. `VerifyComboPads` passed. `VerifyAttackLibrary` output is identical to the committed code's (A/B via stash). The new look and feel still need a human playtest.
+  - **Scalability review (2026-10-23).** Ground Slam's path was audited for single-ability assumptions. Five were found and generalized; there is still no engine change.
+    - **Attack-less slots:** a slot with no attack runs the activation's own Self effects, unbuffered (Second Wind is tested).
+    - **Area burst per window:** `HitWindow.AreaEffect` replaces the single `PlayerAttackFeedback` field that every ability would have shared.
+    - **Multi-step ability attacks:** they auto-chain from one activation, are sealed from the melee button, and can be cancelled only in their final step.
+    - **HUD key hints:** read from the real bindings (`PlayerInputBridge.GetAbilitySlotBindingDisplay`).
+    - **Indicator:** follows the next pulse still to land.
+    - **Timing fix:** the slam's own wind-up fallback was 0.58 s, before its strikes end at 0.593 s. That raced the window in multi-step use. It is now 0.643 s, and a content test enforces the rule for all `Combo_Ability_*`.
+    - **Found, not changed:** `Combo_PlayerMelee` step 0 has the same early-fallback issue (0.317 s vs 0.400 s).
+    - The supported ability shapes and the unsupported ones (projectiles, aimed, movement, charge/channel, more shapes, runtime slot assignment) are listed in `ABILITY_SYSTEM.md`, *Scaling to more abilities*.
+    - Tests: EditMode **507/507**. `VerifyAbilityAttackChain` passed 3 of 3 runs. `VerifyGroundSlam`, `VerifyComboPads`, and `VerifyAttackLibrary` are unchanged (identical to the committed code).
 
 - Milestone 1 Alignment & Verified Gameplay Gap Audit (Milestone 1 — The First Fun, Review Group A). This group was documentation and audit only, with no gameplay or code change.
   - Reconciled this plan's historical milestone labels with the Foundations roadmap. The engine-validation slice (EV-RG3–8) is foundational work. Gameplay Expansion (GX-RG1–5G) is the first tranche of The First Fun. New groups are lettered.
@@ -607,6 +738,14 @@ Current documentation focus:
 - **Equipment-granted Second Wind is unreachable (Review Group A finding).** `Ability_SecondWind` is granted by the Lucky Charm but has no input, adapter, UI, or activation test, so the documented "equipment-granted ability" is real only at the system level. It is resolved by the ability slot from RG B and the binding in RG D. Until then, do not describe it as a player-usable ability.
 - **Scene README and bootstrap startup list drifted (Review Group A finding, cosmetic).** `Assets/Game/Scenes/README.md` says Bootstrap spawns the Wooden Crate on Play. The live boot logs "Live objects: 0" after engine init, and all objects are composed by `VerticalSlice`'s spawners. Update the README (or the startup list) during a future scene pass.
 
+- **Archetypes share base attribute values (Review Group C finding; no engine change).** A `GameplayObjectDefinition` references attribute definitions but cannot override their base values, so every object composing `attribute.max_health` starts at 50. The Brute's stats come from an innate infinite status applied by `EnemyCombatant`. This works and persists, but it is a caller-applied step outside composition. If more variants need it, the composition-level option is per-definition attribute base overrides (a Framework change needing approval) or factory-applied initial statuses.
+- **The elite is a scaled Grunt (Review Group C).** It uses the same model and colours at 1.3×, so it can be hard to pick out among its escorts. The ground telegraph and the boss bar carry its readability today. A tint, accessory, or different model is presentation-only.
+- **Camera obstacle avoidance is off (RG C adjustments).** The Third Person Follow's avoidance would treat enemies (Default layer) as obstacles. Give level geometry its own layer and enable avoidance against it when the region has walls (RG F).
+- **Hit reactions are one-directional (RG C adjustments).** Only player blows deliver `HitImpact`. Enemy blows on the player still do damage only, since player hit reactions are deliberately off (GX-RG5C). The receiver interface is ready if that decision changes.
+- **Grunt model heads render missing (observed in RG C screenshots, not investigated).** The JC Ranger Grunt shows an empty collar in play: likely a missing or disabled head/hair mesh on the prefab model. Presentation only.
+- **Elite encounter state is per-session (Review Group C).** The defeated charge persists through the Save System (by test), but there is no in-game save yet (RG H). The live elite and escorts are transient, like all enemies, so leaving mid-fight and reloading resets the fight. The pad is a minimal challenge trigger, not a region encounter. RG F should gate the regional objective on `resource.encounter_charge`.
+- **`AddressableAssetSettings.m_currentHash` churn.** Authoring definitions through the Addressables API rewrites this hash (cosmetic).
+
 Continue recording technical debt intentionally.
 
 Do not redesign architecture during Milestone 1 unless a genuine architectural defect is demonstrated.
@@ -685,7 +824,9 @@ Gameplay
 
 Verified: authored Gameplay Objects, movement, ordinary melee combat and combos, equipment, interaction, gameplay effects, hazards, NPCs, and save/load (by test).
 
-Missing for Milestone 1 (The First Fun): player-activated abilities, elite, progression, crafting, companion, region identity, world reaction, Hub/return, and in-game save. See the gap audit.
+Awaiting review: Ground Slam (RG B) and the Grunt Brute elite encounter (RG C).
+
+Missing for Milestone 1 (The First Fun): progression, crafting, companion, region identity, world reaction, Hub/return, and in-game save. See the gap audit.
 
 Technical Debt
 

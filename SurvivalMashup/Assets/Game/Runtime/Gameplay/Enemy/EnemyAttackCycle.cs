@@ -52,6 +52,7 @@ namespace ToyChest.Gameplay.Enemy
         private readonly float _recoverSeconds;
         private readonly bool _windUpInterruptible;
         private readonly bool _recoverInterruptible;
+        private readonly float _interruptWindowSeconds;
 
         private EnemyAttackPhase _phase = EnemyAttackPhase.Ready;
         private float _timer;
@@ -61,11 +62,23 @@ namespace ToyChest.Gameplay.Enemy
         /// which phases a hit may interrupt.
         /// </summary>
         public EnemyAttackCycle(float windUpSeconds, float recoverSeconds, bool windUpInterruptible, bool recoverInterruptible)
+            : this(windUpSeconds, recoverSeconds, windUpInterruptible, recoverInterruptible, float.PositiveInfinity)
+        {
+        }
+
+        /// <summary>
+        /// As above, plus the <b>early interrupt window</b>: an ordinary (flinch-weight) hit interrupts the wind-up only
+        /// during its first <paramref name="interruptWindowSeconds"/> — the moment the enemy commits to its swing, a
+        /// light blow can no longer stop it. Heavier hits pass <c>ignoreWindow</c> to <see cref="TryInterrupt(bool)"/>
+        /// and interrupt the whole interruptible wind-up.
+        /// </summary>
+        public EnemyAttackCycle(float windUpSeconds, float recoverSeconds, bool windUpInterruptible, bool recoverInterruptible, float interruptWindowSeconds)
         {
             _windUpSeconds = Mathf.Max(0f, windUpSeconds);
             _recoverSeconds = Mathf.Max(0f, recoverSeconds);
             _windUpInterruptible = windUpInterruptible;
             _recoverInterruptible = recoverInterruptible;
+            _interruptWindowSeconds = Mathf.Max(0f, interruptWindowSeconds);
         }
 
         /// <summary>The phase the attack is in.</summary>
@@ -78,11 +91,24 @@ namespace ToyChest.Gameplay.Enemy
         public bool IsWindingUp => _phase == EnemyAttackPhase.WindUp;
 
         /// <summary>
+        /// How far through the wind-up the attack is, 0 at its start to 1 at the instant the blow lands; 0 outside the
+        /// wind-up. Presentation reads it to show the player when a telegraphed blow will land.
+        /// </summary>
+        public float WindUpProgress =>
+            _phase != EnemyAttackPhase.WindUp ? 0f :
+            _windUpSeconds <= 0f ? 1f : Mathf.Clamp01(1f - _timer / _windUpSeconds);
+
+        /// <summary>
         /// Whether a hit right now would interrupt the attack — the authored interrupt window for the
         /// current phase. Ready is never interruptible (there is nothing to interrupt).
         /// </summary>
-        public bool IsInterruptible =>
-            _phase == EnemyAttackPhase.WindUp ? _windUpInterruptible :
+        public bool IsInterruptible => CanInterrupt(ignoreWindow: false);
+
+        /// <summary>Seconds elapsed in the current wind-up (0 outside it).</summary>
+        public float WindUpElapsed => _phase == EnemyAttackPhase.WindUp ? _windUpSeconds - _timer : 0f;
+
+        private bool CanInterrupt(bool ignoreWindow) =>
+            _phase == EnemyAttackPhase.WindUp ? _windUpInterruptible && (ignoreWindow || WindUpElapsed <= _interruptWindowSeconds) :
             _phase == EnemyAttackPhase.Recover && _recoverInterruptible;
 
         /// <summary>Begins the wind-up from <see cref="EnemyAttackPhase.Ready"/>. No-op if already attacking.</summary>
@@ -163,9 +189,16 @@ namespace ToyChest.Gameplay.Enemy
         /// returns true. In a non-interruptible phase the attack is left running and this returns false, so a
         /// blow outside the window does not arbitrarily cancel it.
         /// </summary>
-        public bool TryInterrupt()
+        public bool TryInterrupt() => TryInterrupt(ignoreWindow: false);
+
+        /// <summary>
+        /// As <see cref="TryInterrupt()"/>; with <paramref name="ignoreWindow"/> (a stagger-weight hit) the whole
+        /// interruptible wind-up can be interrupted, not just its early window. An attack authored uninterruptible
+        /// stays uninterruptible either way.
+        /// </summary>
+        public bool TryInterrupt(bool ignoreWindow)
         {
-            if (!IsInterruptible)
+            if (!CanInterrupt(ignoreWindow))
             {
                 return false;
             }

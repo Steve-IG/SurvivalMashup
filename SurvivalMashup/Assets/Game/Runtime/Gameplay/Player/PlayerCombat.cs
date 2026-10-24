@@ -5,6 +5,7 @@ using ToyChest.Framework.Objects;
 using ToyChest.Gameplay.Combat;
 using ToyChest.Gameplay.HitDetection;
 using ToyChest.Systems.Abilities;
+using ToyChest.Systems.Attributes;
 using ToyChest.Systems.GameplayEffects;
 using UnityEngine;
 
@@ -64,6 +65,17 @@ namespace ToyChest.Gameplay.Player
         [SerializeField]
         [Tooltip("Unity tag identifying valid attack targets.")]
         private string _enemyTag = "Enemy";
+
+        [Header("Hit reactions")]
+        [SerializeField]
+        [Tooltip("Attribute multiplying every blow's authored Impact (absent = ×1). Strength progression or equipment " +
+                 "raises it to make the same attacks flinch, stagger, and knock back heavier enemies.")]
+        private string _impactPowerAttributeId = "attribute.impact_power";
+
+        [SerializeField]
+        [Min(0f)]
+        [Tooltip("Impact of a legacy combo step that has no attack asset (attack-asset windows author their own).")]
+        private float _stepImpact = HitWindow.DefaultImpact;
 
         [SerializeField]
         [Tooltip("Physics layers searched for targets.")]
@@ -158,6 +170,9 @@ namespace ToyChest.Gameplay.Player
         private readonly HitWindowLedger _ledger = new HitWindowLedger();
         private readonly List<int> _openWindows = new List<int>();
 
+        // Windows of the current step whose area has gone live (AreaActivated is raised once per window per step).
+        private readonly HashSet<int> _activatedAreas = new HashSet<int>();
+
         // An ability attack (a one-off authored attack started by an ability activation, see StartAbilityAttack)
         // borrows the step pipeline: its runtime replaces the combo's while it plays, and the combo's is parked
         // here and restored the moment the ability attack ends or is cancelled. Each attack is bound once.
@@ -193,6 +208,21 @@ namespace ToyChest.Gameplay.Player
         /// </summary>
         public event Action<string> WindowStruck;
 
+        /// <summary>
+        /// Raised the frame an attack-asset window's <b>area</b> goes live (a slam's shockwave), carrying the authored
+        /// window (its id and its <see cref="HitWindow.AreaEffect"/>) and the area's live world centre and radius — once
+        /// per window per step, hit or miss, on the same frame that window applies its damage. The moment an area attack
+        /// "lands": presentation that must coincide with the damage (a ground burst) hangs off this rather than
+        /// <see cref="Contacted"/>, which fires when the step's last window closes.
+        /// </summary>
+        public event Action<HitWindow, Vector3, float> AreaActivated;
+
+        /// <summary>
+        /// Raised once per confirmed target that has an <see cref="IHitReactionReceiver"/>, after its damage, with the
+        /// reaction the blow's weight produced on it (None, Flinch, Stagger, Knockback). For tooling and verification.
+        /// </summary>
+        public event Action<GameplayObject, HitReaction> HitReacted;
+
         /// <summary>The authored combo the attack input drives (null = the single-swing fallback).</summary>
         public ComboDefinition Combo => _combo;
 
@@ -214,6 +244,64 @@ namespace ToyChest.Gameplay.Player
 
         /// <summary>Whether the attack in progress is an ability attack (see <see cref="StartAbilityAttack"/>), not the combo.</summary>
         public bool IsPerformingAbilityAttack => _abilityAttack != null;
+
+        /// <summary>
+        /// The area the ability attack in progress will strike next — the live centre and radius of the current step's
+        /// first area window that has not gone live yet (or, once all have, the last one that did) — from the moment the
+        /// attack starts until it ends, so presentation can show exactly where it will land. An ability with several
+        /// pulses (areas in successive windows or steps) shows each in turn. False when no ability attack is in progress
+        /// or its current step has no area.
+        /// </summary>
+        public bool TryGetAbilityAttackArea(out Vector3 center, out float radius)
+        {
+            center = Vector3.zero;
+            radius = 0f;
+            int index = _sequencer != null ? _sequencer.StepIndex : -1;
+            if (_abilityAttack == null || index < 0 || index >= _steps.Length || _steps[index].WindowAreas == null)
+            {
+                return false;
+            }
+
+            HitVolumeEmitter chosen = null;
+            HitVolumeEmitter[] areas = _steps[index].WindowAreas;
+            for (int w = 0; w < areas.Length; w++)
+            {
+                if (areas[w] == null || !areas[w].IsBound)
+                {
+                    continue;
+                }
+
+                chosen = areas[w];
+                if (!_activatedAreas.Contains(w))
+                {
+                    break; // the next pulse still to land
+                }
+            }
+
+            if (chosen == null)
+            {
+                return false;
+            }
+
+            center = chosen.Origin;
+            radius = chosen.Volume.Radius;
+            return true;
+        }
+
+        /// <summary>
+        /// <paramref name="point"/> projected onto the ground under the character: the height of the character model's
+        /// root (the Animator's transform, at the feet). Presentation uses it to draw an area centred on the body — whose
+        /// centre sits at body height — flat on the ground.
+        /// </summary>
+        public Vector3 ToCharacterGround(Vector3 point)
+        {
+            if (_animator != null)
+            {
+                point.y = _animator.transform.position.y;
+            }
+
+            return point;
+        }
 
         /// <summary>The active step's phase (Idle / WindUp / Recovery). Debug tooling reads this.</summary>
         public ComboPhase Phase => _sequencer != null ? _sequencer.Phase : ComboPhase.Idle;
@@ -403,7 +491,7 @@ namespace ToyChest.Gameplay.Player
 
                 if (window.Area != null)
                 {
-                    var anchor = new HitVolumeAnchor(HitAnchorSpace.HumanoidBone, window.AreaBone, Vector3.zero, HitFacing.Owner);
+                    var anchor = new HitVolumeAnchor(window.AreaSpace, window.AreaBone, Vector3.zero, HitFacing.Owner);
                     var area = new HitVolumeEmitter(window.Area.Volume, anchor, _enemyTag, _targetLayers);
                     area.Bind(transform, animator);
                     runtime.WindowAreas[w] = area;
@@ -549,7 +637,8 @@ namespace ToyChest.Gameplay.Player
         }
 
         /// <summary>
-        /// Plays an ability's authored attack — a <see cref="ComboDefinition"/>, typically one step — through the same
+        /// Plays an ability's authored attack — a <see cref="ComboDefinition"/> of one or more steps, all played from this
+        /// one call (later steps chain automatically; the melee press never advances them) — through the same
         /// step pipeline as the combo: its animation, its hit windows and areas, and its impact ability applied to every
         /// target through the Multiple Targets path, with <see cref="Attacked"/>/<see cref="Contacted"/>/<see cref="Impacted"/>
         /// raised as for any step. The caller has already committed the ability's activation (cost and cooldown); this
@@ -670,7 +759,9 @@ namespace ToyChest.Gameplay.Player
         {
             if (_sequencer.IsActive)
             {
-                bool hasNext = _sequencer.StepIndex + 1 < _sequencer.StepCount;
+                // An ability attack's later steps belong to the ability (they chain on their own, see OnStepStarted):
+                // the melee press never advances them, it only waits for — or cuts — the ability's final recovery.
+                bool hasNext = _abilityAttack == null && _sequencer.StepIndex + 1 < _sequencer.StepCount;
                 if (hasNext)
                 {
                     // Mid-combo: buffers a continuation while committed, or continues straight to the next step
@@ -786,7 +877,8 @@ namespace ToyChest.Gameplay.Player
             SyncCommitment();
         }
 
-        // Whether the active attack-asset step is in its recovery tail past the attack's cancel point.
+        // Whether the active attack-asset step is in its recovery tail past the attack's cancel point. An ability
+        // attack is cancelable only in its final step, so neither steering nor another press can cut it short mid-sequence.
         private bool InCancelableRecovery()
         {
             if (_sequencer == null || _sequencer.Phase != ComboPhase.Recovery)
@@ -795,6 +887,11 @@ namespace ToyChest.Gameplay.Player
             }
 
             int index = _sequencer.StepIndex;
+            if (_abilityAttack != null && index + 1 < _steps.Length)
+            {
+                return false;
+            }
+
             StepRuntime step = index >= 0 && index < _steps.Length ? _steps[index] : null;
             return step?.Attack != null && step.Timeline.IsCancelable;
         }
@@ -814,6 +911,7 @@ namespace ToyChest.Gameplay.Player
             {
                 step.Timeline.Restart();
                 _ledger.Clear();
+                _activatedAreas.Clear();
                 _lastTargetsHit = 0;
                 step.StaleTime = -1f;
                 if (_animator != null && _animator.isActiveAndEnabled)
@@ -848,6 +946,13 @@ namespace ToyChest.Gameplay.Player
             // the character moves only by the attack's root motion for exactly as long as the step is
             // committed, and never a frame longer.
             Attacked?.Invoke(step.AnimatorTrigger);
+
+            // An ability attack plays its whole authored sequence from one activation: each step queues the next, which
+            // chains exactly as a buffered combo press does (right after this step's strikes are done).
+            if (_abilityAttack != null && index + 1 < _steps.Length)
+            {
+                _sequencer.Press();
+            }
         }
 
         /// <summary>
@@ -941,8 +1046,29 @@ namespace ToyChest.Gameplay.Player
                     // appear on every struck body rather than only the first.
                     _lastContactPoint = _resolvedHits[i].ContactPoint;
                     Impacted?.Invoke(_resolvedHits[i].ContactPoint);
+                    DeliverImpact(_resolvedHits[i], _stepImpact, attacker);
                 }
             }
+        }
+
+        // After the damage: hand the blow's physical weight to the struck body, which resolves its own reaction against
+        // its Stability (flinch, stagger, knockback). Bodies without a receiver (crates, the player) only take damage.
+        private void DeliverImpact(in HitResult hit, float impact, GameplayObject attacker)
+        {
+            if (hit.Body == null || !hit.Body.TryGetComponent(out IHitReactionReceiver receiver))
+            {
+                return;
+            }
+
+            float power = 1f;
+            if (attacker.TryGet(out AttributeSet attributes) &&
+                attributes.TryGetValue(new DefinitionId(_impactPowerAttributeId), out float value))
+            {
+                power = value;
+            }
+
+            HitReaction reaction = receiver.ReceiveImpact(new HitImpact(impact * power, hit.Body.position - transform.position, hit.ContactPoint, attacker));
+            HitReacted?.Invoke(hit.Object, reaction);
         }
 
         /// <summary>
@@ -1122,6 +1248,11 @@ namespace ToyChest.Gameplay.Player
             HitVolumeEmitter area = step.WindowAreas[windowIndex];
             if (area != null)
             {
+                if (_activatedAreas.Add(windowIndex))
+                {
+                    AreaActivated?.Invoke(window, area.Origin, area.Volume.Radius);
+                }
+
                 IReadOnlyList<HitResult> hits = area.Detect(attacker, _detector);
                 for (int h = 0; h < hits.Count; h++)
                 {
@@ -1160,6 +1291,7 @@ namespace ToyChest.Gameplay.Player
                     _lastContactPoint = _resolvedHits[i].ContactPoint;
                     WindowStruck?.Invoke(window.Id);
                     Impacted?.Invoke(_resolvedHits[i].ContactPoint);
+                    DeliverImpact(_resolvedHits[i], window.Impact, attacker);
                 }
             }
         }

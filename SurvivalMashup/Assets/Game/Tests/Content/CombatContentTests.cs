@@ -177,7 +177,7 @@ namespace ToyChest.Tests.Content
                 grunt.Get<AbilitySet>().TryActivate(new DefinitionId(EnemyStrikeId), EffectTarget.From(player));
 
             Assert.AreEqual(AbilityActivationResult.Activated, result);
-            Assert.AreEqual(PlayerMaxHealth - 8f, playerHealth.Current, Tolerance, "The Grunt's claw deals 8 damage to the player.");
+            Assert.AreEqual(PlayerMaxHealth - 5f, playerHealth.Current, Tolerance, "The Grunt's claw deals 5 damage to the player.");
         }
 
         private GameplayObject Spawn(string id)

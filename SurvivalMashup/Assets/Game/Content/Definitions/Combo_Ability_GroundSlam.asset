@@ -24,10 +24,10 @@ MonoBehaviour:
     _anchorBone: 0
     _anchorOffset: {x: 0, y: 0, z: 0}
     _extraVolumes: []
-    _attack: {fileID: 11400000, guid: fc26b57eaf6f20f48b618f94051d3396, type: 2}
+    _attack: {fileID: 11400000, guid: a349fa9c8d9044189922aaca270a527f, type: 2}
     _animatorState: Fighter_Combo02_3
     _animatorTrigger: Fighter_Combo02_3
-    _windUpDuration: 0.69
+    _windUpDuration: 0.643
     _recoveryDuration: 0.8433335
     _continuationWindow: 0
     _postImpactCommit: 0

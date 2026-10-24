@@ -63,6 +63,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - definitions
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 085e3bf943694014da68562e272fb4c3
+    m_Address: Assets/Game/Content/Definitions/Ability_BruteSlam.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0b1dbcd5828c4b9e9b72ddc2a289b640
     m_Address: Assets/Game/Content/Definitions/Obj_HealingShrine.asset
     m_ReadOnly: 0
@@ -99,8 +105,20 @@ MonoBehaviour:
     m_SerializedLabels:
     - definitions
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1a2756ba728c6534ab7f90293536f2fa
+    m_Address: Assets/Game/Content/Definitions/Item_BruteHorn.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2156444778ca432bb76afb91539e626b
     m_Address: Assets/Game/Content/Definitions/Res_MachineCharge.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2c9b3d0937da4b04ab185f0b3c2d856c
+    m_Address: Assets/Game/Content/Definitions/Tag_Actor_Elite.asset
     m_ReadOnly: 0
     m_SerializedLabels:
     - definitions
@@ -135,6 +153,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - definitions
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3aa85ca4474d7ca488c6ee863ea4771d
+    m_Address: Assets/Game/Content/Definitions/Fx_Heal_EliteBrute.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 46555dccb08ddc54794153a220466ad0
     m_Address: Assets/Game/Content/Definitions/Ability_GreetTraveler.asset
     m_ReadOnly: 0
@@ -161,6 +185,18 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 5c89a1d4a36aa6848bd46e3949ea4c48
     m_Address: Assets/Game/Content/Definitions/Ability_OpenCrate.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5dad701400cc7b3489b87d42a92152cd
+    m_Address: Assets/Game/Content/Definitions/Res_EncounterCharge.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 60c7cb295756a1b44a97ad64eba9c9cc
+    m_Address: Assets/Game/Content/Definitions/Attr_Stability.asset
     m_ReadOnly: 0
     m_SerializedLabels:
     - definitions
@@ -243,6 +279,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - definitions
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 87ebfb477c0032f4294726627420ecfa
+    m_Address: Assets/Game/Content/Definitions/Obj_GruntBrute.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 89fe143bc98279e4abd32a702a1c9d10
     m_Address: Assets/Game/Content/Definitions/Tag_Actor_Npc.asset
     m_ReadOnly: 0
@@ -257,6 +299,12 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8da31a57baf44f058911347891b11601
     m_Address: Assets/Game/Content/Definitions/Fx_Heal_Warmth.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 934f4effeedb30e43be61e6c28d71b80
+    m_Address: Assets/Game/Content/Definitions/Status_EliteBrute.asset
     m_ReadOnly: 0
     m_SerializedLabels:
     - definitions
@@ -291,6 +339,18 @@ MonoBehaviour:
     m_SerializedLabels:
     - definitions
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a9b71f2beaa0a1240ac497784256ff7e
+    m_Address: Assets/Game/Content/Definitions/Obj_EliteEncounter.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: aa6e31186688d434db2b6b22f788d0cb
+    m_Address: Assets/Game/Content/Definitions/Fx_Damage_BruteSlam.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ab0c47e1c71442b18aca9a09e1730297
     m_Address: Assets/Game/Content/Definitions/Fx_AddItem_Relic.asset
     m_ReadOnly: 0
@@ -303,6 +363,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - definitions
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ad359339c13a8a548a77d36be4ca8426
+    m_Address: Assets/Game/Content/Definitions/Ability_EliteRewardBrute.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: aecfbe9ded0db0a439639f409009bf24
     m_Address: Assets/Game/Content/Definitions/Interaction_LootEquipment.asset
     m_ReadOnly: 0
@@ -311,6 +377,12 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: af788542d4efc2549a5d27e8402df13c
     m_Address: Assets/Game/Content/Definitions/Ability_SecondWind.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b0427c6a96ef5174f9f97640a4068320
+    m_Address: Assets/Game/Content/Definitions/Fx_AddItem_BruteHorn.asset
     m_ReadOnly: 0
     m_SerializedLabels:
     - definitions
@@ -383,6 +455,12 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d03e951807e066d4a8c7655232fb8a63
     m_Address: Assets/Game/Content/Definitions/Res_GiftCharge.asset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - definitions
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d57b141c6469d5547822a6ff62d52442
+    m_Address: Assets/Game/Content/Definitions/Attr_ImpactPower.asset
     m_ReadOnly: 0
     m_SerializedLabels:
     - definitions

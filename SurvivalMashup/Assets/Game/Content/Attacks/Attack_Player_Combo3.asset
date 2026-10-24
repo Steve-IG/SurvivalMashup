@@ -22,23 +22,44 @@ MonoBehaviour:
     _end: 0.19491525
     _limbs: 4
     _area: {fileID: 0}
+    _areaSpace: 1
     _areaBone: 0
+    _areaEffect: {fileID: 0}
+    _areaEffectRadius: 1
     _abilityId: 
     _rehitInterval: 0
+    _impact: 16
+    _verified: 0
   - _id: Left kick
     _start: 0.12711863
     _end: 0.16101696
     _limbs: 8
     _area: {fileID: 0}
+    _areaSpace: 1
     _areaBone: 0
+    _areaEffect: {fileID: 0}
+    _areaEffectRadius: 1
     _abilityId: 
     _rehitInterval: 0
+    _impact: 16
+    _verified: 0
   - _id: Slam
     _start: 0.43220308
     _end: 0.48305055
     _limbs: 3
     _area: {fileID: 0}
+    _areaSpace: 1
     _areaBone: 0
+    _areaEffect: {fileID: 0}
+    _areaEffectRadius: 1
     _abilityId: 
     _rehitInterval: 0
+    _impact: 16
+    _verified: 0
   _strikeHint: -1
+  _airHeight:
+    serializedVersion: 2
+    m_Curve: []
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4

@@ -15,4 +15,4 @@ MonoBehaviour:
   _definitionId: fx.damage.enemy_strike
   _conditions: []
   _resourceId: resource.health
-  _amount: 8
+  _amount: 5

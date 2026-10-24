@@ -38,10 +38,18 @@ namespace ToyChest.Gameplay.Player
     }
 
     /// <summary>
-    /// The pure rules of one player ability input slot: <c>press → activation ability → authored attack</c>. The
-    /// slot binds an <b>activation ability</b> (Self target: tag gates, costs, and the ability's cooldown) to the
-    /// authored attack that performs it, whose hit windows apply a separate <b>impact ability</b> to every target hit.
-    /// It holds no ability-specific code — a slot is two authored references.
+    /// The pure rules of one player ability input slot: <c>press → activation ability → (optional) authored attack</c>.
+    /// The slot binds an <b>activation ability</b> (Self target: tag gates, costs, the ability's cooldown, and any
+    /// effects of its own) to an optional authored attack that performs it, whose hit windows apply separate
+    /// <b>impact abilities</b> to every target hit. It holds no ability-specific code — a slot is two authored
+    /// references. Two shapes:
+    /// <list type="bullet">
+    /// <item><b>Attack ability</b> (Ground Slam): the activation commits and the attack plays; damage comes from the
+    /// attack's windows.</item>
+    /// <item><b>Attack-less ability</b> (a Self heal or buff such as Second Wind): no attack is authored, so the
+    /// activation's own Self effects are the whole ability. It needs nothing from the character's attack state, so it
+    /// is never buffered behind a swing or a roll.</item>
+    /// </list>
     ///
     /// <para><b>Cooldown is committed at press.</b> The activation ability commits (paying its cost and starting its
     /// cooldown through <see cref="AbilitySet"/>) before the attack starts and before any target is detected, so a
@@ -72,7 +80,7 @@ namespace ToyChest.Gameplay.Player
         /// <summary>The Self-mode ability whose activation owns this slot's gates, cost, and cooldown.</summary>
         public DefinitionId ActivationAbility { get; }
 
-        /// <summary>The authored attack performed when the activation commits.</summary>
+        /// <summary>The authored attack performed when the activation commits, or null for an attack-less ability.</summary>
         public ComboDefinition Attack { get; }
 
         /// <summary>Whether a press is being held until the character can act.</summary>
@@ -126,7 +134,7 @@ namespace ToyChest.Gameplay.Player
 
         private AbilitySlotPressResult TryActivate(AbilitySet abilities, IAbilityAttackPerformer performer)
         {
-            if (abilities == null || performer == null || Attack == null)
+            if (abilities == null || (Attack != null && performer == null))
             {
                 LastResult = AbilityActivationResult.NotGranted;
                 return AbilitySlotPressResult.Refused;
@@ -141,7 +149,7 @@ namespace ToyChest.Gameplay.Player
                 return AbilitySlotPressResult.Refused;
             }
 
-            if (!performer.CanStartAbilityAttack(Attack))
+            if (Attack != null && !performer.CanStartAbilityAttack(Attack))
             {
                 return AbilitySlotPressResult.Buffered;
             }
@@ -154,7 +162,12 @@ namespace ToyChest.Gameplay.Player
                 return AbilitySlotPressResult.Refused;
             }
 
-            performer.StartAbilityAttack(Attack);
+            // An attack-less ability is complete here: TryActivate already ran its own Self effects.
+            if (Attack != null)
+            {
+                performer.StartAbilityAttack(Attack);
+            }
+
             return AbilitySlotPressResult.Activated;
         }
     }

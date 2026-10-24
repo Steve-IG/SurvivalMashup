@@ -845,25 +845,103 @@ VerifyAttackLibrary         0 duplicate window hits; Grunts vs Combo_Test_Aerial
 
 **Probe note.** In an unfocused Editor the Game view doesn't render, so `WaitForEndOfFrame` never resumes and `VerifyAttackEnd` stalls. Run it with the Editor focused. `VerifyMashAndRoll` only yields `null`.
 
+## Gameplay Camera — close over-the-shoulder action camera (Review Group C adjustments, canonical)
+
+**Target:** God of War (2018)'s close third-person camera, from the reviewer's reference frame. Measured on that frame:
+- the character fills about 60% of screen height, head about 39% from the top and feet at the bottom edge;
+- they sit on the **left third** (x ≈ 0.36);
+- the camera is at about eye height and nearly level (horizon about 43% from the top).
+
+**Practices adopted** from third-person action cameras (God of War, Assassin's Creed, Elden Ring) and the Cinemachine third-person rig:
+- **Close and intimate, with the character off-centre** so the fight reads ahead of them. The shoulder offset alone places the character; the camera looks along the orbit direction, never at the character.
+- **The player owns the orbit.** No positional lag on look input; light positional follow smoothing; no roll; level horizon.
+- **The stick is shaped:** a radial dead zone plus a response curve (fine aim near centre, full speed at the rim). The mouse maps 1:1 (degrees per pixel). Y-invert is an option.
+- **Auto-align behind travel** is gentle, **gamepad-only**, starts after a delay with no look input, and never spins when running toward the camera (the Assassin's Creed / God of War exploration convention; mouse players dislike being rotated).
+- **The pitch range keeps a close camera out of the floor** when looking up (no collision is needed for this).
+- **Movement is camera-relative** (already true).
+
+| Setting | Value | Where |
+|---|---|---|
+| Pivot height above the player root (body centre, about 1 m) | 0.45 m (shoulder) | `ThirdPersonCameraPivot._height` (scene `CameraPivot`) |
+| Initial pitch / range | 5° / −20°…55° | `ThirdPersonCameraPivot` |
+| Distance / shoulder offset / vertical arm | 3.0 m / 0.75 m right / 0 | CM ThirdPerson → `CinemachineThirdPersonFollow` |
+| Vertical FOV | 52° (about 80° horizontal at 16:9) | CM ThirdPerson lens |
+| Mouse | 0.12°/px | `ThirdPersonCameraPivot` |
+| Stick | 200 / 120 °/s, dead zone 0.12, curve exponent 1.8 | `ThirdPersonCameraPivot` |
+| Auto-align (gamepad) | after 1.5 s, 70°/s at 90°, ignored beyond 120° | `ThirdPersonCameraPivot` |
+
+The result in play (`VerifyHitReactions`): camera 3.0 m behind at 1.7 m eye height; character at x 0.36, head 0.38 from the top, feet at the bottom edge.
+
+**Known trade-offs and next steps** (not built; each is its own decision):
+- **Off-screen threats.** A close camera cuts peripheral vision. God of War answers it with off-screen attack indicators, and with enemy positioning that only leaves the screen through player action. Both are recommended before encounters get denser.
+- **Lock-on or soft targeting** for duels (Elden Ring / God of War). It frames the player and target together and re-centres the camera; target selection weighs distance, on-screen visibility, and how near the frontal cone the target is.
+- **Camera collision:** obstacle avoidance is off until level geometry has its own physics layer (enemies share Default today).
+- **Combat framing:** an optional slight pull-back when several enemies are near, which Assassin's Creed-style combat cameras do and God of War largely avoids.
+
+Re-author the camera without touching other content with `AuthorHitReactionsAndCamera.ExecuteCameraOnly`.
+
+## Hit Reactions — flinch, stagger, knockback (Review Group C adjustments, canonical)
+
+How hard a blow *pushes* is separate from how much it *hurts*. Damage stays the ability's `DamageEffect`. After the damage lands, the attacker delivers the blow's physical weight to the struck body, and the body decides how it reacts. This replaces the earlier rule that "a hit inside the wind-up interrupts" (RG5D). It is a small Gameplay-layer vocabulary, not a stun or poise *system*: no status, no resource, no manager, and no Core, Framework, or Ability System change.
+
+```
+confirmed hit → ability damage → HitImpact(power, direction) → IHitReactionReceiver → HitReactionResolver(power, Stability, rules) → reaction → interrupt / stagger / knockback + hit animation
+```
+
+- **Power** = the hit window's authored `Impact` × the attacker's `attribute.impact_power` (absent = ×1). Defaults: window Impact 10 (a punch); combo finisher 16; Ground Slam 30.
+- **Stability** = the target's `attribute.stability` (Grunts and dummies 10; the Grunt Brute 40 through its elite status). Because it is an attribute, statuses and equipment can raise or lower it.
+- **Ratio** = power ÷ stability. With each enemy's authored `HitReactionRules` (defaults below):
+
+| Ratio | Reaction | Effect |
+|---|---|---|
+| < 0.5 | None | Damage only (hit flash); no animation, no interrupt. |
+| 0.5 – 1.5 | Flinch | Light hit animation. Interrupts the attack **only inside its early interrupt window** (the Grunt's first 0.25 s), then 0.4 s out of action. |
+| 1.5 – 2.5 | Stagger | Heavy hit animation. Interrupts any interruptible wind-up. Locked for 0.45 s. |
+| ≥ 2.5 | Knockback | Stagger plus a slide of 1.5 m + 1 m per ratio point (cap 5 m). Knockback animation. |
+
+- Example results:
+  - Grunt: a punch flinches it, the finisher staggers it, and Ground Slam knocks it back about 2 m.
+  - Grunt Brute: it shrugs off punches and finishers, and Ground Slam only flinches it.
+  - Tripling an attacker's Impact Power turns a jab into a knockback.
+- **Armour:** an attack authored uninterruptible (the Brute's slam wind-up) ignores reactions entirely.
+- **Code:**
+  - `HitImpact`, `IHitReactionReceiver`, `HitReactionLevel`/`HitReaction`/`HitReactionRules`/`HitReactionResolver` (pure, tested) live in `ToyChest.Gameplay.Combat`.
+  - `HitResult.Body` carries the struck root; `HitWindow.Impact` is the authored weight.
+  - `PlayerCombat.DeliverImpact` runs per confirmed target, raising `HitReacted`.
+  - `EnemyCombatant` is the receiver; `EnemyAnimatorDriver` maps reactions to the Hit, HitHeavy, and Knockback states (Frank Fighter Hit01, Hit02, Hit_Knockback).
+- **Not yet:** enemy blows on the player deliver no impact (player hit reactions stay off, per GX-RG5C). Per-step impact for legacy non-asset combo steps uses `PlayerCombat._stepImpact`.
+
 ## Ground Slam — the first player-activated ability (Review Group B)
 
-**What the player does.** Press **Ability1** (R, right mouse, or gamepad right shoulder). The character hammers the ground (the Combo02_3 "Hammer slam" clip), and a shockwave damages every enemy in reach, whether in front, beside, or behind. Ground Slam then has a 6 s cooldown, shown on the HUD above the health bar.
+**What the player does.** Press **Ability1** (R, right mouse, or gamepad right shoulder). An orange circle appears on the ground at once, showing the slam's exact reach (3.3 m). The character hammers the ground (the Combo02_3 hammer-slam clip). On the frame the fist lands, every enemy inside the circle takes damage, whether in front, beside, or behind. Ground Slam then has a 3 s cooldown (authored on `Ability_GroundSlam` → *Cooldown Seconds*; 6 s until the RG C adjustments), shown on the HUD above the health bar.
 
 **How it is built (no new combat code path).**
-- The attack is `Combo_Ability_GroundSlam`: a one-step `ComboDefinition` that reuses `Attack_Fighter_Combo02_3` unchanged. Its "Hammer slam" window sweeps a limb plus the `HV_GroundShockwave` area (sphere, r 2.2 m, anchored to the right hand, multi-target, max 8).
+- The attack is `Combo_Ability_GroundSlam`: a one-step `ComboDefinition` whose `Attack_GroundSlam` plays the Combo02_3 clip with its own single "Ground slam" window.
+  - The window covers only nt 0.392–0.400, the frame the fist reaches the ground (measured: still raised at 0.379, on the ground by 0.396).
+  - It has no limb sweep. Its area is `HV_GroundSlam` (sphere, r 3.3 m = 1.5 × `HV_GroundShockwave`, multi-target, max 8), anchored `Owner`: centred on the player, directly above the root bone at body-centre height. Containment measures from the area centre to each target's body centre, so same-height targets are inside exactly when they are within 3.3 m horizontally, in every direction and regardless of the pose.
+  - `Attack_Fighter_Combo02_3` and `HV_GroundShockwave`, which the melee and aerial combos share, are unchanged.
+- `HitWindow` gained `AreaSpace` (default `HumanoidBone`, so existing windows are unchanged), which selects whether a window's area rides a bone or the owner. It also gained the presentation-only `AreaEffect` / `AreaEffectRadius`.
+- Ability attacks may have several steps. One activation plays them all: each step queues the next, the melee press never advances them, and they can be cancelled only in the final step. `Tools/CoplayScripts/VerifyAbilityAttackChain.cs` verifies a two-pulse slam.
+- **Known timing issue in the shipped melee combo (not changed):** `Combo_PlayerMelee` step 0's wind-up fallback (0.317 s) ends before its strikes do (0.400 s). A quickly buffered second punch can chain before the first punch's window has fully swept. Every other authored step follows the "strikes done + 0.05 s" convention.
 - `PlayerCombat.StartAbilityAttack(attack)` plays it through the same step pipeline as the melee combo: the same Animator state, hit-window ledger (one hit per target per window), `HitDetector`, `Attacked`/`Contacted`/`Impacted` events, and Multiple Targets activation. While the ability attack runs, the melee combo's runtime is parked. It is restored when the attack finishes or is cancelled (by a roll, a jump, or a melee press past its cancel point).
 - The window applies `ability.ground_slam_impact` (Provided, 0 s cooldown, `Fx_Damage_GroundSlam` = 30, which is 1.5× a punch) to every target in one activation.
 - `PlayerCombat.CanStartAbilityAttack` mirrors the combo-start gate. The player must be grounded and not rolling (airborne is allowed only for an aerial opener), and either idle or past the current attack's cancel point.
 
 **The cooldown is not PlayerCombat's.** It lives on the separate activation ability and is committed at press, before the attack starts (see `ABILITY_SYSTEM.md`, *Player Activation Pattern*). `PlayerCombat` never checks it, so the melee path is untouched: `ability.player_strike`/`combo2`/`combo3` keep their 0 s cooldowns, and the `TryPress` arc check is unchanged.
 
-**Feedback.**
-- `PlayerAttackFeedback` spawns `_abilityContactVfx` (Epic Toon FX `ToonBodySlam`) at the player's feet on the ability attack's contact frame, hit or miss.
-- Impact VFX, hit-stop, and camera shake still fire only on a confirmed hit, once per beat, exactly as for melee.
+**Feedback, all on one frame.**
+- `PlayerCombat.AreaActivated(center, radius)` fires the frame a window's area goes live, which is the frame its damage is applied.
+- `PlayerAttackFeedback` plays the window's own `HitWindow.AreaEffect` (for the slam, Epic Toon FX `ToonBodySlam`, with the prefab's own rotation) on the ground under the area centre, scaled by area radius / `AreaEffectRadius`. It plays hit or miss. The burst is authored per window, so each area attack brings its own effect, and windows without one (all the melee combos) play none.
+- Impact VFX, hit-stop, and camera shake fire on a confirmed hit, once per beat, as for melee. For the slam that is the same frame.
+- Previously the burst hung off `Contacted`, which for an attack asset fires when the *last* window closes. Damage could land from the window's start, before the fist reached the ground. That caused the reported "damage before the slam".
+- `PlayerAbilityAreaIndicator` draws a flat disc with a gradient fill and a solid rim, at the area's live centre and radius (`PlayerCombat.TryGetAbilityAttackArea`, the same emitter the detector queries), projected onto the ground (`ToCharacterGround`). It shows from the moment the slam starts until the attack ends, and brightens briefly on the impact frame.
 - `PlayerAbilityHud` (IMGUI, like `PlayerHealthBar`) shows `[R / RMB] Ground Slam — READY` or the seconds remaining, with a draining fill. It flashes red when a press is refused.
 
-**Verified.** `GroundSlamContentTests` (14 EditMode tests) plus the play-mode probe `Tools/CoplayScripts/VerifyGroundSlam.cs`, run from `Bootstrap.unity` with real queued keyboard input. The probe confirmed:
-- 3/3 dummies around the player were hit once each, for 30.
+**Verified.** `GroundSlamContentTests` (17 EditMode tests) plus the play-mode probe `Tools/CoplayScripts/VerifyGroundSlam.cs`, run from `Bootstrap.unity` with real queued keyboard input. The probe confirmed:
+- Damage, every `Impacted`, and the burst land on the same frame as `AreaActivated`, with the right hand 0.06 m below the root (the fist on the ground). The burst plays at the area centre.
+- The indicator is hidden before the slam, shown from its start through the impact to the end, then hidden. It sits 0.000 m from the root bone horizontally, with r 3.3 m.
+- A dummy at 2.8 m (outside the old 2.2 m) is hit; one at 4.2 m is not.
+- 3/3 dummies around the player (front, side, behind) were hit once each, for 30.
 - An immediate re-press was refused OnCooldown, with no second slam.
 - Q still plays `Combo_PlayerMelee` and lands a punch during the cooldown.
 - A no-target slam plays, bursts, and starts the cooldown.

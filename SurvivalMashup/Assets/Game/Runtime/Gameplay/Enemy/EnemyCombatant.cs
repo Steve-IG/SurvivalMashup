@@ -2,11 +2,13 @@ using System;
 using System.Collections.Generic;
 using ToyChest.Framework.Data;
 using ToyChest.Framework.Objects;
+using ToyChest.Gameplay.Combat;
 using ToyChest.Gameplay.HitDetection;
 using ToyChest.Systems.Abilities;
 using ToyChest.Systems.Attributes;
 using ToyChest.Systems.GameplayEffects;
 using ToyChest.Systems.Resources;
+using ToyChest.Systems.StatusEffects;
 using UnityEngine;
 
 namespace ToyChest.Gameplay.Enemy
@@ -33,7 +35,7 @@ namespace ToyChest.Gameplay.Enemy
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(CharacterController))]
-    public sealed class EnemyCombatant : MonoBehaviour, IAttackContactReceiver
+    public sealed class EnemyCombatant : MonoBehaviour, IAttackContactReceiver, IHitReactionReceiver
     {
         [SerializeField]
         [Tooltip("The behaviour whose composed object is this enemy. Defaults to the sibling.")]
@@ -105,6 +107,87 @@ namespace ToyChest.Gameplay.Enemy
                  "has landed the enemy commits to its recovery and a hit does not arbitrarily cancel it.")]
         private bool _recoverInterruptible;
 
+        [SerializeField]
+        [Min(0f)]
+        [Tooltip("The early interrupt window: a flinch-weight hit cancels the wind-up only during its first this-many " +
+                 "seconds (once the enemy commits to the swing a light blow can no longer stop it). Stagger-weight hits " +
+                 "interrupt the whole wind-up.")]
+        private float _interruptWindowSeconds = 0.25f;
+
+        [SerializeField]
+        [Min(0f)]
+        [Tooltip("Seconds an enemy whose attack was interrupted by a flinch stays out of action before it can move or swing " +
+                 "again (staggers and knockbacks use their own, longer lock). Without it the enemy would re-start the same " +
+                 "swing the very next frame.")]
+        private float _interruptRecoverySeconds = 0.4f;
+
+        [Header("Hit reactions")]
+        [SerializeField]
+        [Tooltip("Attribute read as this body's Stability (weight / poise). A blow's Impact / Stability picks the reaction.")]
+        private string _stabilityAttributeId = "attribute.stability";
+
+        [SerializeField]
+        [Min(0f)]
+        [Tooltip("Stability used when the composed object has no Stability attribute.")]
+        private float _fallbackStability = 10f;
+
+        [SerializeField]
+        [Tooltip("Ratio thresholds and stagger / knockback amounts that turn a blow's weight into a reaction.")]
+        private HitReactionRules _hitReactionRules = new HitReactionRules();
+
+        [SerializeField]
+        [Min(0.01f)]
+        [Tooltip("Seconds a knockback slide lasts (it decelerates to rest over this time).")]
+        private float _knockbackSlideSeconds = 0.3f;
+
+        [Header("Signature attack (optional — elites)")]
+        [SerializeField]
+        [Tooltip("Definition id of the enemy's signature area attack (e.g. the Grunt Brute's Shockwave Slam), applied to " +
+                 "everything its area catches. Empty = no signature attack (an ordinary Grunt).")]
+        private string _signatureAbilityId = "";
+
+        [SerializeField]
+        [Min(0f)]
+        [Tooltip("Radius of the signature attack's area, centred on the enemy. The ground telegraph shows exactly this circle.")]
+        private float _signatureRadius = 3.5f;
+
+        [SerializeField]
+        [Min(0f)]
+        [Tooltip("Planar distance to the player within which the signature attack begins (when off cooldown).")]
+        private float _signatureTriggerRange = 4.5f;
+
+        [SerializeField]
+        [Min(0f)]
+        [Tooltip("Telegraph: seconds the enemy is rooted, winding up, before the area lands — the player's window to leave it.")]
+        private float _signatureWindUpSeconds = 1.2f;
+
+        [SerializeField]
+        [Min(0f)]
+        [Tooltip("Recovery: seconds the enemy is rooted and vulnerable after the area lands — the player's punish window.")]
+        private float _signatureRecoverSeconds = 1.6f;
+
+        [SerializeField]
+        [Min(0f)]
+        [Tooltip("Seconds after a signature attack's recovery before it may be used again; the ordinary strike fills the gap.")]
+        private float _signatureCooldownSeconds = 5f;
+
+        [SerializeField]
+        [Min(0f)]
+        [Tooltip("Seconds after the enemy appears before its first signature attack.")]
+        private float _signatureInitialDelaySeconds = 1.5f;
+
+        [SerializeField]
+        [Tooltip("Whether a hit during the signature wind-up cancels it. Off by default: the answer to the slam is to get " +
+                 "out of the circle, not to out-trade it.")]
+        private bool _signatureWindUpInterruptible;
+
+        [Header("Variant statuses (optional — elites)")]
+        [SerializeField]
+        [Tooltip("Statuses applied once when the enemy is composed. Every enemy archetype shares the base attribute " +
+                 "definitions (Maximum Health, Enemy Speed), so an elite variant layers its authored modifiers and identity " +
+                 "tag on top through an infinite status rather than through new attributes.")]
+        private List<StatusEffectDefinition> _innateStatuses = new List<StatusEffectDefinition>();
+
         [Header("Movement")]
         [SerializeField]
         [Tooltip("Downward acceleration applied while ungrounded, in units per second squared.")]
@@ -136,8 +219,16 @@ namespace ToyChest.Gameplay.Enemy
         private bool _dead;
         private float _verticalVelocity;
         private EnemyAttackCycle _attackCycle;
+        private EnemySignatureAttack _signature;
+        private HitVolumeEmitter _signatureArea;
+        private DefinitionId _signatureAbility;
+        private readonly List<EffectTarget> _signatureTargets = new List<EffectTarget>();
+        private bool _innateApplied;
         private float _deathTimer;
         private float _lastPlanarSpeed;
+        private float _staggerTimer;
+        private Vector3 _knockbackVelocity;
+        private float _knockbackTimer;
 
         /// <summary>Raised when the enemy begins telegraphing a strike — presentation reads this to flash the wind-up.</summary>
         public event Action WindUpStarted;
@@ -151,18 +242,129 @@ namespace ToyChest.Gameplay.Enemy
         /// <summary>Raised when the enemy takes damage (but survives) — presentation reads this for a hit flash.</summary>
         public event Action Damaged;
 
+        /// <summary>
+        /// Raised when a blow's weight produces a reaction on this body (Flinch, Stagger, Knockback - never None).
+        /// Presentation plays the matching hit animation; gameplay has already interrupted / staggered / pushed it.
+        /// </summary>
+        public event Action<HitReaction> HitReacted;
+
+        /// <summary>Whether the ordinary strike is winding up (telegraphing).</summary>
+        public bool IsWindingUp => _attackCycle != null && _attackCycle.IsWindingUp;
+
+        /// <summary>Whether the enemy is staggered (locked out of moving and attacking by a heavy hit).</summary>
+        public bool IsStaggered => _staggerTimer > 0f;
+
+        /// <summary>This body's current Stability (the authored attribute, or the fallback).</summary>
+        public float Stability =>
+            IsActiveObject() && _behaviour.Object.TryGet(out AttributeSet attributes) &&
+            attributes.TryGetValue(new DefinitionId(_stabilityAttributeId), out float value) ? value : _fallbackStability;
+
+        /// <summary>
+        /// Resolves a blow's weight against this body's Stability and applies the reaction: a flinch interrupts the
+        /// ordinary attack only inside its early window; a stagger interrupts any interruptible wind-up and locks the
+        /// enemy for a moment; a knockback also slides it back along the blow. A signature attack authored
+        /// uninterruptible is armour: during its wind-up the blow does damage only. Called by the attacker after the
+        /// damage has been applied (so a killing blow finds the enemy already dead and does nothing).
+        /// </summary>
+        public HitReaction ReceiveImpact(in HitImpact impact)
+        {
+            if (_dead || !IsActiveObject())
+            {
+                return default;
+            }
+
+            HitReaction reaction = HitReactionResolver.Resolve(impact.Power, Stability, _hitReactionRules);
+            if (!reaction.Reacts)
+            {
+                return reaction;
+            }
+
+            if (IsSignatureWindingUp && !_signatureWindUpInterruptible)
+            {
+                return new HitReaction(HitReactionLevel.None, reaction.Ratio, 0f, 0f);
+            }
+
+            bool heavy = reaction.Level >= HitReactionLevel.Stagger;
+            bool interrupted = _attackCycle.TryInterrupt(ignoreWindow: heavy);
+            interrupted |= _signature != null && _signature.TryInterrupt();
+
+            if (heavy)
+            {
+                _staggerTimer = Mathf.Max(_staggerTimer, reaction.StaggerSeconds);
+            }
+            else if (interrupted)
+            {
+                _staggerTimer = Mathf.Max(_staggerTimer, _interruptRecoverySeconds);
+            }
+
+            if (reaction.Level == HitReactionLevel.Knockback && impact.Direction.sqrMagnitude > 0f)
+            {
+                // Linear deceleration to rest over the slide: distance = v0 * T / 2.
+                _knockbackTimer = _knockbackSlideSeconds;
+                _knockbackVelocity = impact.Direction * (2f * reaction.KnockbackDistance / _knockbackSlideSeconds);
+            }
+
+            HitReacted?.Invoke(reaction);
+            return reaction;
+        }
+
+        /// <summary>Raised when the enemy begins winding up its signature attack — presentation shows the telegraph.</summary>
+        public event Action SignatureWindUpStarted;
+
+        /// <summary>
+        /// Raised on the frame the signature attack's area lands, with its ground centre, its radius, and how many
+        /// targets it damaged — presentation plays the impact here, hit or miss.
+        /// </summary>
+        public event Action<Vector3, float, int> SignatureStruck;
+
         /// <summary>Current planar speed in units per second. Presentation reads this to drive locomotion animation.</summary>
         public float CurrentPlanarSpeed => _lastPlanarSpeed;
 
         /// <summary>The enemy's top pursuit speed right now (the authored attribute value).</summary>
         public float MaxSpeed => CurrentSpeed();
 
+        /// <summary>Whether this enemy has an authored signature attack.</summary>
+        public bool HasSignatureAttack => _signature != null;
+
+        /// <summary>Whether the signature attack is currently winding up (its telegraph is showing).</summary>
+        public bool IsSignatureWindingUp => _signature != null && _signature.Cycle.IsWindingUp;
+
+        /// <summary>Whether the signature attack is in its rooted recovery (the punish window).</summary>
+        public bool IsSignatureRecovering => _signature != null && _signature.Cycle.Phase == EnemyAttackPhase.Recover;
+
+        /// <summary>Whether the enemy has died (its corpse may still be lingering).</summary>
+        public bool IsDead => _dead;
+
+        /// <summary>The composed Gameplay Object this enemy acts for, or null before composition.</summary>
+        public GameplayObject ComposedObject => _behaviour != null ? _behaviour.Object : null;
+
+        /// <summary>
+        /// The signature attack's live area while it winds up: the point on the ground under its centre, its radius,
+        /// and the wind-up progress (0 → 1 at the instant it lands). The ground telegraph reads this — the same centre
+        /// and radius the hit query uses, so the circle and the damage can never disagree. False when not winding up.
+        /// </summary>
+        public bool TryGetSignatureArea(out Vector3 groundCenter, out float radius, out float windUpProgress)
+        {
+            if (_dead || !IsSignatureWindingUp)
+            {
+                groundCenter = default;
+                radius = 0f;
+                windUpProgress = 0f;
+                return false;
+            }
+
+            groundCenter = SignatureGroundCenter();
+            radius = _signatureRadius;
+            windUpProgress = _signature.Cycle.WindUpProgress;
+            return true;
+        }
+
         private void Awake()
         {
             _controller = GetComponent<CharacterController>();
             _motor = new PursuitMotor();
             _detector = new HitDetector();
-            _attackCycle = new EnemyAttackCycle(_windUpSeconds, _recoverSeconds, _windUpInterruptible, _recoverInterruptible);
+            _attackCycle = new EnemyAttackCycle(_windUpSeconds, _recoverSeconds, _windUpInterruptible, _recoverInterruptible, _interruptWindowSeconds);
 
             // The strike uses the identical authoring the player's punch does — a cone anchored to an
             // authored humanoid bone — proving one attack authoring is reused across different characters
@@ -172,6 +374,20 @@ namespace ToyChest.Gameplay.Enemy
             var anchor = new HitVolumeAnchor(HitAnchorSpace.HumanoidBone, _attackBone, _attackOffset, HitFacing.Owner);
             _strike = new HitVolumeEmitter(volume, anchor, _playerTag, _targetLayers);
             _strike.Bind(transform, GetComponentInChildren<Animator>());
+
+            // The signature attack is the same vocabulary again: a sphere centred on the enemy, resolved on the frame
+            // the wind-up completes. Only the shape and the ability differ from the ordinary strike.
+            if (!string.IsNullOrEmpty(_signatureAbilityId))
+            {
+                _signature = new EnemySignatureAttack(
+                    _signatureWindUpSeconds, _signatureRecoverSeconds, _signatureCooldownSeconds,
+                    _signatureInitialDelaySeconds, _signatureTriggerRange, _signatureWindUpInterruptible);
+                var area = new HitVolume(HitShape.Sphere, _signatureRadius, 180f, multiTarget: true, maxTargets: 8);
+                var center = new HitVolumeAnchor(HitAnchorSpace.Owner, HumanBodyBones.Hips, Vector3.zero, HitFacing.Owner);
+                _signatureArea = new HitVolumeEmitter(area, center, _playerTag, _targetLayers);
+                _signatureArea.Bind(transform, GetComponentInChildren<Animator>());
+                _signatureAbility = new DefinitionId(_signatureAbilityId);
+            }
 
             _speedAttribute = new DefinitionId(_speedAttributeId);
             _attackAbility = new DefinitionId(_attackAbilityId);
@@ -207,7 +423,13 @@ namespace ToyChest.Gameplay.Enemy
             Vector3 position = transform.position;
             Vector3 planarVelocity = Vector3.zero;
 
-            if (IsActiveObject())
+            if (IsActiveObject() && _staggerTimer > 0f)
+            {
+                // Staggered by a heavy hit: no pursuit, no attacks (the attack cycles hold), only the knockback slide.
+                _staggerTimer -= delta;
+                planarVelocity = KnockbackStep(delta);
+            }
+            else if (IsActiveObject())
             {
                 AcquirePlayer();
                 bool hasPlayer = _player != null;
@@ -219,12 +441,22 @@ namespace ToyChest.Gameplay.Enemy
 
                 bool inRange = step.Phase == PursuitPhase.Attack && hasPlayer;
 
+                // An elite's signature attack takes priority over the ordinary strike whenever it is ready and the
+                // player is close, and never overlaps it. Once begun it commits: the area lands where the enemy
+                // stands whether or not the player is still inside, so leaving the circle is the dodge.
+                bool signatureBusy = TickSignature(delta, hasPlayer, Vector2.Distance(selfXZ, targetXZ));
+                if (signatureBusy)
+                {
+                    planarVelocity = Vector3.zero;
+                    inRange = false;
+                }
+
                 // Telegraphed attack cycle so the strike is readable and fair: the enemy roots and
                 // anticipates (WindUp), the blow lands, then it is briefly committed (Recover). Cadence and
                 // the authored interrupt windows live in the pure EnemyAttackCycle, not the ability cooldown
                 // or the animator. A hit during an interruptible window cancels the cycle (see OnHealthChanged),
                 // so this state machine simply resumes from Ready.
-                switch (_attackCycle.Phase)
+                switch (signatureBusy ? EnemyAttackPhase.Ready : _attackCycle.Phase)
                 {
                     case EnemyAttackPhase.Ready:
                         if (inRange)
@@ -258,7 +490,7 @@ namespace ToyChest.Gameplay.Enemy
                 }
 
                 // Face the player through the whole attack cycle; otherwise face the movement direction.
-                if (_attackCycle.IsAttacking && hasPlayer)
+                if ((_attackCycle.IsAttacking || signatureBusy) && hasPlayer)
                 {
                     FaceTarget(_player.position - position, delta);
                 }
@@ -284,12 +516,80 @@ namespace ToyChest.Gameplay.Enemy
             _controller.Move(planarVelocity * delta);
         }
 
+        /// <summary>
+        /// Advances the signature attack, if any: begins it when ready and the player is within its trigger range
+        /// (and the ordinary strike is idle), and resolves its area on the tick the wind-up completes. Returns whether
+        /// the signature attack is in progress, which roots the enemy and suspends the ordinary strike.
+        /// </summary>
+        private bool TickSignature(float delta, bool hasPlayer, float planarDistance)
+        {
+            if (_signature == null)
+            {
+                return false;
+            }
+
+            if (!_signature.Cycle.IsAttacking)
+            {
+                _signature.Advance(delta); // cooldown
+                if (!hasPlayer || _attackCycle.IsAttacking || !_signature.ShouldBegin(planarDistance))
+                {
+                    return false;
+                }
+
+                _signature.Begin();
+                SignatureWindUpStarted?.Invoke();
+                return true;
+            }
+
+            if (_signature.Advance(delta).Struck)
+            {
+                ResolveSignature();
+            }
+
+            return _signature.Cycle.IsAttacking;
+        }
+
+        private void ResolveSignature()
+        {
+            GameplayObject enemy = _behaviour.Object;
+            int damaged = 0;
+            if (enemy != null && enemy.TryGet(out AbilitySet abilities))
+            {
+                // One commit applies the signature ability to everything inside the circle (the Multiple Targets path
+                // Ground Slam uses), so a target is never struck twice by one slam.
+                IReadOnlyList<HitResult> hits = _signatureArea.Detect(enemy, _detector);
+                _signatureTargets.Clear();
+                for (int i = 0; i < hits.Count; i++)
+                {
+                    _signatureTargets.Add(EffectTarget.From(hits[i].Object));
+                }
+
+                if (_signatureTargets.Count > 0 &&
+                    abilities.TryActivate(_signatureAbility, _signatureTargets) == AbilityActivationResult.Activated)
+                {
+                    damaged = _signatureTargets.Count;
+                }
+            }
+
+            SignatureStruck?.Invoke(SignatureGroundCenter(), _signatureRadius, damaged);
+        }
+
+        // The area is centred on the enemy's own transform; its ground point is the bottom of the controller capsule.
+        private Vector3 SignatureGroundCenter()
+        {
+            Vector3 origin = _signatureArea != null && _signatureArea.IsBound ? _signatureArea.Origin : transform.position;
+            float groundY = _controller != null && _controller.enabled ? _controller.bounds.min.y : transform.position.y;
+            return new Vector3(origin.x, groundY, origin.z);
+        }
+
         private void EnsureSubscribed()
         {
             if (_subscribed || !IsActiveObject())
             {
                 return;
             }
+
+            ApplyInnateStatuses();
 
             if (_behaviour.Object.TryGet(out ResourceSet resources))
             {
@@ -307,15 +607,48 @@ namespace ToyChest.Gameplay.Enemy
         {
             if (current < previous && current > 0f)
             {
-                // Gameplay interruption: a confirmed hit cancels the attack if it landed during an authored
-                // interrupt window. Cancelling the cycle here means a pending strike (mid wind-up) never
-                // resolves and the enemy resumes normal behaviour next frame; a hit outside the window leaves
-                // the attack running. This is state only — safe to run inside the resource-change callback,
-                // unlike death (which defers teardown). The hit reaction itself is the Damaged event's job,
-                // so interruption stays gameplay-only and presentation stays in the animator.
-                _attackCycle.TryInterrupt();
+                // Damage alone no longer interrupts: whether a blow flinches, staggers, or knocks the enemy back is
+                // decided by its weight against this body's Stability, delivered separately (ReceiveImpact). Damage
+                // with no impact (or an impact too light to matter) only raises Damaged (the hit flash).
                 Damaged?.Invoke();
             }
+        }
+
+        // Once per composed object, before health is watched, so the variant's health boost and refill are not read
+        // as damage or healing. Statuses are authoritative state, so a saved elite restores them through the Save System.
+        private void ApplyInnateStatuses()
+        {
+            if (_innateApplied)
+            {
+                return;
+            }
+
+            _innateApplied = true;
+            if (_innateStatuses.Count == 0 || !_behaviour.Object.TryGet(out StatusEffectSet statuses))
+            {
+                return;
+            }
+
+            for (int i = 0; i < _innateStatuses.Count; i++)
+            {
+                StatusEffectDefinition status = _innateStatuses[i];
+                if (status != null && !statuses.Has(status.Id))
+                {
+                    statuses.Apply(status);
+                }
+            }
+        }
+
+        private Vector3 KnockbackStep(float delta)
+        {
+            if (_knockbackTimer <= 0f)
+            {
+                return Vector3.zero;
+            }
+
+            Vector3 velocity = _knockbackVelocity * (_knockbackTimer / _knockbackSlideSeconds);
+            _knockbackTimer -= delta;
+            return velocity;
         }
 
         private void AcquirePlayer()
@@ -342,6 +675,14 @@ namespace ToyChest.Gameplay.Enemy
         public void NotifyAnimationContact()
         {
             if (_dead)
+            {
+                return;
+            }
+
+            // A contact event in the first half of a wind-up cannot belong to it: it is the previous swing's clip (still
+            // playing after an interrupt or a quick re-swing) reaching its contact frame. Accepting it would land the new
+            // blow with almost no telegraph, so it is ignored and the wind-up timer (or this swing's own event) lands it.
+            if (_attackCycle.WindUpElapsed < _windUpSeconds * 0.5f)
             {
                 return;
             }

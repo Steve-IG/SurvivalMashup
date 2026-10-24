@@ -5,6 +5,7 @@
         "ToyChest.Framework",
         "ToyChest.Systems.Attributes",
         "ToyChest.Systems.Resources",
+        "ToyChest.Systems.StatusEffects",
         "ToyChest.Systems.Abilities",
         "ToyChest.Systems.GameplayEffects",
         "ToyChest.Systems.Items",

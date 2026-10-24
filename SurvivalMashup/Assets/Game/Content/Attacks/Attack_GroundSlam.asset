@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 68ff734ae7828bd439fcf2bfccabd03a, type: 3}
+  m_Name: Attack_GroundSlam
+  m_EditorClassIdentifier: ToyChest.Gameplay::ToyChest.Gameplay.Combat.AttackDefinition
+  _clip: {fileID: 7400000, guid: b099443175035d141b9ea97b2727a3f4, type: 3}
+  _abilityId: 
+  _commitEnd: 0.95
+  _cancelFrom: 0.4853932
+  _windows:
+  - _id: Ground slam
+    _start: 0.392
+    _end: 0.4
+    _limbs: 0
+    _area: {fileID: 11400000, guid: dae1c5e96d5f472987c8a3fb7aec62a7, type: 2}
+    _areaSpace: 0
+    _areaBone: 0
+    _areaEffect: {fileID: 195466, guid: 56c3274d2f9ec214ab584a80b5ce2d6d, type: 3}
+    _areaEffectRadius: 1.5
+    _abilityId: 
+    _rehitInterval: 0
+    _impact: 30
+    _verified: 1
+  _strikeHint: 0.393
+  _airHeight:
+    serializedVersion: 2
+    m_Curve: []
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4

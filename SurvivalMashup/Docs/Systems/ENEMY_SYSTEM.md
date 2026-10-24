@@ -159,6 +159,36 @@ No stun/poise/status system, no AI manager, no encounter manager, no enemy combo
 
 ---
 
+# Milestone 1 Implementation (Review Group C — Elite Encounter)
+
+The first elite, the **Grunt Brute** (`object.grunt_brute`), is the Grunt composition plus one ability. Its encounter is a challenge pad in the dojo. The design, numbers, and evidence are in `DEVELOPMENT_PLAN.md` (*Review Group C*). This section records what the Enemy layer gained. There is still no AI, boss, or encounter manager, and no Core, Framework, or Ability System change.
+
+- **Signature attack (optional, authored on `EnemyCombatant`).** An elite can layer one heavier area attack over its ordinary strike: an ability id, radius, trigger range, wind-up, recovery, cooldown, initial delay, and wind-up interruptibility. Its timing is the pure `EnemySignatureAttack`: a second `EnemyAttackCycle` plus a trigger range and a cooldown measured from the end of recovery.
+  - It takes priority over the ordinary strike when ready, and never overlaps it.
+  - Once begun it commits. The area lands where the enemy stands, so **leaving the circle is the dodge**. With wind-up interruptibility off (the Brute's setting), hits do not cancel it.
+  - Recovery is never interruptible: it is the punish window.
+  - The area resolves through the shared hit vocabulary (an `Owner`-centred `Sphere`, `HitFilter` on the player tag) on the wind-up's final tick. It is applied with the Multiple Targets overload, so a target is hit at most once per slam.
+  - An empty ability id disables the whole feature, which is the setting for Grunts and dummies.
+- **Innate statuses.** Every archetype shares the base attribute definitions (Maximum Health 50, Enemy Speed 3.5), and a definition cannot override base values. An elite variant therefore authors its stats and identity as an **infinite status**, which `EnemyCombatant` applies once on composition before it watches health.
+  - `status.elite_brute` gives +250 Maximum Health, −1 Enemy Speed, and `Actor.Elite`, then refills health with an on-apply heal (modifiers apply before on-apply effects).
+  - Statuses are authoritative, so the Save System restores them, without re-running the refill.
+- **Presentation.** `EnemyAreaTelegraph` draws the exact circle on the ground from `EnemyCombatant.TryGetSignatureArea`, the same centre and radius the query uses. An inner disc grows to the rim over the wind-up, and a flash and burst play on `SignatureStruck`. `EnemyAnimatorDriver` plays the controller's `Slam` state on `SignatureWindUpStarted` (controllers without the parameter ignore it). It also skips the hit flinch during a signature wind-up, so an attack that cannot be interrupted does not look interrupted.
+- **Encounter and completion.** `EliteEncounter` is the pad adapter, the enemy counterpart to `EnemySpawnTrigger`. It composes the elite and its escorts through `GameplayObjectSpawner.Compose` and spawns reinforcements once at a health fraction. When the elite dies it activates its **encounter object's** reward ability on the player.
+  - That object owns a one-shot `resource.encounter_charge`, and the reward ability's cost is that charge: the Supply Crate's loot pattern.
+  - The Ability System therefore grants the reward exactly once, and the spent charge is the persisted "defeated" state.
+  - Rematches play out fully but are refused the reward.
+- **Hit reactions (RG C review adjustments).** These supersede the RG5D rule that a confirmed hit inside the wind-up interrupts.
+  - Damage alone no longer interrupts or plays a hit animation. `EnemyCombatant` implements `IHitReactionReceiver` and reacts to each blow's `HitImpact` against its `attribute.stability` (see `COMBAT.md`, *Hit Reactions*).
+  - **Flinch:** hit animation; interrupts only inside the authored early `_interruptWindowSeconds` (0.25 s), then `_interruptRecoverySeconds` (0.4 s) out of action.
+  - **Stagger:** heavy hit animation, interrupts any interruptible wind-up, locked for the stagger time.
+  - **Knockback:** the stagger plus a decelerating slide (`_knockbackSlideSeconds`).
+  - Thresholds are authored per enemy (`_hitReactionRules`).
+  - `EnemyAttackCycle` gained the early window: `TryInterrupt(ignoreWindow)`, `WindUpElapsed`.
+  - Contact events in the first half of a wind-up are ignored as stale.
+  - Grunt tuning: Enemy Speed 2.6, claw 5.
+
+---
+
 # Enemy Identity
 
 Every enemy should have a clear gameplay identity.

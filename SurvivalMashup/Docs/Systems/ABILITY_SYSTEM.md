@@ -110,15 +110,15 @@ Ability1 input → PlayerInputBridge → PlayerAbilityActivator (slot 0)
   → AbilitySlotActivation.Press
       1. AbilitySet.CanActivate(ability.ground_slam)    refused → TryActivate publishes AbilityActivationFailed; nothing plays
       2. PlayerCombat.CanStartAbilityAttack(attack)     busy    → press buffered 0.18 s; nothing committed
-      3. AbilitySet.TryActivate(ability.ground_slam)    commits: 6 s cooldown, AbilityCooldownStarted, AbilityActivated
+      3. AbilitySet.TryActivate(ability.ground_slam)    commits: its authored cooldown (3 s), AbilityCooldownStarted, AbilityActivated
       4. PlayerCombat.StartAbilityAttack(Combo_Ability_GroundSlam)
-  → "Hammer slam" hit window → HitDetector (HV_GroundShockwave)
+  → "Ground slam" impact window (fist-landing frame) → HitDetector (HV_GroundSlam, r 3.3 m, centred on the player)
   → AbilitySet.TryActivate(ability.ground_slam_impact, targets)   one activation, damage per target
   → PlayerCombat.Impacted → PlayerAttackFeedback
 ```
 
 **Two definitions.**
-- `ability.ground_slam` is the **activation ability**: Self target, 6 s cooldown, no cost, no effects. It owns every rule about *whether* the slam may happen.
+- `ability.ground_slam` is the **activation ability**: Self target, an authored cooldown (3 s; edit `Ability_GroundSlam` → Cooldown Seconds), no cost, no effects. It owns every rule about *whether* the slam may happen.
 - `ability.ground_slam_impact` is the **impact ability**: Provided target, 0 s cooldown, `Fx_Damage_GroundSlam`. It owns *what happens* to each target hit.
 - `Obj_Player` grants both. Progression may move the grant later (Review Group D).
 
@@ -128,7 +128,37 @@ Ability1 input → PlayerInputBridge → PlayerAbilityActivator (slot 0)
 - A press made while the character is busy (mid-attack before the cancel point, rolling, or airborne) is buffered like a melee press. It commits nothing unless the slam actually starts. These movement-state refusals happen in the adapter, before the Ability System is asked, so **they publish no `AbilityActivationFailed`**. The player has no movement-state tags the activation could gate on, and adding them would be new framework state.
 - The cooldown saves and restores through the existing `SaveManager` capture and `RestoreCooldown` (covered by `GroundSlamContentTests`).
 
-**Adding the next ability** takes data plus one slot: an activation ability, an impact ability, an attack asset (a `ComboDefinition` plus an `AttackDefinition`), and a `PlayerAbilityActivator` slot bound to a new input action listed in `PlayerInputBridge._abilitySlotActions`. A Self ability that carries its own effects and has no attack, such as Second Wind, does not fit a slot yet, because a slot requires an attack. Review Group D decides whether to allow an attack-less slot.
+**Timing rule for area abilities.** The impact window must sit on the animation's landing frame, and presentation that must coincide with the damage hangs off `PlayerCombat.AreaActivated`, not `Contacted`. `Contacted` marks the end of the attack's last window.
+
+## Scaling to more abilities (review, 2026-10-23)
+
+Nothing in the slot, activation, attack, or presentation path is specific to Ground Slam. A new ability is authored data plus one slot entry, with no code. These shapes are supported today:
+
+| Ability shape | Example | What to author |
+|---|---|---|
+| **Area attack** | Ground Slam, war stomp, nova | Activation ability; impact ability; a `Combo_Ability_*` with an `AttackDefinition` whose window has an `Area` (`HitVolumeAsset`), `AreaSpace` (`Owner` for self-centred, `HumanoidBone` for a hand or weapon), and optional `AreaEffect` burst. |
+| **Directional strike** | Shield bash, uppercut | Same, with a `Cone` area or limb windows (`Limbs`). |
+| **Multi-pulse / multi-hit** | Triple stomp, flurry | Several windows in one attack, or several steps in the ability's combo. Each window is its own hit instance, each can name its own impact ability and burst, and the steps chain automatically from one activation. |
+| **Mixed effects** | Damage centre plus slowing outer ring | Two windows with different areas and different impact abilities. Any Gameplay Effects work: damage, heal, status, add tag, and so on. |
+| **Attack-less Self ability** | Second Wind (heal), a buff, a cleanse | Activation ability with its own Self effects. Leave the slot's attack empty. It fires at once, with no animation gate and no buffering behind a swing. |
+
+**Rules every ability follows:**
+- The cooldown, costs, and tag gates live on the **activation ability** and are committed at press. They never live on impact abilities, which keep a 0 s cooldown.
+- Each window opens on the animation's actual impact frame. Measure it; don't eyeball it.
+- Each step's wind-up fallback ends after its strikes (strikes done + 0.05 s), or a following step can chain before a window is swept. `GroundSlamContentTests.EveryAbilityAttackStep_WindUpFallback_EndsAfterItsStrikes` enforces this for every `Combo_Ability_*`.
+- Presentation that must coincide with damage hangs off `PlayerCombat.AreaActivated(window, centre, radius)`, never `Contacted`.
+- The attack's animator state must exist on the player controller and be able to restart itself (`AttackValidation`).
+- A new slot is a new input action listed in `PlayerInputBridge._abilitySlotActions` plus a `PlayerAbilityActivator` slot. The HUD stacks slots and reads their key hints from the bindings.
+
+**Not supported yet; each needs its own review-group decision, not speculative code now:**
+- **Projectiles** need a projectile runtime: spawn, travel, and impact feeding Hit Detection.
+- **Aimed or ground-targeted abilities** need an aim and reticle input mode. Today an area is anchored to the character or a bone.
+- **Movement abilities** (dash, leap, blink) need a locomotion-driven performer. The aerial-attack height curve is the nearest existing piece.
+- **Charge, channel, and hold** use the reserved Cast Time, Channeling, and Multi-stage activation extension points. These are engine changes and need approval.
+- **Area shapes beyond sphere and cone** (box, line, ring) would extend the `HitShape` vocabulary.
+- **Runtime slot assignment** for progression (equip an ability into a slot) is Review Group D. Slots are authored on the prefab today, and the HUD already hides ungranted ones.
+- **Movement-state refusals** still publish no `AbilityActivationFailed` (see above).
+- **Indicator colour** is per character, not per ability.
 
 **Pure rules, testable without a scene.** `AbilitySlotActivation` holds the press, buffer, and commit order. `IAbilityAttackPerformer` is the seam: `PlayerCombat` implements it, and tests fake it. `PlayerAbilityActivator` and `PlayerAbilityHud` are thin Unity adapters.
 

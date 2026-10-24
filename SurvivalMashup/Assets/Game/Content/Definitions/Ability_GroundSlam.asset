@@ -20,5 +20,5 @@ MonoBehaviour:
   _requiredOwnerTags: []
   _blockedByOwnerTags: []
   _costs: []
-  _cooldownSeconds: 6
+  _cooldownSeconds: 1
   _effects: []

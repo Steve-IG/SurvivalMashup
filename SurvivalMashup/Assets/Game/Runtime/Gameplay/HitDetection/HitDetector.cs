@@ -95,7 +95,7 @@ namespace ToyChest.Gameplay.HitDetection
                 // this, so VFX land on the contact rather than at an approximated body offset.
                 Vector3 contactPoint = ClosestSurfacePoint(collider, origin);
                 float sqrDistance = (targetPosition - origin).sqrMagnitude;
-                _results.Add(new HitResult(candidate, contactPoint, sqrDistance));
+                _results.Add(new HitResult(candidate, contactPoint, sqrDistance, behaviour.transform));
             }
 
             // Deterministic nearest-first order so resolution never depends on physics query order.
@@ -154,7 +154,7 @@ namespace ToyChest.Gameplay.HitDetection
                     Vector3 onLimb = LimbSweep.ClosestPointOnSegment(collider.bounds.center, a, b);
                     Vector3 contactPoint = ClosestSurfacePoint(collider, onLimb);
                     float sqrDistance = (collider.transform.position - curB).sqrMagnitude;
-                    _results.Add(new HitResult(candidate, contactPoint, sqrDistance));
+                    _results.Add(new HitResult(candidate, contactPoint, sqrDistance, behaviour.transform));
                 }
             }
 

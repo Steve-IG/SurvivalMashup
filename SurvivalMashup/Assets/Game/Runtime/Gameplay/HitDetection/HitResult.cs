@@ -26,12 +26,25 @@ namespace ToyChest.Gameplay.HitDetection
         /// <summary>Squared distance from the query origin to the target, for nearest-first ordering.</summary>
         public readonly float SqrDistance;
 
+        /// <summary>
+        /// The struck body's root transform (its <c>GameplayObjectBehaviour</c>), so the attacker can deliver the
+        /// blow's physical weight to its <c>IHitReactionReceiver</c>. Null when built without a scene body (tests).
+        /// </summary>
+        public readonly Transform Body;
+
         /// <summary>Builds a hit result.</summary>
         public HitResult(GameplayObject gameplayObject, Vector3 contactPoint, float sqrDistance)
+            : this(gameplayObject, contactPoint, sqrDistance, null)
+        {
+        }
+
+        /// <summary>Builds a hit result that also names the struck body's root transform.</summary>
+        public HitResult(GameplayObject gameplayObject, Vector3 contactPoint, float sqrDistance, Transform body)
         {
             Object = gameplayObject;
             ContactPoint = contactPoint;
             SqrDistance = sqrDistance;
+            Body = body;
         }
 
         /// <summary>

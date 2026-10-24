@@ -21,8 +21,12 @@ namespace ToyChest.Gameplay.Player
         private PlayerAbilityActivator _abilities;
 
         [SerializeField]
-        [Tooltip("Input hint per slot, in slot order (e.g. \"R / RMB\"). Presentation only.")]
-        private string[] _inputHints = { "R / RMB" };
+        [Tooltip("Input adapter whose ability-slot bindings supply each slot's key hint. Defaults to the sibling.")]
+        private PlayerInputBridge _input;
+
+        [SerializeField]
+        [Tooltip("Optional key-hint override per slot, in slot order. Empty entries show the slot's real bindings.")]
+        private string[] _inputHints = new string[0];
 
         [Header("Layout")]
         [SerializeField]
@@ -59,6 +63,11 @@ namespace ToyChest.Gameplay.Player
             if (_abilities == null)
             {
                 _abilities = GetComponent<PlayerAbilityActivator>();
+            }
+
+            if (_input == null)
+            {
+                _input = GetComponent<PlayerInputBridge>();
             }
 
             _pixel = new Texture2D(1, 1) { hideFlags = HideFlags.HideAndDontSave };
@@ -133,7 +142,9 @@ namespace ToyChest.Gameplay.Player
                 Draw(background, _backgroundColor);
                 Draw(new Rect(background.x, background.y, background.width * fraction, background.height), fillColor);
 
-                string hint = i < _inputHints.Length && !string.IsNullOrEmpty(_inputHints[i]) ? $"[{_inputHints[i]}] " : string.Empty;
+                string keys = i < _inputHints.Length && !string.IsNullOrEmpty(_inputHints[i]) ? _inputHints[i]
+                    : _input != null ? _input.GetAbilitySlotBindingDisplay(i) : string.Empty;
+                string hint = string.IsNullOrEmpty(keys) ? string.Empty : $"[{keys}] ";
                 string state = ready ? "READY" : $"{remaining:0.0}s";
                 GUI.Label(new Rect(background.x + 8f, background.y, background.width, background.height),
                     $"{hint}{_abilities.GetDisplayName(i)} — {state}");

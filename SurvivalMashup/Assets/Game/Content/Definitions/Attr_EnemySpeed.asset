@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: ToyChest.Systems.Attributes::ToyChest.Systems.Attributes.AttributeDefinition
   _definitionId: attribute.enemy_speed
   _displayName: Enemy Speed
-  _baseValue: 3.5
+  _baseValue: 2.6
   _minimumValue: 0
   _maximumValue: 3.4028235e+38

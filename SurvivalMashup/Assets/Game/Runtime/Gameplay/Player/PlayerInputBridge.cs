@@ -52,6 +52,10 @@ namespace ToyChest.Gameplay.Player
         private string _rollAction = "Roll";
 
         [SerializeField]
+        [Tooltip("Vector2 action orbiting the camera (mouse delta / right stick).")]
+        private string _lookAction = "Look";
+
+        [SerializeField]
         [Tooltip("Button actions for the ability input slots, in slot order (element 0 presses slot 0).")]
         private string[] _abilitySlotActions = { "Ability1" };
 
@@ -82,6 +86,7 @@ namespace ToyChest.Gameplay.Player
         private InputAction _sprint;
         private InputAction _jump;
         private InputAction _roll;
+        private InputAction _look;
         private InputAction[] _abilitySlots = Array.Empty<InputAction>();
         private Action<InputAction.CallbackContext>[] _abilitySlotHandlers = Array.Empty<Action<InputAction.CallbackContext>>();
 
@@ -135,6 +140,7 @@ namespace ToyChest.Gameplay.Player
             _sprint = map.FindAction(_sprintAction, throwIfNotFound: false);
             _jump = map.FindAction(_jumpAction, throwIfNotFound: false);
             _roll = map.FindAction(_rollAction, throwIfNotFound: false);
+            _look = map.FindAction(_lookAction, throwIfNotFound: false);
 
             if (_interact != null)
             {
@@ -220,9 +226,27 @@ namespace ToyChest.Gameplay.Player
             _sprint = null;
             _jump = null;
             _roll = null;
+            _look = null;
             _abilitySlots = Array.Empty<InputAction>();
             _abilitySlotHandlers = Array.Empty<Action<InputAction.CallbackContext>>();
         }
+
+        /// <summary>
+        /// The bound controls of ability slot <paramref name="slot"/>'s action as display text (e.g. "RMB | R | RB"),
+        /// or empty when the slot has no action. Presentation reads this so a key hint always matches the real binding.
+        /// </summary>
+        public string GetAbilitySlotBindingDisplay(int slot)
+        {
+            return slot >= 0 && slot < _abilitySlots.Length && _abilitySlots[slot] != null
+                ? _abilitySlots[slot].GetBindingDisplayString()
+                : string.Empty;
+        }
+
+        /// <summary>This frame's camera-look input: mouse delta in pixels, or right stick in -1..1 (see <see cref="IsLookFromPointer"/>).</summary>
+        public Vector2 LookInput => _look != null ? _look.ReadValue<Vector2>() : Vector2.zero;
+
+        /// <summary>Whether the look input currently comes from a pointer (a per-frame delta) rather than a stick (a rate).</summary>
+        public bool IsLookFromPointer => _look != null && _look.activeControl != null && _look.activeControl.device is Pointer;
 
         private void Update()
         {

@@ -38,8 +38,25 @@ namespace ToyChest.Gameplay.Combat
         private HitVolumeAsset _area;
 
         [SerializeField]
-        [Tooltip("Humanoid bone the area is anchored to.")]
+        [Tooltip("Where the area is centred: a humanoid bone (Area Bone), or Owner — the character itself, directly above " +
+                 "its root at body-centre height, so a self-centred area (a ground slam) reaches the same distance in every " +
+                 "direction regardless of the pose.")]
+        private HitAnchorSpace _areaSpace = HitAnchorSpace.HumanoidBone;
+
+        [SerializeField]
+        [Tooltip("Humanoid bone the area is anchored to (Area Space = HumanoidBone).")]
         private HumanBodyBones _areaBone = HumanBodyBones.Hips;
+
+        [SerializeField]
+        [Tooltip("Presentation only: one-shot effect played on the ground under the area's centre the frame the area goes " +
+                 "live (the frame its damage lands), hit or miss — a slam's shockwave burst. Scaled to the area's radius. " +
+                 "Optional; never read by gameplay.")]
+        private GameObject _areaEffect;
+
+        [SerializeField]
+        [Min(0.01f)]
+        [Tooltip("Radius, in metres, the Area Effect prefab covers at scale 1; it is scaled by area radius / this.")]
+        private float _areaEffectRadius = 1f;
 
         [SerializeField]
         [Tooltip("Ability applied to targets this window strikes. Empty = the attack's ability.")]
@@ -50,6 +67,14 @@ namespace ToyChest.Gameplay.Combat
         [Tooltip("0 = each target is struck at most once per window. >0 = a target may be struck again after this " +
                  "many seconds (continuous attacks: spins, grinders, flurries).")]
         private float _rehitInterval;
+
+        [SerializeField]
+        [Min(0f)]
+        [Tooltip("Physical weight of the blow, compared with the target's Stability attribute (a Grunt has 10) after it is " +
+                 "multiplied by the attacker's Impact Power attribute. Impact ÷ Stability decides the reaction: below 0.5 " +
+                 "nothing, then a flinch (early-window interrupt), a stagger from 1.5, a knockback from 2.5 (thresholds " +
+                 "live on the target). Damage is unaffected — that is the ability's job.")]
+        private float _impact = DefaultImpact;
 
         [SerializeField]
         [Tooltip("Authoring only: a designer has checked this window against the animation (scrubbed it, watched it " +
@@ -74,9 +99,22 @@ namespace ToyChest.Gameplay.Combat
         public float End => _end;
         public StrikeLimbMask Limbs => _limbs;
         public HitVolumeAsset Area => _area;
+        public HitAnchorSpace AreaSpace => _areaSpace;
         public HumanBodyBones AreaBone => _areaBone;
+
+        /// <summary>Presentation-only burst played where the area lands (null = none).</summary>
+        public GameObject AreaEffect => _areaEffect;
+
+        /// <summary>Radius the <see cref="AreaEffect"/> prefab covers at scale 1.</summary>
+        public float AreaEffectRadius => _areaEffectRadius;
         public string AbilityId => _abilityId;
         public float RehitInterval => _rehitInterval;
+
+        /// <summary>Impact a window has when none is authored: an ordinary punch, a flinch on a Grunt.</summary>
+        public const float DefaultImpact = 10f;
+
+        /// <summary>The blow's authored physical weight, before the attacker's Impact Power multiplier.</summary>
+        public float Impact => _impact;
 
         /// <summary>Authoring-only: whether a designer has verified this window against the animation.</summary>
         public bool IsVerified => _verified;

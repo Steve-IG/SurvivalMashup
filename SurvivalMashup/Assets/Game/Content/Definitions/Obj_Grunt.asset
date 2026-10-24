@@ -17,6 +17,7 @@ MonoBehaviour:
   _attributes:
   - {fileID: 11400000, guid: 106981fc59ce5074c9051e5720476594, type: 2}
   - {fileID: 11400000, guid: 8d16100453574e788533310e7bb4df83, type: 2}
+  - {fileID: 11400000, guid: 60c7cb295756a1b44a97ad64eba9c9cc, type: 2}
   _resources:
   - {fileID: 11400000, guid: bad34d537fb7e20489b659992c8eb2d4, type: 2}
   _initialTags:
